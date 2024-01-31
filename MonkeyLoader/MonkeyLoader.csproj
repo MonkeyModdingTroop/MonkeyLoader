@@ -8,7 +8,7 @@
 
   <PropertyGroup>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Title>Monkey Loader</Title>
+    <Title>MonkeyLoader</Title>
     <Authors>Banane9</Authors>
     <Version>0.3.0-beta</Version>
     <Description>A convenience and extendability focused mod loader using NuGet packages.</Description>
@@ -17,7 +17,7 @@
     <PackageProjectUrl>https://github.com/MonkeyModdingTroop/MonkeyLoader</PackageProjectUrl>
     <RepositoryUrl>https://github.com/MonkeyModdingTroop/MonkeyLoader.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>mod; mods; modding; mod loader; harmony; unity; game; games; mono; config; configuration; nuget; logging</PackageTags>
+    <PackageTags>mod; mods; modding; loader; harmony; unity; game; games; mono; config; configuration; nuget; logging; monkeyloader</PackageTags>
     <IncludeSymbols>True</IncludeSymbols>
     <EmbedAllSources>True</EmbedAllSources>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
