@@ -7,10 +7,7 @@
   </PropertyGroup>
 
   <Target Name="PackProject" AfterTargets="PostBuildEvent">
-    <MSBuild
-      Projects="$(MSBuildProjectFile)"
-      Properties="NuPkgName=MonkeyLoader.GamePacks.Resonite"
-      Targets="PackNugetPkg">
+    <MSBuild Projects="$(MSBuildProjectFile)" Properties="NuPkgName=MonkeyLoader.GamePacks.Resonite" Targets="PackNugetPkg">
     </MSBuild>
   </Target>
 
@@ -25,10 +22,7 @@
     <Reference Include="FrooxEngine">
       <HintPath>$(ResonitePath)\Resonite_Data\Managed\FrooxEngine.dll</HintPath>
     </Reference>
-    <Publicize
-      Include="FrooxEngine"
-      IncludeCompilerGeneratedMembers="false"
-      IncludeVirtualMembers="false" />
+    <Publicize Include="FrooxEngine" IncludeCompilerGeneratedMembers="false" IncludeVirtualMembers="false" />
 
     <Reference Include="Elements.Core">
       <HintPath>$(ResonitePath)\Resonite_Data\Managed\Elements.Core.dll</HintPath>
@@ -46,8 +40,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MonkeyLoader.Resonite.Data\MonkeyLoader.Resonite.Data.csproj" />
-    <ProjectReference
-      Include="..\MonkeyLoader.Unity.Integration\MonkeyLoader.Unity.Integration.csproj" />
     <ProjectReference Include="..\MonkeyLoader\MonkeyLoader.csproj" />
   </ItemGroup>
 </Project>

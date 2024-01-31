@@ -8,9 +8,9 @@
     <Title>Monkey Loader</Title>
     <Authors>Banane9</Authors>
     <Description>A convenience and extendability focused mod loader using NuGet packages.</Description>
-    <PackageProjectUrl>https://github.com/Banane9/MonkeyLoader</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/MonkeyModdingTroop/MonkeyLoader</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <RepositoryUrl>https://github.com/Banane9/MonkeyLoader.git</RepositoryUrl>
+    <RepositoryUrl>https://github.com/MonkeyModdingTroop/MonkeyLoader.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>mod; mods; modding; mod loader; harmony; unity; game; games; mono; config; configuration; nuget; logging</PackageTags>
     <IncludeSymbols>True</IncludeSymbols>
@@ -39,12 +39,10 @@
       Importance="high" />
 
     <Copy
-      Condition="$(PDB2MDBPath) != ''"
-      SourceFiles="$(TargetDir)$(TargetFileName).mdb"
-      DestinationFiles="$(ResonitePath)/MonkeyLoader/$(AssemblyFileName).mdb" />
+      SourceFiles="$(TargetDir)$(TargetName).pdb"
+      DestinationFiles="$(ResonitePath)/MonkeyLoader/$(TargetName).pdb" />
     <Message
-      Condition="$(PDB2MDBPath) != ''"
-      Text="Copied $(TargetFileName).mdb to $(ResonitePath)/MonkeyLoader/$(AssemblyFileName).mdb"
+      Text="Copied $(TargetName).pdb to $(ResonitePath)/MonkeyLoader/$(TargetName).pdb"
       Importance="high" />
   </Target>
 
