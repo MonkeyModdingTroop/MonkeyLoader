@@ -383,8 +383,9 @@ namespace MonkeyLoader
             var loadedPackages = GameAssemblyPool.GetAllAsLoadedPackages().ToArray();
             NuGet.AddAll(loadedPackages);
 
-            foreach (var package in loadedPackages)
-                package.TryResolveDependencies();
+            // Not needed since the game has already everything resolved
+            /*foreach (var package in loadedPackages)
+                package.TryResolveDependencies();*/
 
             //if (!loadedPackages.All(package => package.AllDependenciesLoaded))
             //    throw new InvalidOperationException("Game assemblies contained unresolvable references!");
