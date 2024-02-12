@@ -51,12 +51,12 @@ namespace MonkeyLoader.Meta
         /// <summary>
         /// Gets an <see cref="IComparer{T}"/> that keeps <see cref="Mod"/>s sorted in topological order.
         /// </summary>
-        public static IComparer<IMod> AscendingComparer { get; } = new ModComparer();
+        public static IComparer<IMod> AscendingComparer { get; } = new ModComparer( true );
 
         /// <summary>
         /// Gets an <see cref="IComparer{T}"/> that keeps <see cref="Mod"/>s sorted in reverse topological order.
         /// </summary>
-        public static IComparer<IMod> DescendingComparer { get; } = new ModComparer();
+        public static IComparer<IMod> DescendingComparer { get; } = new ModComparer( false );
 
         /// <inheritdoc/>
         public bool AllDependenciesLoaded
@@ -271,7 +271,7 @@ namespace MonkeyLoader.Meta
                     ShutdownFailed |= !earlyMonkey.Shutdown();
 
                 foreach (var monkey in monkeys)
-                    ShutdownFailed |= monkey.Shutdown();
+                    ShutdownFailed |= !monkey.Shutdown();
             }
             catch (Exception ex)
             {
