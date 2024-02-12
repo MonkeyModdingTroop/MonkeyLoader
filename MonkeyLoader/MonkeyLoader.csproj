@@ -29,26 +29,14 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(CopyToLibraries)'=='true'">
-    <Copy
-      SourceFiles="$(TargetDir)$(TargetFileName)"
-      DestinationFiles="$(ResonitePath)/MonkeyLoader/$(AssemblyFileName)" />
-    <Message
-      Text="Copied $(TargetFileName) to $(ResonitePath)/MonkeyLoader/$(AssemblyFileName)"
-      Importance="high" />
+    <Copy SourceFiles="$(TargetDir)$(TargetFileName)" DestinationFiles="$(ResonitePath)/MonkeyLoader/$(AssemblyFileName)" />
+    <Message Text="Copied $(TargetFileName) to $(ResonitePath)/MonkeyLoader/$(AssemblyFileName)" Importance="high" />
 
-    <Copy
-      SourceFiles="$(TargetDir)$(TargetName).xml"
-      DestinationFiles="$(ResonitePath)/MonkeyLoader/$(AssemblyTitle).xml" />
-    <Message
-      Text="Copied $(TargetName).xml to $(ResonitePath)/MonkeyLoader/$(AssemblyTitle).xml"
-      Importance="high" />
+    <Copy SourceFiles="$(TargetDir)$(TargetName).xml" DestinationFiles="$(ResonitePath)/MonkeyLoader/$(AssemblyTitle).xml" />
+    <Message Text="Copied $(TargetName).xml to $(ResonitePath)/MonkeyLoader/$(AssemblyTitle).xml" Importance="high" />
 
-    <Copy
-      SourceFiles="$(TargetDir)$(TargetName).pdb"
-      DestinationFiles="$(ResonitePath)/MonkeyLoader/$(TargetName).pdb" />
-    <Message
-      Text="Copied $(TargetName).pdb to $(ResonitePath)/MonkeyLoader/$(TargetName).pdb"
-      Importance="high" />
+    <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFiles="$(ResonitePath)/MonkeyLoader/$(TargetName).pdb" />
+    <Message Text="Copied $(TargetName).pdb to $(ResonitePath)/MonkeyLoader/$(TargetName).pdb" Importance="high" />
   </Target>
 
   <ItemGroup>
@@ -60,7 +48,7 @@
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
-    <Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="lib\$(TargetFramework)\$(AssemblyName).pdb"/>
+    <Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="lib\$(TargetFramework)\$(AssemblyName).pdb" />
     <None Include="Configuration\ModLoaderConfiguration.cs" />
   </ItemGroup>
 

@@ -160,7 +160,7 @@ namespace MonkeyLoader
         /// </summary>
         /// <param name="configPath">The path to the configuration file to use.</param>
         /// <param name="loggingLevel">The logging level to start with.</param>
-        public MonkeyLoader(string configPath = "MonkeyLoader.json", LoggingLevel loggingLevel = LoggingLevel.Info)
+        public MonkeyLoader(string configPath = "MonkeyLoader/MonkeyLoader.json", LoggingLevel loggingLevel = LoggingLevel.Info)
         {
             Logger = new(this);
             LoggingLevel = loggingLevel;
@@ -531,7 +531,7 @@ namespace MonkeyLoader
             var monkeys = mods.SelectMany(mod => mod.Monkeys).ToArray();
             Array.Sort(monkeys, Monkey.AscendingComparer);
 
-            Logger.Info(() => $"Running {monkeys.Length} early monkeys!");
+            Logger.Info(() => $"Running {monkeys.Length} monkeys!");
             Logger.Trace(() => "Running monkeys in this order:");
             Logger.Trace(monkeys.Select(m => new Func<object>(() => $"{m.Mod.Title}/{m.Name}")));
 
