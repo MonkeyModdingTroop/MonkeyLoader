@@ -14,7 +14,7 @@ namespace Doorstop
         public static void Start()
         {
             Debugger.Break();
-            var log = new FileLoggingHandler("MonkeyLog.log");
+            var log = new FileLoggingHandler("MonkeyLoader/MonkeyLog.log");
 
             try
             {
@@ -22,6 +22,18 @@ namespace Doorstop
 
                 var loader = new MonkeyLoader.MonkeyLoader(loggingLevel: LoggingLevel.Trace);
                 loader.LoggingHandler += log;
+
+                var type = Type.GetType("Mono.Runtime");
+                if (type != null)
+                {
+                    var displayName = type.GetMethod("GetDisplayName", BindingFlags.NonPublic | BindingFlags.Static);
+                    if (displayName != null)
+                        log.Info(() => $"Mono Runtime Version: {displayName.Invoke(null, null)}");
+                }
+                else
+                {
+                    log.Info(() => "Not running on Mono.");
+                }
 
                 log.Info(() => $".NET Runtime Version: {Environment.Version}");
                 log.Info(() => $".NET Runtime: {RuntimeInformation.FrameworkDescription}");
@@ -39,7 +51,7 @@ namespace Doorstop
             }
             catch (Exception ex)
             {
-                log.Log(ex.Format());
+                log.Fatal(ex.Format);
             }
         }
     }

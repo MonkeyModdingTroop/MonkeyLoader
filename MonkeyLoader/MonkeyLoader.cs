@@ -5,6 +5,8 @@ using MonkeyLoader.NuGet;
 using MonkeyLoader.Patching;
 using Mono.Cecil;
 using Newtonsoft.Json;
+using NuGet.Packaging.Core;
+using NuGet.Versioning;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -171,7 +173,9 @@ namespace MonkeyLoader
             Config = new Config(this);
             Locations = Config.LoadSection<LocationConfigSection>();
 
+            // TODO: also add Zio, Cecil, Harmony, etc.
             NuGet = new NuGetManager(this);
+            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("MonkeyLoader", new NuGetVersion(Assembly.GetExecutingAssembly().GetName().Version)), NuGetHelper.Framework));
 
             var executablePath = Environment.GetCommandLineArgs()[0];
             GameAssemblyPath = Path.Combine(Path.GetDirectoryName(executablePath), $"{Path.GetFileNameWithoutExtension(executablePath)}_Data", "Managed");
@@ -467,11 +471,16 @@ namespace MonkeyLoader
             var earlyMonkeys = mods.SelectMany(mod => mod.EarlyMonkeys).ToArray();
             Array.Sort(earlyMonkeys, Monkey.AscendingComparer);
 
+            Logger.Info(() => $"Running {earlyMonkeys.Length} early monkeys!");
             Logger.Trace(() => "Running early monkeys in this order:");
             Logger.Trace(earlyMonkeys.Select(eM => new Func<object>(() => $"{eM.Mod.Title}/{eM.Name}")));
 
+            var sw = Stopwatch.StartNew();
+
             foreach (var earlyMonkey in earlyMonkeys)
                 earlyMonkey.Run();
+
+            Logger.Info(() => $"Done running early monkeys in {sw.ElapsedMilliseconds}ms!");
         }
 
         /// <summary>
@@ -523,11 +532,16 @@ namespace MonkeyLoader
             var monkeys = mods.SelectMany(mod => mod.Monkeys).ToArray();
             Array.Sort(monkeys, Monkey.AscendingComparer);
 
+            Logger.Info(() => $"Running {monkeys.Length} early monkeys!");
             Logger.Trace(() => "Running monkeys in this order:");
             Logger.Trace(monkeys.Select(m => new Func<object>(() => $"{m.Mod.Title}/{m.Name}")));
 
+            var sw = Stopwatch.StartNew();
+
             foreach (var monkey in monkeys)
                 monkey.Run();
+
+            Logger.Info(() => $"Done running monkeys in {sw.ElapsedMilliseconds}ms!");
         }
 
         /// <summary>
@@ -538,7 +552,8 @@ namespace MonkeyLoader
         public bool Shutdown()
         {
             if (ShutdownRan)
-                throw new InvalidOperationException("A loader's Shutdown() method must only be called once!");
+                Logger.Warn(() => "This loader's Shutdown() method has already been called!");
+            //throw new InvalidOperationException("A loader's Shutdown() method must only be called once!");
 
             ShutdownRan = true;
 

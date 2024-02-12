@@ -4,18 +4,23 @@
     <AssemblyFileName>$(AssemblyTitle).dll</AssemblyFileName>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     <CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Title>Monkey Loader</Title>
+    <Title>MonkeyLoader</Title>
     <Authors>Banane9</Authors>
+    <Version>0.3.0-beta</Version>
     <Description>A convenience and extendability focused mod loader using NuGet packages.</Description>
-    <PackageProjectUrl>https://github.com/Banane9/MonkeyLoader</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <RepositoryUrl>https://github.com/Banane9/MonkeyLoader.git</RepositoryUrl>
+    <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/MonkeyModdingTroop/MonkeyLoader</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/MonkeyModdingTroop/MonkeyLoader.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageTags>mod; mods; modding; mod loader; harmony; unity; game; games; mono; config; configuration; nuget; logging</PackageTags>
+    <PackageTags>mod; mods; modding; loader; harmony; unity; game; games; mono; config; configuration; nuget; logging; monkeyloader</PackageTags>
     <IncludeSymbols>True</IncludeSymbols>
+    <EmbedAllSources>True</EmbedAllSources>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
-    <Version>0.2.0-alpha</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -39,12 +44,10 @@
       Importance="high" />
 
     <Copy
-      Condition="$(PDB2MDBPath) != ''"
-      SourceFiles="$(TargetDir)$(TargetFileName).mdb"
-      DestinationFiles="$(ResonitePath)/MonkeyLoader/$(AssemblyFileName).mdb" />
+      SourceFiles="$(TargetDir)$(TargetName).pdb"
+      DestinationFiles="$(ResonitePath)/MonkeyLoader/$(TargetName).pdb" />
     <Message
-      Condition="$(PDB2MDBPath) != ''"
-      Text="Copied $(TargetFileName).mdb to $(ResonitePath)/MonkeyLoader/$(AssemblyFileName).mdb"
+      Text="Copied $(TargetName).pdb to $(ResonitePath)/MonkeyLoader/$(TargetName).pdb"
       Importance="high" />
   </Target>
 
@@ -57,6 +60,7 @@
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
+    <Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="lib\$(TargetFramework)\$(AssemblyName).pdb"/>
     <None Include="Configuration\ModLoaderConfiguration.cs" />
   </ItemGroup>
 

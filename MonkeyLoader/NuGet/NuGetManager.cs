@@ -70,6 +70,11 @@ namespace MonkeyLoader.NuGet
         }
 
         public bool TryResolve(string id, [NotNullWhen(true)] out ILoadedNuGetPackage? package)
-            => _loadedPackages.TryGetValue(id, out package);
+        {
+            var success = _loadedPackages.TryGetValue(id, out package);
+            Logger.Trace(() => $"Attempted to resolve package with id [{id}] - {(success ? "success" : "failed")}");
+
+            return success;
+        }
     }
 }
