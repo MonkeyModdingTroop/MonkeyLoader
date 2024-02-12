@@ -271,7 +271,7 @@ namespace MonkeyLoader.Meta
                     ShutdownFailed |= !earlyMonkey.Shutdown();
 
                 foreach (var monkey in monkeys)
-                    ShutdownFailed |= monkey.Shutdown();
+                    ShutdownFailed |= !monkey.Shutdown();
             }
             catch (Exception ex)
             {
