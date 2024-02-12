@@ -14,7 +14,7 @@ namespace Doorstop
         public static void Start()
         {
             Debugger.Break();
-            var log = new FileLoggingHandler("MonkeyLog.log");
+            var log = new FileLoggingHandler("MonkeyLoader/MonkeyLog.log");
 
             try
             {
@@ -51,7 +51,7 @@ namespace Doorstop
             }
             catch (Exception ex)
             {
-                log.Log(ex.Format());
+                log.Fatal(ex.Format);
             }
         }
     }
