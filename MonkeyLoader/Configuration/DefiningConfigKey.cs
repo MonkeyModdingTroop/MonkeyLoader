@@ -27,6 +27,15 @@ namespace MonkeyLoader.Configuration
         /// <inheritdoc/>
         public string? Description { get; }
 
+        bool IDefiningConfigKeyInternal.HasChanges
+        {
+            get => HasChanges;
+            set => HasChanges = value;
+        }
+
+        /// <inheritdoc/>
+        public bool HasChanges { get; internal set; }
+
         /// <inheritdoc/>
         [MemberNotNullWhen(true, nameof(Description))]
         public bool HasDescription { get; }
@@ -225,14 +234,22 @@ namespace MonkeyLoader.Configuration
         bool IDefiningConfigKey.Validate(object? value) => Validate(value);
 
         /// <summary>
-        /// Triggers this config item's typed and untyped <see cref="Changed">Changed</see> events
-        /// and passes the event up to <see cref="Configuration.Config"/> owning this item.
+        /// Handles the value of this config item potentially having changed.
+        /// If the <paramref name="oldValue"/> and new value are different:<br/>
+        /// Sets <see cref="HasChanges">HasChanges</see> and triggers this config item's typed and
+        /// untyped <see cref="Changed">Changed</see> events and passes the event up to
+        /// the <see cref="Configuration.Config"/> owning this item.
         /// </summary>
         /// <param name="hadValue">Whether the old value existed.</param>
         /// <param name="oldValue">The old value.</param>
         /// <param name="eventLabel">The custom label that may be set by whoever changed the configuration.</param>
         protected virtual void OnChanged(bool hadValue, T? oldValue, string? eventLabel)
         {
+            // Don't fire event if value didn't change
+            if (ReferenceEquals(oldValue, _value) || (oldValue is not null && _value is not null && _value.Equals(oldValue)))
+                return;
+
+            HasChanges = true;
             var eventArgs = new ConfigKeyChangedEventArgs<T>(Config, this, hadValue, oldValue, HasValue, _value, eventLabel);
 
             try
@@ -283,6 +300,11 @@ namespace MonkeyLoader.Configuration
         /// Gets the human-readable description of this config item.
         /// </summary>
         public string? Description { get; }
+
+        /// <summary>
+        /// Gets whether this configuration item has unsaved changes.
+        /// </summary>
+        public bool HasChanges { get; }
 
         /// <summary>
         /// Gets whether this config item has a useable <see cref="Description">description</see>.
@@ -411,6 +433,11 @@ namespace MonkeyLoader.Configuration
 
     internal interface IDefiningConfigKeyInternal : IDefiningConfigKey
     {
+        /// <summary>
+        /// Gets or sets whether this configuration item has unsaved changes.
+        /// </summary>
+        public new bool HasChanges { get; set; }
+
         /// <summary>
         /// Gets the config section this item belongs to.
         /// </summary>

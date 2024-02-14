@@ -173,9 +173,15 @@ namespace MonkeyLoader
             Config = new Config(this);
             Locations = Config.LoadSection<LocationConfigSection>();
 
-            // TODO: also add Zio, Cecil, Harmony, etc.
+            // TODO: do this properly - scan all loaded assemblies?
             NuGet = new NuGetManager(this);
             NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("MonkeyLoader", new NuGetVersion(Assembly.GetExecutingAssembly().GetName().Version)), NuGetHelper.Framework));
+            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Newtonsoft.Json", new NuGetVersion(13, 0, 3)), NuGetHelper.Framework));
+            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("NuGet.Packaging", new NuGetVersion(6, 9, 1)), NuGetHelper.Framework));
+            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("NuGet.Protocol", new NuGetVersion(6, 9, 1)), NuGetHelper.Framework));
+            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Mono.Cecil", new NuGetVersion(0, 11, 5)), NuGetHelper.Framework));
+            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Harmony", new NuGetVersion(2, 3, 0)), NuGetHelper.Framework));
+            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Zio", new NuGetVersion(0, 17, 0)), NuGetHelper.Framework));
 
             var executablePath = Environment.GetCommandLineArgs()[0];
             GameAssemblyPath = Path.Combine(Path.GetDirectoryName(executablePath), $"{Path.GetFileNameWithoutExtension(executablePath)}_Data", "Managed");
@@ -225,6 +231,10 @@ namespace MonkeyLoader
             }
         }
 
+        /// <summary>
+        /// Adds a mod to be managed by this loader.
+        /// </summary>
+        /// <param name="mod">The mod to add.</param>
         public void AddMod(IMod mod)
         {
             Logger.Debug(() => $"Adding {(mod.IsGamePack ? "game pack" : "regular")} mod: {mod.Title}");
@@ -370,6 +380,9 @@ namespace MonkeyLoader
             }
         }
 
+        /// <summary>
+        /// Loads all of the game's assemblies' <see cref="AssemblyDefinition"/>s to potentially modify them in memory.
+        /// </summary>
         public void LoadGameAssemblyDefinitions()
         {
             foreach (var assemblyFile in Directory.EnumerateFiles(GameAssemblyPath, "*.dll", SearchOption.TopDirectoryOnly))

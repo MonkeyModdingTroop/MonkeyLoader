@@ -166,12 +166,13 @@ namespace MonkeyLoader.Configuration
         /// </summary>
         public void Save()
         {
-            if (!AnyValuesSet())
+            if (!NeedsToSave())
             {
-                Logger.Info(() => "Skipping save - no set Config Keys!");
+                Logger.Info(() => "Skipping save - no config keys with a set value and changes!");
                 return;
             }
 
+            var successfulSections = new List<ConfigSection>();
             var sectionsJson = (JObject)_loadedConfig[SectionsKey]!;
             var stopwatch = Stopwatch.StartNew();
 
@@ -183,8 +184,11 @@ namespace MonkeyLoader.Configuration
                     {
                         var sectionJson = section.Save(Owner.Loader.JsonSerializer);
 
-                        if (section is not null)
-                            sectionsJson[section.Name] = sectionJson;
+                        if (sectionJson is null)
+                            continue;
+
+                        successfulSections.Add(section);
+                        sectionsJson[section.Name] = sectionJson;
                     }
                     catch (Exception ex)
                     {
@@ -205,6 +209,9 @@ namespace MonkeyLoader.Configuration
                     jsonTextWriter.Flush();
 
                     Logger.Info(() => $"Saved config in {stopwatch.ElapsedMilliseconds}ms!");
+
+                    foreach (var section in successfulSections)
+                        section.ResetHasChanges();
                 }
                 catch (Exception ex)
                 {
@@ -345,8 +352,6 @@ namespace MonkeyLoader.Configuration
             Owner.Loader.OnAnyConfigChanged(configKeyChangedEventArgs);
         }
 
-        private bool AnyValuesSet() => ConfigurationItemDefinitions.Any(key => key.HasValue);
-
         private JObject LoadConfig()
         {
             if (File.Exists(Owner.ConfigPath))
@@ -371,6 +376,8 @@ namespace MonkeyLoader.Configuration
                 [SectionsKey] = new JObject()
             };
         }
+
+        private bool NeedsToSave() => ConfigurationItemDefinitions.Any(key => key.HasValue && key.HasChanges);
 
         [DoesNotReturn]
         private void ThrowKeyNotFound(IConfigKey key)

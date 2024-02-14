@@ -50,8 +50,13 @@ namespace MonkeyLoader.NuGet
 
         public void Add(ILoadedNuGetPackage package)
         {
-            _loadedPackages.Add(package.Identity.Id, package);
+            if (_loadedPackages.ContainsKey(package.Identity.Id))
+            {
+                Logger.Warn(() => $"Already added loaded package [{package.Identity}]");
+                return;
+            }
 
+            _loadedPackages.Add(package.Identity.Id, package);
             Logger.Trace(() => $"Added loaded package [{package.Identity}]");
         }
 

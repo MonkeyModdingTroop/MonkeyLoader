@@ -31,6 +31,11 @@ namespace MonkeyLoader.Configuration
         public abstract string Description { get; }
 
         /// <summary>
+        /// Gets whether there are any config keys with unsaved changes in this section.
+        /// </summary>
+        public bool HasChanges => _keys.Any(key => key.HasChanges);
+
+        /// <summary>
         /// Gets all the config keys of this section.
         /// </summary>
         public IEnumerable<IDefiningConfigKey> Keys => _keys.AsSafeEnumerable();
@@ -119,7 +124,7 @@ namespace MonkeyLoader.Configuration
 
             ValidateCompatibility(serializedVersion);
 
-            foreach (var key in Keys)
+            foreach (var key in _keys)
             {
                 try
                 {
@@ -127,6 +132,7 @@ namespace MonkeyLoader.Configuration
                     {
                         var value = token.ToObject(key.ValueType, jsonSerializer);
                         key.SetValue(value, "Load");
+                        key.HasChanges = false;
                     }
                 }
                 catch (Exception ex)
@@ -136,6 +142,12 @@ namespace MonkeyLoader.Configuration
                     throw new ConfigLoadException($"Error loading key [{key.Name}] of type [{key.ValueType}] in section [{Name}]!", ex);
                 }
             }
+        }
+
+        internal void ResetHasChanges()
+        {
+            foreach (var key in _keys)
+                key.HasChanges = false;
         }
 
         internal JObject? Save(JsonSerializer jsonSerializer)
