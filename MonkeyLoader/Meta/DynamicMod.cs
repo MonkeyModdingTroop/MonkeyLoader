@@ -50,7 +50,7 @@ namespace MonkeyLoader.Meta
         public NuGetVersion Version { get; }
 
         public DynamicMod(MonkeyLoader loader, string id, Version version, bool isGamePack, string description = "Dynamic Mod", string title = "Dynamic Mod", IFileSystem? fileSystem = null)
-            : base(loader, isGamePack)
+            : base(loader, null, isGamePack)
         {
             _title = title;
             Description = description;

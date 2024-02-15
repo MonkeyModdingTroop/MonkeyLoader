@@ -44,19 +44,22 @@ namespace MonkeyLoader.Meta
         protected readonly HashSet<string> tags = new(StringComparer.InvariantCultureIgnoreCase);
 
         private readonly Lazy<Config> _config;
+
         private readonly Lazy<Harmony> _harmony;
+
         private readonly Lazy<MonkeyLogger> _logger;
+
         private bool _allDependenciesLoaded = false;
 
         /// <summary>
         /// Gets an <see cref="IComparer{T}"/> that keeps <see cref="Mod"/>s sorted in topological order.
         /// </summary>
-        public static IComparer<IMod> AscendingComparer { get; } = new ModComparer( true );
+        public static IComparer<IMod> AscendingComparer { get; } = new ModComparer(true);
 
         /// <summary>
         /// Gets an <see cref="IComparer{T}"/> that keeps <see cref="Mod"/>s sorted in reverse topological order.
         /// </summary>
-        public static IComparer<IMod> DescendingComparer { get; } = new ModComparer( false );
+        public static IComparer<IMod> DescendingComparer { get; } = new ModComparer(false);
 
         /// <inheritdoc/>
         public bool AllDependenciesLoaded
@@ -156,6 +159,11 @@ namespace MonkeyLoader.Meta
         public bool LoadMonkeysFailed { get; private set; } = false;
 
         /// <summary>
+        /// Gets the absolute path to this mod's file. May be <c>null</c> if the mod only exists in memory.
+        /// </summary>
+        public string? Location { get; }
+
+        /// <summary>
         /// Gets the logger to be used by this mod.
         /// </summary>
         /// <remarks>
@@ -198,10 +206,12 @@ namespace MonkeyLoader.Meta
         /// Creates a new mod instance with the given details.
         /// </summary>
         /// <param name="loader">The loader instance that loaded this mod.</param>
+        /// <param name="location">The absolute path to this mod's file. May be <c>null</c> if the mod only exists in memory.</param>
         /// <param name="isGamePack">Whether this mod is a game pack.</param>
-        protected Mod(MonkeyLoader loader, bool isGamePack)
+        protected Mod(MonkeyLoader loader, string? location, bool isGamePack)
         {
             Loader = loader;
+            Location = location;
             IsGamePack = isGamePack;
 
             // Lazy, because the properties used to create them are only assigned after this constructor.

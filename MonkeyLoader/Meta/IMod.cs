@@ -100,6 +100,11 @@ namespace MonkeyLoader.Meta
         public bool LoadMonkeysFailed { get; }
 
         /// <summary>
+        /// Gets the absolute path to this mod's file. May be <c>null</c> if the mod only exists in memory.
+        /// </summary>
+        public string? Location { get; }
+
+        /// <summary>
         /// Gets the available <see cref="IMonkey"/>s of this mod.
         /// </summary>
         public IEnumerable<IMonkey> Monkeys { get; }

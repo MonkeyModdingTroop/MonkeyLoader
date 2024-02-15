@@ -173,6 +173,12 @@ namespace MonkeyLoader
             Config = new Config(this);
             Locations = Config.LoadSection<LocationConfigSection>();
 
+            foreach (var modLocation in Locations.Mods)
+            {
+                modLocation.LoadMod += (mL, path) => TryLoadAndRunMod(path, out _);
+                modLocation.UnloadMod += (mL, path) => ShutdownMod(path);
+            }
+
             // TODO: do this properly - scan all loaded assemblies?
             NuGet = new NuGetManager(this);
             NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("MonkeyLoader", new NuGetVersion(Assembly.GetExecutingAssembly().GetName().Version)), NuGetHelper.Framework));
@@ -341,8 +347,15 @@ namespace MonkeyLoader
         }
 
         /// <summary>
-        /// Loads every given <see cref="IMod"/>'s patcher assemblies and <see cref="IEarlyMonkey"/>s.
+        /// Loads every given <see cref="IMod"/>'s pre-patcher assemblies and <see cref="IEarlyMonkey"/>s.
         /// </summary>
+        /// <param name="mods">The mods who's <see cref="IEarlyMonkey"/>s to load.</param>
+        public void LoadEarlyMonkeys(params IMod[] mods) => LoadEarlyMonkeys((IEnumerable<IMod>)mods);
+
+        /// <summary>
+        /// Loads every given <see cref="IMod"/>'s pre-patcher assemblies and <see cref="IEarlyMonkey"/>s.
+        /// </summary>
+        /// <param name="mods">The mods who's <see cref="IEarlyMonkey"/>s to load.</param>
         public void LoadEarlyMonkeys(IEnumerable<IMod> mods)
         {
             Logger.Trace(() => "Loading early monkeys in this order:");
@@ -454,6 +467,13 @@ namespace MonkeyLoader
         /// <summary>
         /// Loads every given <see cref="IMod"/>'s patcher assemblies and <see cref="IMonkey"/>s.
         /// </summary>
+        /// <param name="mods">The mods who's <see cref="IMonkey"/>s to load.</param>
+        public void LoadMonkeys(params IMod[] mods) => LoadMonkeys((IEnumerable<IMod>)mods);
+
+        /// <summary>
+        /// Loads every given <see cref="IMod"/>'s patcher assemblies and <see cref="IMonkey"/>s.
+        /// </summary>
+        /// <param name="mods">The mods who's <see cref="IMonkey"/>s to load.</param>
         public void LoadMonkeys(IEnumerable<IMod> mods)
         {
             Logger.Trace(() => "Loading monkeys in this order:");
@@ -473,9 +493,17 @@ namespace MonkeyLoader
         }
 
         /// <summary>
-        /// Runs every given <see cref="RegularMods">mod's</see> loaded
-        /// <see cref="IEarlyMonkey"/>s <see cref="MonkeyBase.Run">Run</see>() method.
+        /// Runs every given <see cref="IMod"/>'s loaded
+        /// <see cref="IMod.EarlyMonkeys">early monkeys'</see> <see cref="MonkeyBase.Run">Run</see>() method.
         /// </summary>
+        /// <param name="mods">The mods who's <see cref="IMod.EarlyMonkeys">early monkeys</see> should be <see cref="MonkeyBase.Run">run</see>.</param>
+        public void RunEarlyMonkeys(params IMod[] mods) => RunEarlyMonkeys((IEnumerable<IMod>)mods);
+
+        /// <summary>
+        /// Runs every given <see cref="IMod"/>'s loaded
+        /// <see cref="IMod.EarlyMonkeys">early monkeys'</see> <see cref="MonkeyBase.Run">Run</see>() method.
+        /// </summary>
+        /// <param name="mods">The mods who's <see cref="IMod.EarlyMonkeys">early monkeys</see> should be <see cref="MonkeyBase.Run">run</see>.</param>
         public void RunEarlyMonkeys(IEnumerable<IMod> mods)
         {
             // Add check for mod.EarlyMonkeyLoadError
@@ -496,7 +524,8 @@ namespace MonkeyLoader
         }
 
         /// <summary>
-        /// Runs every loaded game pack <see cref="RegularMods">mod's</see> loaded <see cref="IEarlyMonkey"/>s.
+        /// Runs every loaded <see cref="GamePacks">game pack mod's</see> loaded
+        /// <see cref="IMod.EarlyMonkeys">early monkeys'</see> <see cref="MonkeyBase.Run">Run</see>() method.
         /// </summary>
         public void RunGamePackEarlyMonkeys()
         {
@@ -505,7 +534,7 @@ namespace MonkeyLoader
         }
 
         /// <summary>
-        /// Runs every loaded game pack <see cref="RegularMods">mod's</see> loaded
+        /// Runs every loaded <see cref="GamePacks">game pack mod's</see> loaded
         /// <see cref="IMod.Monkeys">monkeys'</see> <see cref="MonkeyBase.Run">Run</see>() method.
         /// </summary>
         public void RunGamePackMonkeys()
@@ -515,7 +544,8 @@ namespace MonkeyLoader
         }
 
         /// <summary>
-        /// Runs every loaded regular <see cref="RegularMods">mod's</see> loaded <see cref="IEarlyMonkey"/>s.
+        /// Runs every loaded <see cref="RegularMods">regular mod's</see> loaded
+        /// <see cref="IMod.EarlyMonkeys">monkeys'</see> <see cref="MonkeyBase.Run">Run</see>() method.
         /// </summary>
         public void RunModEarlyMonkeys()
         {
@@ -524,7 +554,7 @@ namespace MonkeyLoader
         }
 
         /// <summary>
-        /// Runs every loaded regular <see cref="RegularMods">mod's</see> loaded
+        /// Runs every loaded <see cref="RegularMods">regular mod's</see> loaded
         /// <see cref="IMod.Monkeys">monkeys'</see> <see cref="MonkeyBase.Run">Run</see>() method.
         /// </summary>
         public void RunModMonkeys()
@@ -537,6 +567,14 @@ namespace MonkeyLoader
         /// Runs every given <see cref="IMod"/>'s loaded
         /// <see cref="IMod.Monkeys">monkeys'</see> <see cref="MonkeyBase.Run">Run</see>() method.
         /// </summary>
+        /// <param name="mods">The mods who's <see cref="IMod.Monkeys">monkeys</see> should be <see cref="MonkeyBase.Run">run</see>.</param>
+        public void RunMonkeys(params IMod[] mods) => RunMonkeys((IEnumerable<IMod>)mods);
+
+        /// <summary>
+        /// Runs every given <see cref="IMod"/>'s loaded
+        /// <see cref="IMod.Monkeys">monkeys'</see> <see cref="MonkeyBase.Run">Run</see>() method.
+        /// </summary>
+        /// <param name="mods">The mods who's <see cref="IMod.Monkeys">monkeys</see> should be <see cref="MonkeyBase.Run">run</see>.</param>
         public void RunMonkeys(IEnumerable<IMod> mods)
         {
             // Add check for mod.MonkeyLoadError
@@ -593,6 +631,38 @@ namespace MonkeyLoader
             return !ShutdownFailed;
         }
 
+        public bool ShutdownMod(string path)
+        {
+            if (string.IsNullOrWhiteSpace(path))
+            {
+                Logger.Warn(() => $"Attempted to shutdown mod using invalid path!");
+                return false;
+            }
+
+            var mods = _allMods.Where(mod => mod.Location?.Equals(path, StringComparison.Ordinal) ?? false).ToArray();
+
+            if (mods.Length == 0)
+                return true;
+
+            if (mods.Length > 1)
+            {
+                Logger.Error(() => $"Attempted to shutdown multiple mods using path: {path}");
+                return false;
+            }
+
+            return ShutdownMod(mods[0]);
+        }
+
+        public bool ShutdownMod(IMod mod)
+        {
+            Logger.Debug(() => $"Shutting down mod {mod.Title}");
+
+            var success = mod.Shutdown();
+            _allMods.Remove((IModInternal)mod);
+
+            return success;
+        }
+
         /// <summary>
         /// Tries to get the <see cref="AssemblyDefinition"/> for the given <see cref="AssemblyName"/> from
         /// the <see cref="GameAssemblyPool">GameAssemblyPool</see> or the <see cref="PatcherAssemblyPool">PatcherAssemblyPool</see>.
@@ -621,6 +691,31 @@ namespace MonkeyLoader
                 assemblyPool = null;
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Attempts to load the given <paramref name="path"/> as a <paramref name="mod"/>
+        /// and immediately <see cref="MonkeyBase.Run">runs</see> its
+        /// <see cref="IMod.EarlyMonkeys">early</see> and <see cref="IMod.Monkeys">regular</see> monkeys.
+        /// </summary>
+        /// <param name="path">The path to the file to load as a mod.</param>
+        /// <param name="mod">The resulting mod when successful, or null when not.</param>
+        /// <param name="isGamePack">Whether the mod is a game pack.</param>
+        /// <returns><c>true</c> when the file was successfully loaded.</returns>
+        public bool TryLoadAndRunMod(string path, [NotNullWhen(true)] out NuGetPackageMod? mod, bool isGamePack = false)
+        {
+            Logger.Debug(() => $"Loading and running {(isGamePack ? "game pack" : "regular")} mod from: {path}");
+
+            if (!TryLoadMod(path, out mod, isGamePack))
+                return false;
+
+            LoadEarlyMonkeys(mod);
+            RunEarlyMonkeys(mod);
+
+            LoadMonkeys(mod);
+            RunMonkeys(mod);
+
+            return true;
         }
 
         /// <summary>

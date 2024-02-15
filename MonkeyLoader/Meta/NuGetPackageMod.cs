@@ -57,11 +57,6 @@ namespace MonkeyLoader.Meta
         public override PackageIdentity Identity { get; }
 
         /// <summary>
-        /// Gets the absolute file path to this mod's file.
-        /// </summary>
-        public string Location { get; }
-
-        /// <summary>
         /// Gets the paths inside this mod's <see cref="FileSystem">FileSystem</see> that point to patcher assemblies that should be loaded.
         /// </summary>
         public IEnumerable<UPath> PatcherAssemblyPaths => _assemblyPaths.Where(path => !path.FullName.Contains(PrePatchersFolderName));
@@ -93,10 +88,8 @@ namespace MonkeyLoader.Meta
         /// <param name="loader">The loader instance that loaded this mod.</param>
         /// <param name="location">The absolute file path to the mod's file.</param>
         /// <param name="isGamePack">Whether this mod is a game pack.</param>
-        public NuGetPackageMod(MonkeyLoader loader, string location, bool isGamePack) : base(loader, isGamePack)
+        public NuGetPackageMod(MonkeyLoader loader, string location, bool isGamePack) : base(loader, location, isGamePack)
         {
-            Location = location;
-
             using var fileStream = File.OpenRead(location);
             var memoryStream = new MemoryStream((int)fileStream.Length);
             fileStream.CopyTo(memoryStream);
