@@ -367,6 +367,10 @@ namespace MonkeyLoader.Meta
             /// <inheritdoc/>
             public int Compare(IMod x, IMod y)
             {
+                // Game Packs always first
+                if (x.IsGamePack ^ y.IsGamePack)
+                    return _factor * (x.IsGamePack ? -1 : 1);
+
                 // TODO: Make this not a partial order?
                 // If x depends on a mod depending on y, it should count the same
 
@@ -376,7 +380,7 @@ namespace MonkeyLoader.Meta
                 if (y.Dependencies.Any(dep => dep.Id.Equals(x.Id)))
                     return -1 * _factor;
 
-                // Fall back to alphabetical order, otherwise things get stupid.
+                // Fall back to alphabetical order to prevent false equivalence
                 return _factor * x.Id.CompareTo(y.Id);
             }
         }
