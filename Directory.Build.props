@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 		<Deterministic>true</Deterministic>
 		<AllowUnsafeBlocks>False</AllowUnsafeBlocks>
-		<DebugType>full</DebugType>
+		<DebugType>portable</DebugType>
 		<GenerateDocumentationFile>True</GenerateDocumentationFile>
 
 		<CopyToLibraries Condition="'$(CopyToLibraries)'==''">true</CopyToLibraries>

@@ -17,7 +17,7 @@ namespace MonkeyLoader.Meta
         public readonly DefiningConfigKey<string> ConfigsKey = new("Configs", "Paths to check for configuration files.", () => "./MonkeyLoader/Configs", valueValidator: PathValidator);
         public readonly DefiningConfigKey<string> GamePacksKey = new("GamePacks", "Paths to check for game packs.", () => "./MonkeyLoader/GamePacks", valueValidator: PathValidator);
         public readonly DefiningConfigKey<string> LibsKey = new("Libs", "Paths to check for dependency libraries.", () => "./MonkeyLoader/Libs", valueValidator: PathValidator);
-        public readonly DefiningConfigKey<List<ModLoadingLocation>> ModsKey = new("Mods", "Loading locations to check for mods.", () => new() { new ModLoadingLocation("./MonkeyLoader/Mods", true, "\\.disabled") }, valueValidator: locations => locations?.Count > 0);
+        public readonly DefiningConfigKey<List<ModLoadingLocation>> ModsKey = new("Mods", "Loading locations to check for mods.", () => new() { new ModLoadingLocation("./MonkeyLoader/Mods", true, false, "\\.disabled") }, valueValidator: locations => locations?.Count > 0);
         public readonly DefiningConfigKey<string> PatchedAssembliesKey = new("PatchedAssemblies", "Path to save pre-patched assemblies to. Set null to disable.", () => "./MonkeyLoader/PatchedAssemblies", valueValidator: PathValidator);
 
         private const string SetEventLabel = "Property";

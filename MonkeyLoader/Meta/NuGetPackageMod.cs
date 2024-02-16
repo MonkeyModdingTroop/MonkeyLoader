@@ -184,7 +184,7 @@ namespace MonkeyLoader.Meta
                     assemblyFile.CopyTo(assemblyStream);
 
                     var mdbPath = prepatcherPath + ".mdb";
-                    var pdbPath = prepatcherPath.GetDirectory() / prepatcherPath.GetNameWithoutExtension()! / ".pdb";
+                    var pdbPath = prepatcherPath.GetDirectory() / $"{prepatcherPath.GetNameWithoutExtension()!}.pdb";
                     using var symbolStream = new MemoryStream();
 
                     if (FileSystem.FileExists(mdbPath))
@@ -243,7 +243,7 @@ namespace MonkeyLoader.Meta
                     assemblyFile.CopyTo(assemblyStream);
 
                     var mdbPath = patcherPath + ".mdb";
-                    var pdbPath = patcherPath.GetDirectory() / patcherPath.GetNameWithoutExtension()! / ".pdb";
+                    var pdbPath = patcherPath.GetDirectory() / $"{patcherPath.GetNameWithoutExtension()!}.pdb";
                     using var symbolStream = new MemoryStream();
 
                     if (FileSystem.FileExists(mdbPath))
