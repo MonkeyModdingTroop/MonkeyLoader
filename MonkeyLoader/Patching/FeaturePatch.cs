@@ -12,12 +12,12 @@ namespace MonkeyLoader.Patching
     public static class FeaturePatch
     {
         /// <summary>
-        /// Gets an <see cref="IFeaturePatch"/>-comparer, that sorts patches with lower impact first.
+        /// Gets an <see cref="IFeaturePatch"/>-comparer, that sorts patches with higher impact first.
         /// </summary>
         public static IComparer<IFeaturePatch> AscendingComparer { get; } = new FeaturePatchComparer();
 
         /// <summary>
-        /// Gets an <see cref="IFeaturePatch"/>-comparer, that sorts patches with higher impact first.
+        /// Gets an <see cref="IFeaturePatch"/>-comparer, that sorts patches with lower impact first.
         /// </summary>
         public static IComparer<IFeaturePatch> DescendingComparer { get; } = new FeaturePatchComparer(false);
 
@@ -37,14 +37,14 @@ namespace MonkeyLoader.Patching
 
             public int Compare(IFeaturePatch x, IFeaturePatch y)
             {
-                var featureComparison = _factor * x.Feature.CompareTo(y.Feature);
+                var featureComparison = x.Feature.CompareTo(y.Feature);
 
-                // If patched features compare the same, compatibility acts as tie breaker.
-                // Flipped operands, because bigger compatibility = smaller impact.
-                if (featureComparison == 0)
-                    return _factor * (x.Compatibility - y.Compatibility);
+                // Feature already decided it
+                if (featureComparison != 0)
+                    return _factor * featureComparison;
 
-                return featureComparison;
+                // Compatibility acts as tie breaker.
+                return _factor * (x.Compatibility - y.Compatibility);
             }
 
             public bool Equals(IFeaturePatch x, IFeaturePatch y)
@@ -85,6 +85,7 @@ namespace MonkeyLoader.Patching
 
         /// <summary>
         /// Compares the impact of this patch to another.
+        /// Uses <see cref="FeaturePatch.AscendingComparer"/>: higher impact first.
         /// </summary>
         /// <inheritdoc/>
         public int CompareTo(IFeaturePatch other)

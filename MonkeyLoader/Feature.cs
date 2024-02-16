@@ -66,12 +66,12 @@ namespace MonkeyLoader
         private readonly Type _type;
 
         /// <summary>
-        /// Gets a <see cref="Feature"/>-comparer, that sorts smaller / deeper features first.
+        /// Gets a <see cref="Feature"/>-comparer, that sorts larger / shallower features first.
         /// </summary>
         public static IComparer<Feature> AscendingComparer { get; } = new FeatureComparer();
 
         /// <summary>
-        /// Gets a <see cref="Feature"/>-comparer, that sorts larger / shallower features first.
+        /// Gets a <see cref="Feature"/>-comparer, that sorts smaller / deeper features first.
         /// </summary>
         public static IComparer<Feature> DescendingComparer { get; } = new FeatureComparer(false);
 
@@ -160,6 +160,9 @@ namespace MonkeyLoader
             => left.CompareTo(right) > 0;
 
         /// <inheritdoc/>
+        /// <remarks>
+        /// Sorts using <see cref="AscendingComparer"/>: larger / shallower features first.
+        /// </remarks>
         public int CompareTo(Feature other) => AscendingComparer.Compare(this, other);
 
         /// <inheritdoc/>

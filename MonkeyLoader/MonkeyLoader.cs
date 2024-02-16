@@ -623,7 +623,8 @@ namespace MonkeyLoader
 
             Logger.Info(() => $"Triggering shutdown for all {_allMods.Count} mods!");
 
-            foreach (var mod in _allMods)
+            // TODO: Shutdown monkeys separately in reverse launch order first
+            foreach (var mod in _allMods.Reverse())
                 ShutdownFailed |= !mod.Shutdown();
 
             Logger.Info(() => $"Processed shutdown in {sw.ElapsedMilliseconds}ms!");

@@ -5,8 +5,6 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Xml.Linq;
 
 namespace MonkeyLoader.Patching
 {
@@ -16,12 +14,12 @@ namespace MonkeyLoader.Patching
     public static class Monkey
     {
         /// <summary>
-        /// Gets an <see cref="IMonkey"/>-comparer, that sorts patches with lower impact first.
+        /// Gets an <see cref="IMonkey"/>-comparer, that sorts patchers with higher impact first.
         /// </summary>
         public static IComparer<IMonkey> AscendingComparer { get; } = new MonkeyComparer();
 
         /// <summary>
-        /// Gets an <see cref="IMonkey"/>-comparer, that sorts patches with higher impact first.
+        /// Gets an <see cref="IMonkey"/>-comparer, that sorts patchers with lower impact first.
         /// </summary>
         public static IComparer<IMonkey> DescendingComparer { get; } = new MonkeyComparer(false);
 
@@ -49,18 +47,21 @@ namespace MonkeyLoader.Patching
 
                 // Better declare features if you want to sort high
                 if (biggestX is null)
-                    return biggestY is null ? 0 : (-1 * _factor);
+                    return biggestY is null ? TypeNameComparison(x, y) : _factor;
 
                 if (biggestY is null)
-                    return _factor;
+                    return (-1 * _factor);
 
                 var impactComparison = _factor * biggestX.CompareTo(biggestY);
                 if (impactComparison != 0)
                     return _factor * impactComparison;
 
-                // Fall back to type name comparison just to avoid false ==
-                return _factor * x.GetType().FullName.CompareTo(y.GetType().FullName);
+                // Fall back to type name comparison to avoid false equivalence
+                return TypeNameComparison(x, y);
             }
+
+            private int TypeNameComparison(IMonkey x, IMonkey y)
+                => _factor * x.GetType().FullName.CompareTo(y.GetType().FullName);
         }
     }
 
