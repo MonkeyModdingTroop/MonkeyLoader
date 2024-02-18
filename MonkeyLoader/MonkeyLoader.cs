@@ -38,27 +38,9 @@ namespace MonkeyLoader
         public string ConfigPath { get; }
 
         /// <summary>
-        /// Gets the <see cref="IEarlyMonkey"/>s of <i>all</i> loaded <see cref="Mods">mods</see> in no particular order.<br/>
-        /// Use <see cref="Monkey.AscendingComparer"/> or <see cref="Monkey.DescendingComparer"/> for sorting.
-        /// </summary>
-        public IEnumerable<IEarlyMonkey> EarlyMonkeys => _allMods.SelectMany(mod => mod.EarlyMonkeys);
-
-        /// <summary>
         /// Gets the path pointing of the directory containing the game's assemblies.
         /// </summary>
         public string GameAssemblyPath { get; }
-
-        /// <summary>
-        /// Gets the <see cref="IEarlyMonkey"/>s of all loaded <see cref="GamePacks">game pack mods</see> in no particular order.<br/>
-        /// Use <see cref="Monkey.AscendingComparer"/> or <see cref="Monkey.DescendingComparer"/> for sorting.
-        /// </summary>
-        public IEnumerable<IEarlyMonkey> GamePackEarlyMonkeys => GamePacks.SelectMany(mod => mod.EarlyMonkeys);
-
-        /// <summary>
-        /// Gets the <see cref="IMonkey"/>s of all loaded <see cref="RegularMods">game pack mods</see> in no particular order.<br/>
-        /// Use <see cref="Monkey.AscendingComparer"/> or <see cref="Monkey.DescendingComparer"/> for sorting.
-        /// </summary>
-        public IEnumerable<IMonkey> GamePackMonkeys => GamePacks.SelectMany(mod => mod.Monkeys);
 
         /// <summary>
         /// Gets all loaded game pack <see cref="Mod"/>s in topological order.
@@ -120,32 +102,14 @@ namespace MonkeyLoader
         public IEnumerable<IMod> Mods => _allMods.AsSafeEnumerable();
 
         /// <summary>
-        /// Gets the <see cref="IMonkey"/>s of <i>all</i> loaded <see cref="Mods">mods</see> in no particular order.<br/>
-        /// Use <see cref="Monkey.AscendingComparer"/> or <see cref="Monkey.DescendingComparer"/> for sorting.
-        /// </summary>
-        public IEnumerable<IMonkey> Monkeys => _allMods.SelectMany(mod => mod.Monkeys);
-
-        /// <summary>
         /// Gets the NuGet manager used by this loader.
         /// </summary>
         public NuGetManager NuGet { get; private set; }
 
         /// <summary>
-        /// Gets the <see cref="IEarlyMonkey"/>s of all loaded <see cref="RegularMods">regular mods</see> in no particular order.<br/>
-        /// Use <see cref="Monkey.AscendingComparer"/> or <see cref="Monkey.DescendingComparer"/> for sorting.
-        /// </summary>
-        public IEnumerable<IEarlyMonkey> RegularEarlyMonkeys => RegularMods.SelectMany(mod => mod.EarlyMonkeys);
-
-        /// <summary>
         /// Gets all loaded regular <see cref="Mod"/>s in topological order.
         /// </summary>
         public IEnumerable<IMod> RegularMods => _allMods.Where(mod => !mod.IsGamePack);
-
-        /// <summary>
-        /// Gets the <see cref="IMonkey"/>s of all loaded <see cref="RegularMods">regular mods</see> in no particular order.<br/>
-        /// Use <see cref="Monkey.AscendingComparer"/> or <see cref="Monkey.DescendingComparer"/> for sorting.
-        /// </summary>
-        public IEnumerable<IMonkey> RegularMonkeys => RegularMods.SelectMany(mod => mod.Monkeys);
 
         /// <summary>
         /// Gets whether this loaders's <see cref="Shutdown">Shutdown</see>() failed when it was called.
@@ -514,8 +478,7 @@ namespace MonkeyLoader
         {
             // Add check for mod.EarlyMonkeyLoadError
 
-            var earlyMonkeys = mods.SelectMany(mod => mod.EarlyMonkeys).ToArray();
-            Array.Sort(earlyMonkeys, Monkey.AscendingComparer);
+            var earlyMonkeys = mods.GetEarlyMonkeysAscending();
 
             Logger.Info(() => $"Running {earlyMonkeys.Length} early monkeys!");
             Logger.Trace(() => "Running early monkeys in this order:");
@@ -585,8 +548,7 @@ namespace MonkeyLoader
         {
             // Add check for mod.MonkeyLoadError
 
-            var monkeys = mods.SelectMany(mod => mod.Monkeys).ToArray();
-            Array.Sort(monkeys, Monkey.AscendingComparer);
+            var monkeys = mods.GetMonkeysAscending();
 
             Logger.Info(() => $"Running {monkeys.Length} monkeys!");
             Logger.Trace(() => "Running monkeys in this order:");
@@ -668,6 +630,12 @@ namespace MonkeyLoader
             _allMods.Remove((IModInternal)mod);
 
             return success;
+        }
+
+        public void ShutdownMods(params IMod[] mods) => ShutdownMods((IEnumerable<IMod>)mods);
+
+        public void ShutdownMods(IEnumerable<IMod> mods)
+        {
         }
 
         /// <summary>
