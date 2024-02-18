@@ -38,7 +38,8 @@ namespace MonkeyLoader
         public string ConfigPath { get; }
 
         /// <summary>
-        /// Gets the <see cref="IEarlyMonkey"/>s of <i>all</i> loaded <see cref="Mods">mods</see>.
+        /// Gets the <see cref="IEarlyMonkey"/>s of <i>all</i> loaded <see cref="Mods">mods</see> in no particular order.<br/>
+        /// Use <see cref="Monkey.AscendingComparer"/> or <see cref="Monkey.DescendingComparer"/> for sorting.
         /// </summary>
         public IEnumerable<IEarlyMonkey> EarlyMonkeys => _allMods.SelectMany(mod => mod.EarlyMonkeys);
 
@@ -48,12 +49,14 @@ namespace MonkeyLoader
         public string GameAssemblyPath { get; }
 
         /// <summary>
-        /// Gets the <see cref="IEarlyMonkey"/>s of all loaded <see cref="GamePacks">game pack mods</see>.
+        /// Gets the <see cref="IEarlyMonkey"/>s of all loaded <see cref="GamePacks">game pack mods</see> in no particular order.<br/>
+        /// Use <see cref="Monkey.AscendingComparer"/> or <see cref="Monkey.DescendingComparer"/> for sorting.
         /// </summary>
         public IEnumerable<IEarlyMonkey> GamePackEarlyMonkeys => GamePacks.SelectMany(mod => mod.EarlyMonkeys);
 
         /// <summary>
-        /// Gets the <see cref="IMonkey"/>s of all loaded <see cref="RegularMods">game pack mods</see>.
+        /// Gets the <see cref="IMonkey"/>s of all loaded <see cref="RegularMods">game pack mods</see> in no particular order.<br/>
+        /// Use <see cref="Monkey.AscendingComparer"/> or <see cref="Monkey.DescendingComparer"/> for sorting.
         /// </summary>
         public IEnumerable<IMonkey> GamePackMonkeys => GamePacks.SelectMany(mod => mod.Monkeys);
 
@@ -117,7 +120,8 @@ namespace MonkeyLoader
         public IEnumerable<IMod> Mods => _allMods.AsSafeEnumerable();
 
         /// <summary>
-        /// Gets the <see cref="IMonkey"/>s of <i>all</i> loaded <see cref="Mods">mods</see>.
+        /// Gets the <see cref="IMonkey"/>s of <i>all</i> loaded <see cref="Mods">mods</see> in no particular order.<br/>
+        /// Use <see cref="Monkey.AscendingComparer"/> or <see cref="Monkey.DescendingComparer"/> for sorting.
         /// </summary>
         public IEnumerable<IMonkey> Monkeys => _allMods.SelectMany(mod => mod.Monkeys);
 
@@ -127,7 +131,8 @@ namespace MonkeyLoader
         public NuGetManager NuGet { get; private set; }
 
         /// <summary>
-        /// Gets the <see cref="IEarlyMonkey"/>s of all loaded <see cref="RegularMods">regular mods</see>.
+        /// Gets the <see cref="IEarlyMonkey"/>s of all loaded <see cref="RegularMods">regular mods</see> in no particular order.<br/>
+        /// Use <see cref="Monkey.AscendingComparer"/> or <see cref="Monkey.DescendingComparer"/> for sorting.
         /// </summary>
         public IEnumerable<IEarlyMonkey> RegularEarlyMonkeys => RegularMods.SelectMany(mod => mod.EarlyMonkeys);
 
@@ -137,7 +142,8 @@ namespace MonkeyLoader
         public IEnumerable<IMod> RegularMods => _allMods.Where(mod => !mod.IsGamePack);
 
         /// <summary>
-        /// Gets the <see cref="IMonkey"/>s of all loaded <see cref="RegularMods">regular mods</see>.
+        /// Gets the <see cref="IMonkey"/>s of all loaded <see cref="RegularMods">regular mods</see> in no particular order.<br/>
+        /// Use <see cref="Monkey.AscendingComparer"/> or <see cref="Monkey.DescendingComparer"/> for sorting.
         /// </summary>
         public IEnumerable<IMonkey> RegularMonkeys => RegularMods.SelectMany(mod => mod.Monkeys);
 

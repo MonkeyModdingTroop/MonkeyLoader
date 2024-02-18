@@ -273,7 +273,19 @@ namespace MonkeyLoader.Meta
 
             ShutdownRan = true;
 
-            Config.Save();
+            try
+            {
+                if (!OnShutdown())
+                {
+                    ShutdownFailed = true;
+                    Logger.Warn(() => "OnShutdown failed!");
+                }
+            }
+            catch (Exception ex)
+            {
+                ShutdownFailed = true;
+                Logger.Error(() => ex.Format("OnShutdown threw an Exception:"));
+            }
 
             try
             {
@@ -293,7 +305,7 @@ namespace MonkeyLoader.Meta
         }
 
         public bool TryResolveDependencies()
-            => dependencies.Values.Select(dep => dep.TryResolve()).All();
+                    => dependencies.Values.Select(dep => dep.TryResolve()).All();
 
         protected bool LoadEarlyMonkeys()
         {
@@ -354,6 +366,22 @@ namespace MonkeyLoader.Meta
         /// </summary>
         /// <returns>Whether it ran successfully.</returns>
         protected abstract bool OnLoadMonkeys();
+
+        /// <summary>
+        /// Lets this mod cleanup and shutdown.
+        /// </summary>
+        /// <remarks>
+        /// <i>By default:</i> <see cref="Config.Save">Saves</see> this mod's <see cref="Config">Config</see>
+        /// and <see cref="Harmony.UnpatchAll(string)">unpatches</see> everything patched with its <see cref="Harmony">Harmony</see> instance.
+        /// </remarks>
+        /// <returns>Whether it ran successfully.</returns>
+        protected virtual bool OnShutdown()
+        {
+            Config.Save();
+            Harmony.UnpatchAll(Harmony.Id);
+
+            return true;
+        }
 
         private sealed class ModComparer : IComparer<IMod>
         {

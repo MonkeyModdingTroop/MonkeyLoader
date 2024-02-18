@@ -140,7 +140,7 @@ namespace MonkeyLoader.Patching
         /// <summary>
         /// Lets this monkey cleanup and shutdown.
         /// </summary>
-        /// <inheritdoc/>
+        /// <returns>Whether it ran successfully.</returns>
         protected virtual bool OnShutdown() => true;
 
         /// <summary>
