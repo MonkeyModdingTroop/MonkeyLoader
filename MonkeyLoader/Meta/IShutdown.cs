@@ -7,6 +7,28 @@ using System.Threading.Tasks;
 namespace MonkeyLoader.Meta
 {
     /// <summary>
+    /// Contains extension methods for collections of <see cref="IShutdown"/> instances.
+    /// </summary>
+    public static class ShutdownEnumerableExtensions
+    {
+        /// <summary>
+        /// Calls the <see cref="IShutdown.Shutdown"/> method on all elements of the collection,
+        /// aggregating their success state as an 'all'.
+        /// </summary>
+        /// <param name="shutdowns">The <see cref="IShutdown"/> instances to process.</param>
+        /// <returns><c>true</c> if all instances successfully shut down, <c>false</c> otherwise.</returns>
+        public static bool ShutdownAll(this IEnumerable<IShutdown> shutdowns)
+        {
+            var success = true;
+
+            foreach (var shutdown in shutdowns)
+                success &= shutdown.Shutdown();
+
+            return success;
+        }
+    }
+
+    /// <summary>
     /// Interface for everything that can be shut down.
     /// </summary>
     public interface IShutdown

@@ -24,7 +24,7 @@ namespace MonkeyLoader
     /// </summary>
     public sealed class MonkeyLoader : IConfigOwner, IShutdown
     {
-        private readonly SortedSet<IModInternal> _allMods = new(Mod.AscendingComparer);
+        private readonly SortedDictionary<IMod, IModInternal> _allMods = new(Mod.AscendingComparer);
         private LoggingHandler _loggingHandler = MissingLoggingHandler.Instance;
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace MonkeyLoader
         /// <summary>
         /// Gets all loaded game pack <see cref="Mod"/>s in topological order.
         /// </summary>
-        public IEnumerable<IMod> GamePacks => _allMods.Where(mod => mod.IsGamePack);
+        public IEnumerable<IMod> GamePacks => _allMods.Keys.Where(mod => mod.IsGamePack);
 
         /// <summary>
         /// Gets this loader's id.
@@ -99,7 +99,7 @@ namespace MonkeyLoader
         /// <summary>
         /// Gets <i>all</i> loaded <see cref="Mod"/>s in topological order.
         /// </summary>
-        public IEnumerable<IMod> Mods => _allMods.AsSafeEnumerable();
+        public IEnumerable<IMod> Mods => _allMods.Keys.AsSafeEnumerable();
 
         /// <summary>
         /// Gets the NuGet manager used by this loader.
@@ -109,7 +109,7 @@ namespace MonkeyLoader
         /// <summary>
         /// Gets all loaded regular <see cref="Mod"/>s in topological order.
         /// </summary>
-        public IEnumerable<IMod> RegularMods => _allMods.Where(mod => !mod.IsGamePack);
+        public IEnumerable<IMod> RegularMods => _allMods.Keys.Where(mod => !mod.IsGamePack);
 
         /// <summary>
         /// Gets whether this loaders's <see cref="Shutdown">Shutdown</see>() failed when it was called.
@@ -146,7 +146,11 @@ namespace MonkeyLoader
             foreach (var modLocation in Locations.Mods)
             {
                 modLocation.LoadMod += (mL, path) => TryLoadAndRunMod(path, out _);
-                modLocation.UnloadMod += (mL, path) => ShutdownMod(path);
+                modLocation.UnloadMod += (mL, path) =>
+                {
+                    if (TryFindModByLocation(path, out var mod))
+                        ShutdownMod(mod);
+                };
             }
 
             // TODO: do this properly - scan all loaded assemblies?
@@ -215,7 +219,7 @@ namespace MonkeyLoader
         {
             Logger.Debug(() => $"Adding {(mod.IsGamePack ? "game pack" : "regular")} mod: {mod.Title}");
 
-            _allMods.Add((IModInternal)mod);
+            _allMods.Add(mod, (IModInternal)mod);
             NuGet.Add(mod);
         }
 
@@ -329,7 +333,7 @@ namespace MonkeyLoader
         public void LoadEarlyMonkeys(IEnumerable<IMod> mods)
         {
             Logger.Trace(() => "Loading early monkeys in this order:");
-            Logger.Trace(mods.Cast<IModInternal>().Select(mod => new Func<object>(() => mod.Title)));
+            Logger.Trace(mods.Cast<IModInternal>().Select(mod => mod.Title));
 
             foreach (var mod in mods)
                 mod.TryResolveDependencies();
@@ -447,7 +451,7 @@ namespace MonkeyLoader
         public void LoadMonkeys(IEnumerable<IMod> mods)
         {
             Logger.Trace(() => "Loading monkeys in this order:");
-            Logger.Trace(mods.Cast<IModInternal>().Select(mod => new Func<object>(() => mod.Title)));
+            Logger.Trace(mods.Cast<IModInternal>().Select(mod => mod.Title));
 
             // TODO: For a FullLoad this shouldn't make a difference since LoadEarlyMonkeys does the same.
             // However users of the library may add more mods inbetween those phases or even later afterwards.
@@ -482,7 +486,7 @@ namespace MonkeyLoader
 
             Logger.Info(() => $"Running {earlyMonkeys.Length} early monkeys!");
             Logger.Trace(() => "Running early monkeys in this order:");
-            Logger.Trace(earlyMonkeys.Select(eM => new Func<object>(() => $"{eM.Mod.Title}/{eM.Name}")));
+            Logger.Trace(earlyMonkeys);
 
             var sw = Stopwatch.StartNew();
 
@@ -552,7 +556,7 @@ namespace MonkeyLoader
 
             Logger.Info(() => $"Running {monkeys.Length} monkeys!");
             Logger.Trace(() => "Running monkeys in this order:");
-            Logger.Trace(monkeys.Select(m => new Func<object>(() => $"{m.Mod.Title}/{m.Name}")));
+            Logger.Trace(monkeys);
 
             var sw = Stopwatch.StartNew();
 
@@ -570,17 +574,21 @@ namespace MonkeyLoader
         public bool Shutdown()
         {
             if (ShutdownRan)
+            {
                 Logger.Warn(() => "This loader's Shutdown() method has already been called!");
-            //throw new InvalidOperationException("A loader's Shutdown() method must only be called once!");
+                return !ShutdownFailed;
+            }
 
             ShutdownRan = true;
-
             var sw = Stopwatch.StartNew();
-            Logger.Info(() => $"Triggering shutdown routine! Saving the loader's config.");
+            Logger.Warn(() => $"The loader's shutdown routine was triggered! Triggering shutdown for all {_allMods.Count} mods!");
+
+            ShutdownFailed |= !ShutdownMods(_allMods.Values.ToArray());
+
+            Logger.Info(() => $"Saving the loader's config!");
 
             try
             {
-                Logger.Debug(() => $"Triggering save for the mod loader's config to shut down!");
                 Config.Save();
             }
             catch (Exception ex)
@@ -589,53 +597,77 @@ namespace MonkeyLoader
                 Logger.Error(() => ex.Format("The mod loader's config threw an exception while saving during shutdown!"));
             }
 
-            Logger.Info(() => $"Triggering shutdown for all {_allMods.Count} mods!");
-
-            // TODO: Shutdown monkeys separately in reverse launch order first
-            foreach (var mod in _allMods.Reverse())
-                ShutdownFailed |= !mod.Shutdown();
-
             Logger.Info(() => $"Processed shutdown in {sw.ElapsedMilliseconds}ms!");
 
             return !ShutdownFailed;
         }
 
-        public bool ShutdownMod(string path)
+        /// <summary>
+        /// Calls the given <see cref="Mod"/>'s <see cref="Mod.Shutdown">Shutdown</see> method
+        /// and removes it from this loader's <see cref="Mods">Mods</see>.
+        /// </summary>
+        /// <param name="mod">The mod to shut down.</param>
+        /// <returns>Whether it ran successfully.</returns>
+        public bool ShutdownMod(IMod mod) => ShutdownMod((IModInternal)mod);
+
+        /// <summary>
+        /// Calls the given <see cref="Mod"/>s' <see cref="Mod.Shutdown">Shutdown</see> methods
+        /// and removes them from this loader's <see cref="Mods">Mods</see> in reverse topological order.
+        /// </summary>
+        /// <remarks>
+        /// Use <see cref="Mod.ShutdownFailed"/> if you want to check if any failed.
+        /// </remarks>
+        /// <param name="mods">The mods to shut down.</param>
+        /// <exception cref="InvalidOperationException">When <paramref name="mods"/> contains invalid items.</exception>
+        public bool ShutdownMods(params IMod[] mods) => ShutdownMods((IEnumerable<IMod>)mods);
+
+        /// <summary>
+        /// Calls the given <see cref="Mod"/>s' <see cref="Mod.Shutdown">Shutdown</see> methods
+        /// and removes them from this loader's <see cref="Mods">Mods</see> in reverse topological order.
+        /// </summary>
+        /// <param name="mods">The mods to shut down.</param>
+        public bool ShutdownMods(IEnumerable<IMod> mods)
         {
-            if (string.IsNullOrWhiteSpace(path))
+            var internalMods = mods.TrySelect<IMod, IModInternal>(_allMods.TryGetValue).ToArray();
+
+            if (mods.Count() != internalMods.Length)
+                throw new InvalidOperationException($"Tried to shut down mods that aren't weren't part of this loader or already removed!");
+
+            return ShutdownMods(internalMods);
+        }
+
+        /// <summary>
+        /// Searches all of this loader's loaded <see cref="Mods">Mods</see> to find a single one with the given <see cref="Mod.Location">location</see>.
+        /// </summary>
+        /// <remarks>
+        /// If zero or multiple matching mods are found, <paramref name="mod"/> will be <c>null</c>.
+        /// </remarks>
+        /// <param name="location"></param>
+        /// <param name="mod">The mod that was found.</param>
+        /// <returns>Whether a single matching mod was found.</returns>
+        public bool TryFindModByLocation(string location, [NotNullWhen(true)] out IMod? mod)
+        {
+            mod = null;
+
+            if (string.IsNullOrWhiteSpace(location))
             {
-                Logger.Warn(() => $"Attempted to shutdown mod using invalid path!");
+                Logger.Warn(() => $"Attempted to get a mod using an invalid location!");
                 return false;
             }
 
-            var mods = _allMods.Where(mod => mod.Location?.Equals(path, StringComparison.Ordinal) ?? false).ToArray();
+            var mods = _allMods.Values.Where(mod => mod.Location?.Equals(location, StringComparison.Ordinal) ?? false).ToArray();
 
             if (mods.Length == 0)
-                return true;
+                return false;
 
             if (mods.Length > 1)
             {
-                Logger.Error(() => $"Attempted to shutdown multiple mods using path: {path}");
+                Logger.Error(() => $"Attempted to get multiple mods using path: {location}");
                 return false;
             }
 
-            return ShutdownMod(mods[0]);
-        }
-
-        public bool ShutdownMod(IMod mod)
-        {
-            Logger.Debug(() => $"Shutting down mod {mod.Title}");
-
-            var success = mod.Shutdown();
-            _allMods.Remove((IModInternal)mod);
-
-            return success;
-        }
-
-        public void ShutdownMods(params IMod[] mods) => ShutdownMods((IEnumerable<IMod>)mods);
-
-        public void ShutdownMods(IEnumerable<IMod> mods)
-        {
+            mod = mods[0];
+            return true;
         }
 
         /// <summary>
@@ -730,6 +762,64 @@ namespace MonkeyLoader
             {
                 Logger.Error(() => ex.Format($"Some {nameof(AnyConfigChanged)} event subscriber(s) threw an exception:"));
             }
+        }
+
+        private bool ShutdownMod(IModInternal internalMod)
+        {
+            var earlyMonkeys = internalMod.GetEarlyMonkeysDescending();
+            var monkeys = internalMod.GetMonkeysDescending();
+
+            Logger.Info(() => $"Shutting down mod {internalMod.Title} with {earlyMonkeys.Length} early and {monkeys.Length} regular monkeys.");
+
+            var success = true;
+
+            ShutdownMonkeys(earlyMonkeys, monkeys);
+
+            success &= internalMod.Shutdown();
+
+            _allMods.Remove(internalMod);
+
+            return success;
+        }
+
+        private bool ShutdownMods(IModInternal[] internalMods)
+        {
+            var success = true;
+            Array.Sort(internalMods, Mod.DescendingComparer);
+
+            var earlyMonkeys = internalMods.GetEarlyMonkeysDescending();
+            var monkeys = internalMods.GetMonkeysDescending();
+
+            Logger.Info(() => $"Shutting down {internalMods.Length} mods with {earlyMonkeys.Length} early and {monkeys.Length} regular monkeys.");
+
+            ShutdownMonkeys(earlyMonkeys, monkeys);
+
+            Logger.Trace(() => "Shutting down mods in this order:");
+            Logger.Trace(internalMods);
+
+            success &= internalMods.ShutdownAll();
+
+            foreach (var mod in internalMods)
+                _allMods.Remove(mod);
+
+            return success;
+        }
+
+        private bool ShutdownMonkeys(IEarlyMonkey[] earlyMonkeys, IMonkey[] monkeys)
+        {
+            var success = true;
+
+            Logger.Trace(() => "Shutting down monkeys in this order:");
+            Logger.Trace(monkeys);
+
+            success &= monkeys.ShutdownAll();
+
+            Logger.Trace(() => "Shutting down early monkeys in this order:");
+            Logger.Trace(earlyMonkeys);
+
+            success &= earlyMonkeys.ShutdownAll();
+
+            return success;
         }
 
         private bool TryLoadGamePack(string path, [NotNullWhen(true)] out NuGetPackageMod? gamePack)

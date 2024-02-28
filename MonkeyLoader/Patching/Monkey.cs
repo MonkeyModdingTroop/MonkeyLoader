@@ -86,8 +86,8 @@ namespace MonkeyLoader.Patching
         public override sealed bool Run()
         {
             ThrowIfRan();
-            Ran = true;
 
+            Ran = true;
             Debug(() => "Running OnLoaded!");
 
             try

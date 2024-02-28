@@ -4,6 +4,7 @@ using MonkeyLoader.Logging;
 using MonkeyLoader.Meta;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
@@ -14,6 +15,11 @@ namespace MonkeyLoader.Patching
     /// </summary>
     public abstract partial class MonkeyBase : IMonkey
     {
+        /// <summary>
+        /// The monkey's runtime type.
+        /// </summary>
+        protected readonly Type type;
+
         private static readonly Type _monkeyType = typeof(MonkeyBase);
         private readonly Lazy<IFeaturePatch[]> _featurePatches;
         private Mod _mod = null!;
@@ -42,18 +48,23 @@ namespace MonkeyLoader.Patching
         public Mod Mod
         {
             get => _mod;
+
+            [MemberNotNull(nameof(Mod), nameof(_mod))]
             internal set
             {
-                if (value == _mod)
-                    return;
+                if (value is null)
+                    throw new ArgumentNullException(nameof(value));
 
                 _mod = value;
                 Logger = new MonkeyLogger(_mod.Logger, Name);
             }
         }
 
+        /// <remarks>
+        /// <i>By Default</i>: The monkey's <see cref="type">type</see>'s Name.
+        /// </remarks>
         /// <inheritdoc/>
-        public abstract string Name { get; }
+        public virtual string Name => type.Name;
 
         /// <summary>
         /// Gets whether this monkey's <see cref="Run">Run</see>() method has been called.
@@ -72,7 +83,7 @@ namespace MonkeyLoader.Patching
 
         internal MonkeyBase()
         {
-            var type = GetType();
+            type = GetType();
             AssemblyName = new(type.Assembly.GetName().Name);
 
             _featurePatches = new Lazy<IFeaturePatch[]>(() =>
@@ -105,6 +116,7 @@ namespace MonkeyLoader.Patching
                 throw new InvalidOperationException("A monkey's Shutdown() method must only be called once!");
 
             ShutdownRan = true;
+            Logger.Debug(() => "Running OnShutdown!");
 
             try
             {
@@ -122,6 +134,12 @@ namespace MonkeyLoader.Patching
 
             return !ShutdownFailed;
         }
+
+        /// <inheritdoc/>
+        /// <remarks>
+        /// <i>Format:</i> <c>{<see cref="Mod">Mod</see>.<see cref="Mod.Title">Title</see>}/{<see cref="Name">Name</see>}</c>
+        /// </remarks>
+        public override string ToString() => $"{Mod.Title}/{Name}";
 
         internal static MonkeyBase GetInstance(Type type)
         {
@@ -211,6 +229,12 @@ namespace MonkeyLoader.Patching
         public static void Debug(IEnumerable<Func<object>> messageProducers) => Logger.Debug(messageProducers);
 
         /// <summary>
+        /// Logs events considered to be useful during debugging when more granular information is needed.
+        /// </summary>
+        /// <param name="messages">The messages to log as individual lines if possible.</param>
+        public static void Debug(IEnumerable<object> messages) => Logger.Debug(messages);
+
+        /// <summary>
         /// Logs that one or more functionalities are not working, preventing some from working correctly.
         /// </summary>
         /// <param name="messageProducer">The producer to log if possible.</param>
@@ -227,6 +251,12 @@ namespace MonkeyLoader.Patching
         /// </summary>
         /// <param name="messageProducers">The producers to log as individual lines if possible.</param>
         public static void Error(IEnumerable<Func<object>> messageProducers) => Logger.Error(messageProducers);
+
+        /// <summary>
+        /// Logs that one or more functionalities are not working, preventing some from working correctly.
+        /// </summary>
+        /// <param name="messages">The messages to log as individual lines if possible.</param>
+        public static void Error(IEnumerable<object> messages) => Logger.Error(messages);
 
         /// <summary>
         /// Logs that one or more key functionalities, or the whole system isn't working.
@@ -247,6 +277,12 @@ namespace MonkeyLoader.Patching
         public static void Fatal(IEnumerable<Func<object>> messageProducers) => Logger.Fatal(messageProducers);
 
         /// <summary>
+        /// Logs that one or more key functionalities, or the whole system isn't working.
+        /// </summary>
+        /// <param name="messages">The messages to log as individual lines if possible.</param>
+        public static void Fatal(IEnumerable<object> messages) => Logger.Fatal(messages);
+
+        /// <summary>
         /// Logs that something happened, which is purely informative and can be ignored during normal use.
         /// </summary>
         /// <param name="messageProducer">The producer to log if possible.</param>
@@ -263,6 +299,12 @@ namespace MonkeyLoader.Patching
         /// </summary>
         /// <param name="messageProducers">The producers to log as individual lines if possible.</param>
         public static void Info(IEnumerable<Func<object>> messageProducers) => Logger.Info(messageProducers);
+
+        /// <summary>
+        /// Logs that something happened, which is purely informative and can be ignored during normal use.
+        /// </summary>
+        /// <param name="messages">The messages to log as individual lines if possible.</param>
+        public static void Info(IEnumerable<object> messages) => Logger.Info(messages);
 
         /// <summary>
         /// Logs step by step execution of code that can be ignored during standard operation,
@@ -286,6 +328,13 @@ namespace MonkeyLoader.Patching
         public static void Trace(IEnumerable<Func<object>> messageProducers) => Logger.Trace(messageProducers);
 
         /// <summary>
+        /// Logs step by step execution of code that can be ignored during standard operation,
+        /// but may be useful during extended debugging sessions.
+        /// </summary>
+        /// <param name="messages">The messages to log as individual lines if possible.</param>
+        public static void Trace(IEnumerable<object> messages) => Logger.Trace(messages);
+
+        /// <summary>
         /// Logs that unexpected behavior happened, but work is continuing and the key functionalities are operating as expected.
         /// </summary>
         /// <param name="messageProducer">The producer to log if possible.</param>
@@ -302,5 +351,11 @@ namespace MonkeyLoader.Patching
         /// </summary>
         /// <param name="messageProducers">The producers to log as individual lines if possible.</param>
         public static void Warn(IEnumerable<Func<object>> messageProducers) => Logger.Warn(messageProducers);
+
+        /// <summary>
+        /// Logs that unexpected behavior happened, but work is continuing and the key functionalities are operating as expected.
+        /// </summary>
+        /// <param name="messages">The messages to log as individual lines if possible.</param>
+        public static void Warn(IEnumerable<object> messages) => Logger.Warn(messages);
     }
 }

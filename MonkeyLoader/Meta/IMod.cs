@@ -11,7 +11,7 @@ namespace MonkeyLoader.Meta
     /// <summary>
     /// Contains all metadata and references for a mod.
     /// </summary>
-    public interface IMod : IConfigOwner, ILoadedNuGetPackage, IShutdown, IComparable<IMod>
+    public interface IMod : IConfigOwner, ILoadedNuGetPackage, IComparable<IMod>
     {
         /// <summary>
         /// Gets the names of the authors of this mod.
@@ -65,10 +65,6 @@ namespace MonkeyLoader.Meta
         /// </summary>
         public abstract Uri? IconUrl { get; }
 
-        /// <summary>
-        /// Gets the unique identifier of this mod.
-        /// </summary>
-        //public string Id { get; }
         /// <summary>
         /// Gets whether this mod is a game pack.
         /// </summary>
@@ -150,7 +146,7 @@ namespace MonkeyLoader.Meta
         public bool HasTag(string tag);
     }
 
-    internal interface IModInternal : IMod
+    internal interface IModInternal : IMod, IShutdown
     {
         public bool LoadEarlyMonkeys();
 
