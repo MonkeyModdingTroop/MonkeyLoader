@@ -72,6 +72,12 @@ namespace MonkeyLoader.Logging
         public void Debug(IEnumerable<Func<object>> messageProducers) => LogInternal(LoggingLevel.Debug, messageProducers);
 
         /// <summary>
+        /// Logs events considered to be useful during debugging when more granular information is needed.
+        /// </summary>
+        /// <param name="messages">The messages to log as individual lines if possible.</param>
+        public void Debug(IEnumerable<object> messages) => LogInternal(LoggingLevel.Debug, messages);
+
+        /// <summary>
         /// Logs that one or more functionalities are not working, preventing some from working correctly.
         /// </summary>
         /// <param name="messageProducer">The producer to log if possible.</param>
@@ -90,6 +96,12 @@ namespace MonkeyLoader.Logging
         public void Error(IEnumerable<Func<object>> messageProducers) => LogInternal(LoggingLevel.Error, messageProducers);
 
         /// <summary>
+        /// Logs that one or more functionalities are not working, preventing some from working correctly.
+        /// </summary>
+        /// <param name="messages">The messages to log as individual lines if possible.</param>
+        public void Error(IEnumerable<object> messages) => LogInternal(LoggingLevel.Error, messages);
+
+        /// <summary>
         /// Logs that one or more key functionalities, or the whole system isn't working.
         /// </summary>
         /// <param name="messageProducer">The producer to log if possible.</param>
@@ -100,6 +112,12 @@ namespace MonkeyLoader.Logging
         /// </summary>
         /// <param name="messageProducers">The producers to log as individual lines if possible.</param>
         public void Fatal(params Func<object>[] messageProducers) => LogInternal(LoggingLevel.Fatal, messageProducers);
+
+        /// <summary>
+        /// Logs that one or more key functionalities, or the whole system isn't working.
+        /// </summary>
+        /// <param name="messages">The messages to log as individual lines if possible.</param>
+        public void Fatal(IEnumerable<object> messages) => LogInternal(LoggingLevel.Fatal, messages);
 
         /// <summary>
         /// Logs that one or more key functionalities, or the whole system isn't working.
@@ -124,6 +142,12 @@ namespace MonkeyLoader.Logging
         /// </summary>
         /// <param name="messageProducers">The producers to log as individual lines if possible.</param>
         public void Info(IEnumerable<Func<object>> messageProducers) => LogInternal(LoggingLevel.Info, messageProducers);
+
+        /// <summary>
+        /// Logs that something happened, which is purely informative and can be ignored during normal use.
+        /// </summary>
+        /// <param name="messages">The messages to log as individual lines if possible.</param>
+        public void Info(IEnumerable<object> messages) => LogInternal(LoggingLevel.Info, messages);
 
         /// <summary>
         /// Determines whether the given <see cref="LoggingLevel"/> should be logged at the current <see cref="Level">Level</see>.
@@ -154,6 +178,13 @@ namespace MonkeyLoader.Logging
         public void Trace(IEnumerable<Func<object>> messageProducers) => LogInternal(LoggingLevel.Trace, messageProducers);
 
         /// <summary>
+        /// Logs step by step execution of code that can be ignored during standard operation,
+        /// but may be useful during extended debugging sessions.
+        /// </summary>
+        /// <param name="messages">The messages to log as individual lines if possible.</param>
+        public void Trace(IEnumerable<object> messages) => LogInternal(LoggingLevel.Trace, messages);
+
+        /// <summary>
         /// Logs that unexpected behavior happened, but work is continuing and the key functionalities are operating as expected.
         /// </summary>
         /// <param name="messageProducer">The producer to log if possible.</param>
@@ -171,6 +202,12 @@ namespace MonkeyLoader.Logging
         /// <param name="messageProducers">The producers to log as individual lines if possible.</param>
         public void Warn(IEnumerable<Func<object>> messageProducers) => LogInternal(LoggingLevel.Warn, messageProducers);
 
+        /// <summary>
+        /// Logs that unexpected behavior happened, but work is continuing and the key functionalities are operating as expected.
+        /// </summary>
+        /// <param name="messages">The messages to log as individual lines if possible.</param>
+        public void Warn(IEnumerable<object> messages) => LogInternal(LoggingLevel.Warn, messages);
+
         internal void FlushDeferredMessages()
         {
             lock (Loader.DeferredMessages)
@@ -187,7 +224,7 @@ namespace MonkeyLoader.Logging
             => (Func<object> messageProducer) =>
             {
                 lock (Loader.DeferredMessages)
-                    Loader.DeferredMessages.Enqueue(new DeferredMessage(this, level, messageProducer()));
+                    Loader.DeferredMessages.Enqueue(new DeferredMessage(level, messageProducer()));
             };
 
         private void LogInternal(LoggingLevel level, Func<object> messageProducer)
@@ -207,6 +244,17 @@ namespace MonkeyLoader.Logging
 
             foreach (var messageProducer in messageProducers)
                 logger(MakeMessageProducer(level, messageProducer));
+        }
+
+        private void LogInternal(LoggingLevel level, IEnumerable<object> messages)
+        {
+            if (!ShouldLog(level))
+                return;
+
+            var logger = LogLevelToLogger(level);
+
+            foreach (var message in messages)
+                logger(MakeMessageProducer(level, message));
         }
 
         private Action<Func<object>> LogLevelToLogger(LoggingLevel level)
@@ -240,15 +288,16 @@ namespace MonkeyLoader.Logging
         private Func<object> MakeMessageProducer(LoggingLevel level, Func<object> messageProducer)
             => () => $"{LogLevelToString(level)} [{Identifier}] {messageProducer()}";
 
+        private Func<object> MakeMessageProducer(LoggingLevel level, object message)
+            => () => $"{LogLevelToString(level)} [{Identifier}] {message}";
+
         internal readonly struct DeferredMessage
         {
-            public readonly MonkeyLogger Logger;
             public readonly LoggingLevel LoggingLevel;
             public readonly object Message;
 
-            public DeferredMessage(MonkeyLogger logger, LoggingLevel level, object message)
+            public DeferredMessage(LoggingLevel level, object message)
             {
-                Logger = logger;
                 LoggingLevel = level;
                 Message = message;
             }
