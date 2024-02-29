@@ -23,6 +23,16 @@ namespace MonkeyLoader.Patching
         /// </summary>
         public static IComparer<IMonkey> DescendingComparer { get; } = new MonkeyComparer(false);
 
+        /// <summary>
+        /// Gets the <see cref="Type"/> of <see cref="IEarlyMonkey"/>.
+        /// </summary>
+        public static Type EarlyMonkeyType { get; } = typeof(IEarlyMonkey);
+
+        /// <summary>
+        /// Gets the <see cref="Type"/> of <see cref="IMonkey"/>.
+        /// </summary>
+        public static Type MonkeyType { get; } = typeof(IMonkey);
+
         private sealed class MonkeyComparer : IComparer<IMonkey>
         {
             private readonly int _factor;
@@ -50,7 +60,7 @@ namespace MonkeyLoader.Patching
                     return biggestY is null ? TypeNameComparison(x, y) : _factor;
 
                 if (biggestY is null)
-                    return (-1 * _factor);
+                    return -1 * _factor;
 
                 var impactComparison = _factor * biggestX.CompareTo(biggestY);
                 if (impactComparison != 0)

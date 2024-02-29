@@ -20,7 +20,6 @@ namespace MonkeyLoader.Patching
         /// </summary>
         protected readonly Type type;
 
-        private static readonly Type _monkeyType = typeof(MonkeyBase);
         private readonly Lazy<IFeaturePatch[]> _featurePatches;
         private Mod _mod = null!;
 
@@ -49,11 +48,17 @@ namespace MonkeyLoader.Patching
         {
             get => _mod;
 
-            [MemberNotNull(nameof(Mod), nameof(_mod))]
+            [MemberNotNull(nameof(_mod))]
             internal set
             {
                 if (value is null)
                     throw new ArgumentNullException(nameof(value));
+
+                if (ReferenceEquals(_mod, value))
+                    return;
+
+                if (_mod is not null)
+                    throw new InvalidOperationException("Can't assign a different mod to a monkey!");
 
                 _mod = value;
                 Logger = new MonkeyLogger(_mod.Logger, Name);
@@ -141,13 +146,16 @@ namespace MonkeyLoader.Patching
         /// </remarks>
         public override string ToString() => $"{Mod.Title}/{Name}";
 
-        internal static MonkeyBase GetInstance(Type type)
+        internal static TMonkey GetInstance<TMonkey>(Type type, Mod mod) where TMonkey : IMonkey
         {
             // Could do more specific inheriting from Monkey<> check
-            if (!_monkeyType.IsAssignableFrom(type))
-                throw new ArgumentException($"Given type [{type}] doesn't inherit from {_monkeyType.FullName}!", nameof(type));
+            if (!typeof(TMonkey).IsAssignableFrom(type))
+                throw new ArgumentException($"Given type [{type}] doesn't inherit from {typeof(TMonkey).FullName}!", nameof(type));
 
-            return Traverse.Create(type).Property<MonkeyBase>("Instance").Value;
+            var monkey = Traverse.Create(type).Property<MonkeyBase>("Instance").Value;
+            monkey.Mod = mod;
+
+            return (TMonkey)(object)monkey;
         }
 
         /// <summary>

@@ -20,7 +20,7 @@ namespace MonkeyLoader.Meta
     /// <summary>
     /// Contains all the metadata and references to loaded patchers from a .nupkg mod file.
     /// </summary>
-    public sealed class NuGetPackageMod : Mod, IModInternal
+    public sealed class NuGetPackageMod : Mod
     {
         /// <summary>
         /// The search pattern for mod files.
@@ -39,19 +39,16 @@ namespace MonkeyLoader.Meta
         private readonly string? _title;
 
         /// <inheritdoc/>
-        public override string ConfigPath { get; }
+        public override string Description { get; }
 
         /// <inheritdoc/>
-        public string Description { get; }
+        public override IFileSystem FileSystem { get; }
 
         /// <inheritdoc/>
-        public IFileSystem FileSystem { get; }
+        public override UPath? IconPath { get; }
 
         /// <inheritdoc/>
-        public UPath? IconPath { get; }
-
-        /// <inheritdoc/>
-        public Uri? IconUrl { get; }
+        public override Uri? IconUrl { get; }
 
         /// <inheritdoc/>
         public override PackageIdentity Identity { get; }
@@ -67,19 +64,16 @@ namespace MonkeyLoader.Meta
         public IEnumerable<UPath> PrePatcherAssemblyPaths => _assemblyPaths.Where(path => path.FullName.Contains(PrePatchersFolderName));
 
         /// <inheritdoc/>
-        public Uri? ProjectUrl { get; }
+        public override Uri? ProjectUrl { get; }
 
         /// <inheritdoc/>
-        public string? ReleaseNotes { get; }
+        public override string? ReleaseNotes { get; }
 
         /// <inheritdoc/>
         public override NuGetFramework TargetFramework { get; }
 
         /// <inheritdoc/>
         public override string Title => _title ?? base.Title;
-
-        /// <inheritdoc/>
-        public NuGetVersion Version => Identity.Version;
 
         /// <summary>
         /// Creates a new <see cref="NuGetPackageMod"/> instance for the given <paramref name="loader"/>, loading a .nupkg from the given <paramref name="location"/>.<br/>
@@ -104,7 +98,6 @@ namespace MonkeyLoader.Meta
             _title = string.IsNullOrWhiteSpace(title) ? null : title;
 
             Identity = nuspecReader.GetIdentity();
-            ConfigPath = Path.Combine(Loader.Locations.Configs, $"{Id}.json");
 
             Description = nuspecReader.GetDescription();
             ReleaseNotes = nuspecReader.GetReleaseNotes();
@@ -166,10 +159,6 @@ namespace MonkeyLoader.Meta
                 Logger.Debug(() => $"Found the following dependencies:{Environment.NewLine}    - {string.Join($"{Environment.NewLine}    - ", dependencies.Keys)}");
         }
 
-        bool IModInternal.LoadEarlyMonkeys() => LoadEarlyMonkeys();
-
-        bool IModInternal.LoadMonkeys() => LoadMonkeys();
-
         /// <inheritdoc/>
         protected override bool OnLoadEarlyMonkeys()
         {
@@ -208,9 +197,7 @@ namespace MonkeyLoader.Meta
                     foreach (var type in instantiableTypes)
                     {
                         Logger.Debug(() => $"Instantiating EarlyMonkey Type: {type.FullName}");
-                        var monkey = MonkeyBase.GetInstance(type);
-                        monkey.Mod = this;
-                        earlyMonkeys.Add((IEarlyMonkey)monkey);
+                        earlyMonkeys.Add(MonkeyBase.GetInstance<IEarlyMonkey>(type, this));
                     }
 
                     Logger.Info(() => $"Found {earlyMonkeys.Count} Early Monkeys!");
@@ -269,9 +256,7 @@ namespace MonkeyLoader.Meta
                     foreach (var type in instantiableTypes)
                     {
                         Logger.Debug(() => $"Instantiating Monkey Type: {type.FullName}");
-                        var monkey = MonkeyBase.GetInstance(type);
-                        monkey.Mod = this;
-                        monkeys.Add(monkey);
+                        monkeys.Add(MonkeyBase.GetInstance<IMonkey>(type, this));
                     }
 
                     Logger.Info(() => $"Found {monkeys.Count} Monkeys!");
