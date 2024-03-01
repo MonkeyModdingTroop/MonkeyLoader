@@ -11,8 +11,9 @@ namespace System.Runtime.CompilerServices
     /// Use when building against publicized assemblies to prevent problems if the game ever switches from running on old Mono,
     /// where checking the "Allow Unsafe Code" option in the Project Settings is enough.
     /// </remarks>
+    // This is only here to add documentation to the public version of this Type defined in MonoMod.Utils
     [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
-    public class IgnoresAccessChecksToAttribute : Attribute
+    internal sealed class IgnoresAccessChecksToAttribute : Attribute
     {
         /// <summary>
         /// Gets the name of the Assembly to ignore access checks to.
