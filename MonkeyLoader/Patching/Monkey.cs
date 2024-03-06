@@ -129,7 +129,6 @@ namespace MonkeyLoader.Patching
         /// <returns>Whether the patching was successful.</returns>
         protected virtual bool OnLoaded()
         {
-            var type = GetType();
             Harmony.PatchCategory(type.Assembly, type.Name);
 
             return true;

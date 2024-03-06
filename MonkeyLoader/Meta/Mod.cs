@@ -311,20 +311,6 @@ namespace MonkeyLoader.Meta
                 Logger.Error(() => ex.Format("OnShutdown threw an Exception:"));
             }
 
-            try
-            {
-                foreach (var earlyMonkey in earlyMonkeys)
-                    ShutdownFailed |= !earlyMonkey.Shutdown();
-
-                foreach (var monkey in monkeys)
-                    ShutdownFailed |= !monkey.Shutdown();
-            }
-            catch (Exception ex)
-            {
-                ShutdownFailed = true;
-                Logger.Error(() => ex.Format("A mod's Shutdown() method threw an Exception:"));
-            }
-
             return !ShutdownFailed;
         }
 
