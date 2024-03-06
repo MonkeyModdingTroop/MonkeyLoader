@@ -10,7 +10,7 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>MonkeyLoader</Title>
     <Authors>Banane9</Authors>
-    <Version>0.4.0-beta</Version>
+    <Version>0.5.0-beta</Version>
     <Description>A convenience and extendability focused mod loader using NuGet packages.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
@@ -21,6 +21,7 @@
     <IncludeSymbols>False</IncludeSymbols>
     <EmbedAllSources>True</EmbedAllSources>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);AddSymbolsToPackage</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
   
   <ItemGroup>
@@ -31,9 +32,6 @@
   <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(CopyToLibraries)'=='true'">
     <Copy SourceFiles="$(TargetDir)$(TargetFileName)" DestinationFiles="$(ResonitePath)/MonkeyLoader/$(AssemblyFileName)" />
     <Message Text="Copied $(TargetFileName) to $(ResonitePath)/MonkeyLoader/$(AssemblyFileName)" Importance="high" />
-
-    <Copy SourceFiles="$(TargetDir)$(TargetName).xml" DestinationFiles="$(ResonitePath)/MonkeyLoader/$(AssemblyTitle).xml" />
-    <Message Text="Copied $(TargetName).xml to $(ResonitePath)/MonkeyLoader/$(AssemblyTitle).xml" Importance="high" />
 
     <Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFiles="$(ResonitePath)/MonkeyLoader/$(TargetName).pdb" />
     <Message Text="Copied $(TargetName).pdb to $(ResonitePath)/MonkeyLoader/$(TargetName).pdb" Importance="high" />
@@ -48,12 +46,17 @@
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
-    <Content Include="bin\$(Configuration)\$(TargetFramework)\$(AssemblyName).pdb" PackagePath="lib\$(TargetFramework)\$(AssemblyName).pdb" />
     <None Include="Configuration\ModLoaderConfiguration.cs" />
   </ItemGroup>
+  
+  <Target Name="AddSymbolsToPackage">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(OutDir)$(AssemblyName).pdb" PackagePath="lib/$(TargetFramework)/" />
+    </ItemGroup>
+  </Target>
 
   <ItemGroup>
-    <PackageReference Include="Lib.Harmony.Thin" Version="2.3.0.1" />
+    <PackageReference Include="Lib.Harmony.Thin" Version="2.3.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="NuGet.Packaging" Version="6.9.1" />
     <PackageReference Include="NuGet.Protocol" Version="6.9.1" />
