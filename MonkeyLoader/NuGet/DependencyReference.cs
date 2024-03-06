@@ -12,15 +12,28 @@ namespace MonkeyLoader.NuGet
     {
         private bool _allDependenciesLoaded = false;
 
+        private bool _checkingDependencies = false;
+
         [MemberNotNullWhen(true, nameof(LoadedPackage))]
         public bool AllDependenciesLoaded
         {
             get
             {
-                if (!_allDependenciesLoaded)
-                    _allDependenciesLoaded = IsLoaded && LoadedPackage.AllDependenciesLoaded;
+                lock (this)
+                {
+                    // Must be loaded if recursing
+                    if (_checkingDependencies)
+                        return IsLoaded;
 
-                return _allDependenciesLoaded;
+                    _checkingDependencies = true;
+
+                    if (!_allDependenciesLoaded)
+                        _allDependenciesLoaded = IsLoaded && LoadedPackage.AllDependenciesLoaded;
+
+                    _checkingDependencies = false;
+
+                    return _allDependenciesLoaded;
+                }
             }
         }
 
