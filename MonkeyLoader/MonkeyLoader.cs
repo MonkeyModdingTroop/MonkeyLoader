@@ -45,6 +45,11 @@ namespace MonkeyLoader
         public string GameAssemblyPath { get; }
 
         /// <summary>
+        /// Gets the name of the game (its executable).
+        /// </summary>
+        public string GameName { get; }
+
+        /// <summary>
         /// Gets all loaded game pack <see cref="Mod"/>s in topological order.
         /// </summary>
         public IEnumerable<Mod> GamePacks => _allMods.Where(mod => mod.IsGamePack);
@@ -162,7 +167,8 @@ namespace MonkeyLoader
             NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Zio", new NuGetVersion(0, 17, 0)), NuGetHelper.Framework));
 
             var executablePath = Environment.GetCommandLineArgs()[0];
-            GameAssemblyPath = Path.Combine(Path.GetDirectoryName(executablePath), $"{Path.GetFileNameWithoutExtension(executablePath)}_Data", "Managed");
+            GameName = Path.GetFileNameWithoutExtension(executablePath);
+            GameAssemblyPath = Path.Combine(Path.GetDirectoryName(executablePath), $"{GameName}_Data", "Managed");
 
             if (!Directory.Exists(GameAssemblyPath))
                 GameAssemblyPath = Path.GetDirectoryName(executablePath);
@@ -330,7 +336,7 @@ namespace MonkeyLoader
         /// <param name="mods">The mods who's <see cref="IEarlyMonkey"/>s to load.</param>
         public void LoadEarlyMonkeys(IEnumerable<Mod> mods)
         {
-            Logger.Trace(() => "Loading early monkeys in this order:");
+            Logger.Trace(() => "Loading the early monkeys of mods in this order:");
             Logger.Trace(mods);
 
             foreach (var mod in mods)
@@ -382,7 +388,7 @@ namespace MonkeyLoader
                 }
             }
 
-            var loadedPackages = GameAssemblyPool.GetAllAsLoadedPackages().ToArray();
+            var loadedPackages = GameAssemblyPool.GetAllAsLoadedPackages($"{GameName}.").ToArray();
             NuGet.AddAll(loadedPackages);
 
             foreach (var package in loadedPackages)
@@ -448,7 +454,7 @@ namespace MonkeyLoader
         /// <param name="mods">The mods who's <see cref="IMonkey"/>s to load.</param>
         public void LoadMonkeys(IEnumerable<Mod> mods)
         {
-            Logger.Trace(() => "Loading monkeys in this order:");
+            Logger.Trace(() => "Loading the monkeys of mods in this order:");
             Logger.Trace(mods);
 
             // TODO: For a FullLoad this shouldn't make a difference since LoadEarlyMonkeys does the same.

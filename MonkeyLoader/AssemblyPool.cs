@@ -62,17 +62,30 @@ namespace MonkeyLoader
         {
         }
 
-        public IEnumerable<ILoadedNuGetPackage> GetAllAsLoadedPackages()
+        public IEnumerable<ILoadedNuGetPackage> GetAllAsLoadedPackages(string optionalPrefix)
         {
+            var doPrefix = !string.IsNullOrWhiteSpace(optionalPrefix);
+
             foreach (var entry in _assemblies.Values)
             {
                 var assemblyDefinition = entry.GetResolveDefinition();
 
-                var identity = new PackageIdentity(entry.Name.Name, new NuGetVersion(assemblyDefinition.Name.Version));
+                var version = new NuGetVersion(assemblyDefinition.Name.Version);
+                var identity = new PackageIdentity(entry.Name.Name, version);
                 var targetFramework = assemblyDefinition.GetTargetFramework();
-                var dependencies = assemblyDefinition.GetAssemblyReferences().ToPackageDependencies();
 
-                yield return new LoadedNuGetPackage(identity, targetFramework, dependencies.Select(dep => new DependencyReference(Loader.NuGet, dep)));
+                var dependencies = assemblyDefinition.GetAssemblyReferences()
+                    .ToPackageDependencies()
+                    .Select(dep => new DependencyReference(Loader.NuGet, dep))
+                    .ToArray();
+
+                yield return new LoadedNuGetPackage(identity, targetFramework, dependencies);
+
+                if (doPrefix)
+                {
+                    var prefixIdentity = new PackageIdentity(optionalPrefix + entry.Name.Name, version);
+                    yield return new LoadedNuGetPackage(prefixIdentity, targetFramework, new DependencyReference(Loader.NuGet, new PackageDependency(entry.Name.Name)));
+                }
             }
         }
 
