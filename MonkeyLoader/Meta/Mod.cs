@@ -2,6 +2,7 @@
 using MonkeyLoader.Configuration;
 using MonkeyLoader.Logging;
 using MonkeyLoader.NuGet;
+using MonkeyLoader.Patching;
 using NuGet.Frameworks;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
@@ -19,9 +20,24 @@ namespace MonkeyLoader.Meta
     public abstract class Mod : IConfigOwner, IShutdown, ILoadedNuGetPackage, IComparable<Mod>
     {
         /// <summary>
+        /// The file extension for mods' assemblies.
+        /// </summary>
+        protected const string AssemblyExtension = ".dll";
+
+        /// <summary>
+        /// Stores the paths to the mod's assemblies inside the mod's <see cref="FileSystem">FileSystem</see>.
+        /// </summary>
+        protected readonly SortedSet<UPath> assemblyPaths = new(UPath.DefaultComparerIgnoreCase);
+
+        /// <summary>
         /// Stores the authors of this mod.
         /// </summary>
         protected readonly HashSet<string> authors = new(StringComparer.InvariantCultureIgnoreCase);
+
+        /// <summary>
+        /// Stores the paths to the mod's content files inside the mod's <see cref="FileSystem">FileSystem</see>.
+        /// </summary>
+        protected readonly SortedSet<UPath> contentPaths = new();
 
         /// <summary>
         /// Stores the dependencies of this mod.
@@ -31,12 +47,12 @@ namespace MonkeyLoader.Meta
         /// <summary>
         /// Stores the pre-patchers of this mod.
         /// </summary>
-        protected readonly HashSet<IEarlyMonkey> earlyMonkeys = new();
+        protected readonly SortedSet<IEarlyMonkey> earlyMonkeys = new(Monkey.AscendingComparer);
 
         /// <summary>
         /// Stores the patchers of this mod.
         /// </summary>
-        protected readonly HashSet<IMonkey> monkeys = new();
+        protected readonly SortedSet<IMonkey> monkeys = new(Monkey.AscendingComparer);
 
         /// <summary>
         /// Stores the tags of this mod.
@@ -44,9 +60,11 @@ namespace MonkeyLoader.Meta
         protected readonly HashSet<string> tags = new(StringComparer.InvariantCultureIgnoreCase);
 
         private readonly Lazy<Config> _config;
+
         private readonly Lazy<string> _configPath;
-        private readonly Lazy<Harmony> _harmony;
+
         private readonly Lazy<MonkeyLogger> _logger;
+
         private bool _allDependenciesLoaded = false;
 
         /// <summary>
@@ -72,6 +90,11 @@ namespace MonkeyLoader.Meta
         }
 
         /// <summary>
+        /// Gets the paths to the mod's assemblies inside the mod's <see cref="FileSystem">FileSystem</see>.
+        /// </summary>
+        public IEnumerable<UPath> AssemblyPaths => assemblyPaths.AsSafeEnumerable();
+
+        /// <summary>
         /// Gets the names of the authors of this mod.
         /// </summary>
         public IEnumerable<string> Authors => authors.AsSafeEnumerable();
@@ -87,6 +110,11 @@ namespace MonkeyLoader.Meta
         public string ConfigPath => _configPath.Value;
 
         /// <summary>
+        /// Gets the paths to the mod's content files inside the mod's <see cref="FileSystem">FileSystem</see>.
+        /// </summary>
+        public IEnumerable<UPath> ContentPaths => contentPaths.AsSafeEnumerable();
+
+        /// <summary>
         /// Gets the dependencies of this mod.
         /// </summary>
         public IEnumerable<DependencyReference> Dependencies => dependencies.Values.AsSafeEnumerable();
@@ -97,7 +125,7 @@ namespace MonkeyLoader.Meta
         public abstract string Description { get; }
 
         /// <summary>
-        /// Gets the available <see cref="IEarlyMonkey"/>s of this mod.
+        /// Gets the available <see cref="IEarlyMonkey"/>s of this mod, with the highest impact ones coming first.
         /// </summary>
         public IEnumerable<IEarlyMonkey> EarlyMonkeys => earlyMonkeys.AsSafeEnumerable();
 
@@ -105,11 +133,6 @@ namespace MonkeyLoader.Meta
         /// Gets the readonly file system of this mod's file.
         /// </summary>
         public abstract IFileSystem FileSystem { get; }
-
-        /// <summary>
-        /// Gets the <see cref="HarmonyLib.Harmony"/> instance to be used by this mod's (pre-)patcher(s).
-        /// </summary>
-        public Harmony Harmony => _harmony.Value;
 
         /// <summary>
         /// Gets whether this mod has any <see cref="Monkeys">monkeys</see>.
@@ -193,7 +216,7 @@ namespace MonkeyLoader.Meta
         public MonkeyLogger Logger => _logger.Value;
 
         /// <summary>
-        /// Gets the available <see cref="IMonkey"/>s of this mod.
+        /// Gets the available <see cref="IMonkey"/>s of this mod, with the highest impact ones coming first.
         /// </summary>
         public IEnumerable<IMonkey> Monkeys => monkeys.AsSafeEnumerable();
 
@@ -254,7 +277,6 @@ namespace MonkeyLoader.Meta
             _logger = new(() => new MonkeyLogger(loader.Logger, Title));
             _configPath = new(() => Path.Combine(Loader.Locations.Configs, $"{Id}.json"));
             _config = new(() => new Config(this));
-            _harmony = new(() => new Harmony(Id));
         }
 
         /// <summary>
@@ -391,7 +413,6 @@ namespace MonkeyLoader.Meta
         protected virtual bool OnShutdown()
         {
             Config.Save();
-            Harmony.UnpatchAll(Harmony.Id);
 
             return true;
         }

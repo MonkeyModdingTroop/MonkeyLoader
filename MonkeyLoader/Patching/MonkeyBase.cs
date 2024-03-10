@@ -21,6 +21,7 @@ namespace MonkeyLoader.Patching
         protected readonly Type type;
 
         private readonly Lazy<IFeaturePatch[]> _featurePatches;
+        private readonly Lazy<Harmony> _harmony;
         private Mod _mod = null!;
 
         /// <inheritdoc/>
@@ -38,7 +39,7 @@ namespace MonkeyLoader.Patching
         public IEnumerable<IFeaturePatch> FeaturePatches => _featurePatches.Value.AsSafeEnumerable();
 
         /// <inheritdoc/>
-        public Harmony Harmony => Mod.Harmony;
+        public Harmony Harmony => _harmony.Value;
 
         /// <inheritdoc/>
         public MonkeyLogger Logger { get; private set; } = null!;
@@ -98,6 +99,8 @@ namespace MonkeyLoader.Patching
 
                 return featurePatches;
             });
+
+            _harmony = new(() => new Harmony($"{Mod.Title}/{Name}"));
         }
 
         /// <inheritdoc/>
@@ -166,8 +169,18 @@ namespace MonkeyLoader.Patching
         /// <summary>
         /// Lets this monkey cleanup and shutdown.
         /// </summary>
+        /// <remarks>
+        /// <i>By default:</i> Removes all <see cref="Harmony"/> patches done
+        /// using this Monkey's <see cref="MonkeyBase.Harmony">Harmony</see> instance
+        /// and returns <c>true</c>.
+        /// </remarks>
         /// <returns>Whether it ran successfully.</returns>
-        protected virtual bool OnShutdown() => true;
+        protected virtual bool OnShutdown()
+        {
+            Harmony.UnpatchAll(Harmony.Id);
+
+            return true;
+        }
 
         /// <summary>
         /// Throws an <see cref="InvalidOperationException"/> if <see cref="Ran"/> is <c>true</c>.

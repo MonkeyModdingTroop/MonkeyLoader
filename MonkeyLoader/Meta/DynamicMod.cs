@@ -64,6 +64,8 @@ namespace MonkeyLoader.Meta
 
             _monkeyTypes = builder.Monkeys.ToArray();
             _earlyMonkeyTypes = builder.EarlyMonkeys.ToArray();
+
+            contentPaths.AddRange(FileSystem.EnumerateFiles(UPath.Root));
         }
 
         /// <inheritdoc/>
@@ -115,7 +117,8 @@ namespace MonkeyLoader.Meta
             public IEnumerable<Type> EarlyMonkeys => _earlyMonkeyTypes.AsSafeEnumerable();
 
             /// <summary>
-            /// Gets the file system for the mod.
+            /// Gets the file system for the mod.<br/>
+            /// All files within will be considered <see cref="Mod.ContentPaths">content</see>.
             /// </summary>
             public IFileSystem FileSystem { get; }
 

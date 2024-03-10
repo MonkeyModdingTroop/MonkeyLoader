@@ -23,18 +23,15 @@ namespace MonkeyLoader.Meta
     public sealed class NuGetPackageMod : Mod
     {
         /// <summary>
-        /// The search pattern for mod files.
+        /// The search pattern for mod files supported by this mod-type.
         /// </summary>
         public const string SearchPattern = "*.nupkg";
 
         internal readonly HashSet<Assembly> PatcherAssemblies = new();
         internal readonly HashSet<Assembly> PrePatcherAssemblies = new();
-
-        private const string AssemblyExtension = ".dll";
         private const char AuthorsSeparator = ',';
         private const string PrePatchersFolderName = "pre-patchers";
         private const char TagsSeparator = ' ';
-        private readonly UPath[] _assemblyPaths;
 
         private readonly string? _title;
 
@@ -56,12 +53,12 @@ namespace MonkeyLoader.Meta
         /// <summary>
         /// Gets the paths inside this mod's <see cref="FileSystem">FileSystem</see> that point to patcher assemblies that should be loaded.
         /// </summary>
-        public IEnumerable<UPath> PatcherAssemblyPaths => _assemblyPaths.Where(path => !path.FullName.Contains(PrePatchersFolderName));
+        public IEnumerable<UPath> PatcherAssemblyPaths => assemblyPaths.Where(path => !path.FullName.Contains(PrePatchersFolderName));
 
         /// <summary>
         /// Gets the paths inside this mod's <see cref="FileSystem">FileSystem</see> that point to pre-patcher assemblies that should be loaded.
         /// </summary>
-        public IEnumerable<UPath> PrePatcherAssemblyPaths => _assemblyPaths.Where(path => path.FullName.Contains(PrePatchersFolderName));
+        public IEnumerable<UPath> PrePatcherAssemblyPaths => assemblyPaths.Where(path => path.FullName.Contains(PrePatchersFolderName));
 
         /// <inheritdoc/>
         public override Uri? ProjectUrl { get; }
@@ -123,10 +120,19 @@ namespace MonkeyLoader.Meta
             else if (!string.IsNullOrWhiteSpace(projectUrl))
                 Logger.Warn(() => $"Project Url [{projectUrl}] is set but is invalid for mod: {location}");
 
+            var contentItemGroups = packageReader.GetContentItems().ToArray();
+            var nearestContentItems = contentItemGroups.GetNearestCompatible();
+            var anyContentItems = contentItemGroups.GetNearest(NuGetFramework.AnyFramework);
+
+            if (nearestContentItems is not null)
+                contentPaths.AddRange(nearestContentItems.Items.Select(path => new UPath(path).ToAbsolute()));
+
+            if (anyContentItems is not null && anyContentItems != nearestContentItems)
+                contentPaths.AddRange(anyContentItems.Items.Select(path => new UPath(path).ToAbsolute()));
+
             var nearestLib = packageReader.GetLibItems().GetNearestCompatible();
             if (nearestLib is null)
             {
-                _assemblyPaths = Array.Empty<UPath>();
                 TargetFramework = NuGetFramework.AnyFramework;
                 Logger.Warn(() => $"No compatible lib entry found!");
 
@@ -136,12 +142,12 @@ namespace MonkeyLoader.Meta
             TargetFramework = nearestLib.TargetFramework;
             Logger.Debug(() => $"Nearest compatible lib entry: {nearestLib.TargetFramework}");
 
-            _assemblyPaths = nearestLib.Items
+            assemblyPaths.AddRange(nearestLib.Items
                 .Where(path => AssemblyExtension.Equals(Path.GetExtension(path), StringComparison.OrdinalIgnoreCase))
-                .Select(path => new UPath(path).ToAbsolute()).ToArray() ?? Array.Empty<UPath>();
+                .Select(path => new UPath(path).ToAbsolute()));
 
-            if (_assemblyPaths.Any())
-                Logger.Trace(() => $"Found the following assemblies:{Environment.NewLine}    - {string.Join($"{Environment.NewLine}    - ", _assemblyPaths)}");
+            if (assemblyPaths.Any())
+                Logger.Trace(() => $"Found the following assemblies:{Environment.NewLine}    - {string.Join($"{Environment.NewLine}    - ", assemblyPaths)}");
             else
                 Logger.Warn(() => "Found no assemblies!");
 
