@@ -592,6 +592,9 @@ namespace MonkeyLoader
 
             LoadMonkeys(mods);
             RunMonkeys(mods);
+
+            foreach (var mod in mods)
+                ModRan?.TryInvokeAll(this, mod);
         }
 
         /// <summary>
@@ -924,6 +927,11 @@ namespace MonkeyLoader
         /// Called when a <see cref="Mod"/> is <see cref="AddMod">added</see> to this loader.
         /// </summary>
         public event ModsChangedEventHandler? ModAdded;
+
+        /// <summary>
+        /// Called after a <see cref="Mod"/> has been <see cref="RunMod">ran</see> by this loader.
+        /// </summary>
+        public event ModsChangedEventHandler? ModRan;
 
         /// <summary>
         /// Called after a <see cref="Mod"/> has been <see cref="Mod.Shutdown">shut down</see> by this loader.
