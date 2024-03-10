@@ -18,6 +18,13 @@ using System.Reflection;
 namespace MonkeyLoader
 {
     /// <summary>
+    /// The delegate that gets called when a mod is added to or removed from a <see cref="MonkeyLoader"/>.
+    /// </summary>
+    /// <param name="loader">The loader responsible for the mod.</param>
+    /// <param name="mod">The mod that was added or removed.</param>
+    public delegate void ModsChangedEventHandler(MonkeyLoader loader, Mod mod);
+
+    /// <summary>
     /// The root of all mod loading.
     /// </summary>
     public sealed class MonkeyLoader : IConfigOwner, IShutdown
@@ -28,6 +35,7 @@ namespace MonkeyLoader
         private readonly SortedSet<Mod> _allMods = new(Mod.AscendingComparer);
 
         private LoggingHandler _loggingHandler = MissingLoggingHandler.Instance;
+
         private ExecutionPhase _phase;
 
         /// <summary>
@@ -250,6 +258,8 @@ namespace MonkeyLoader
 
             _allMods.Add(mod);
             NuGet.Add(mod);
+
+            ModAdded?.TryInvokeAll(this, mod);
         }
 
         /// <summary>
@@ -457,6 +467,8 @@ namespace MonkeyLoader
         /// <returns>The loaded mod.</returns>
         public NuGetPackageMod LoadMod(string path, bool isGamePack = false)
         {
+            path = Path.GetFullPath(path);
+
             Logger.Debug(() => $"Loading {(isGamePack ? "game pack" : "regular")} mod from: {path}");
 
             var mod = new NuGetPackageMod(this, path, isGamePack);
@@ -693,18 +705,19 @@ namespace MonkeyLoader
         /// <returns>Whether it ran successfully.</returns>
         public bool ShutdownMod(Mod mod)
         {
+            ModShuttingDown?.TryInvokeAll(this, mod);
+
             var earlyMonkeys = mod.GetEarlyMonkeysDescending();
             var monkeys = mod.GetMonkeysDescending();
 
             Logger.Info(() => $"Shutting down {mod} with {earlyMonkeys.Length} early and {monkeys.Length} regular monkeys.");
 
             var success = true;
-
-            ShutdownMonkeys(earlyMonkeys, monkeys);
-
+            success &= ShutdownMonkeys(earlyMonkeys, monkeys);
             success &= mod.Shutdown();
 
             _allMods.Remove(mod);
+            ModShutdown?.TryInvokeAll(this, mod);
 
             return success;
         }
@@ -723,12 +736,15 @@ namespace MonkeyLoader
             var success = true;
             Array.Sort(mods, Mod.DescendingComparer);
 
+            foreach (var mod in mods)
+                ModShuttingDown?.TryInvokeAll(this, mod);
+
             var earlyMonkeys = mods.GetEarlyMonkeysDescending();
             var monkeys = mods.GetMonkeysDescending();
 
             Logger.Info(() => $"Shutting down {mods.Length} mods with {earlyMonkeys.Length} early and {monkeys.Length} regular monkeys.");
 
-            ShutdownMonkeys(earlyMonkeys, monkeys);
+            success &= ShutdownMonkeys(earlyMonkeys, monkeys);
 
             Logger.Trace(() => "Shutting down mods in this order:");
             Logger.Trace(mods);
@@ -737,6 +753,9 @@ namespace MonkeyLoader
 
             foreach (var mod in mods)
                 _allMods.Remove(mod);
+
+            foreach (var mod in mods)
+                ModShutdown?.TryInvokeAll(this, mod);
 
             return success;
         }
@@ -900,6 +919,21 @@ namespace MonkeyLoader
         /// This gets fired <i>after</i> the source config's <see cref="Config.ItemChanged">ConfigurationChanged</see> event.
         /// </summary>
         public event ConfigKeyChangedEventHandler? AnyConfigChanged;
+
+        /// <summary>
+        /// Called when a <see cref="Mod"/> is <see cref="AddMod">added</see> to this loader.
+        /// </summary>
+        public event ModsChangedEventHandler? ModAdded;
+
+        /// <summary>
+        /// Called after a <see cref="Mod"/> has been <see cref="Mod.Shutdown">shut down</see> by this loader.
+        /// </summary>
+        public event ModsChangedEventHandler? ModShutdown;
+
+        /// <summary>
+        /// Called when a <see cref="Mod"/> is about to be <see cref="ShutdownMod">shut down</see> by this loader.
+        /// </summary>
+        public event ModsChangedEventHandler? ModShuttingDown;
 
         /// <summary>
         /// Denotes the different stages of the loader's execution.<br/>

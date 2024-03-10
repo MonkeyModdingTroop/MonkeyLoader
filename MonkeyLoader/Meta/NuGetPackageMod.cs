@@ -1,11 +1,13 @@
 ﻿using MonkeyLoader.NuGet;
 using MonkeyLoader.Patching;
+using Mono.Cecil;
 using NuGet.Frameworks;
 using NuGet.Packaging;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -33,6 +35,7 @@ namespace MonkeyLoader.Meta
         private const string PrePatchersFolderName = "pre-patchers";
         private const char TagsSeparator = ' ';
 
+        private static int _assemblyCounter = 0;
         private readonly string? _title;
 
         /// <inheritdoc/>
@@ -174,26 +177,9 @@ namespace MonkeyLoader.Meta
             {
                 try
                 {
-                    using var assemblyFile = FileSystem.OpenFile(prepatcherPath, FileMode.Open, FileAccess.Read);
-                    using var assemblyStream = new MemoryStream();
-                    assemblyFile.CopyTo(assemblyStream);
+                    Logger.Debug(() => $"Loading pre-patcher assembly from: {prepatcherPath}");
 
-                    var mdbPath = prepatcherPath + ".mdb";
-                    var pdbPath = prepatcherPath.GetDirectory() / $"{prepatcherPath.GetNameWithoutExtension()!}.pdb";
-                    using var symbolStream = new MemoryStream();
-
-                    if (FileSystem.FileExists(mdbPath))
-                    {
-                        using var mdbFile = FileSystem.OpenFile(mdbPath, FileMode.Open, FileAccess.Read);
-                        mdbFile.CopyTo(symbolStream);
-                    }
-                    else if (FileSystem.FileExists(pdbPath))
-                    {
-                        using var pdbFile = FileSystem.OpenFile(pdbPath, FileMode.Open, FileAccess.Read);
-                        pdbFile.CopyTo(symbolStream);
-                    }
-
-                    var assembly = Assembly.Load(assemblyStream.ToArray(), symbolStream.ToArray());
+                    var assembly = LoadAssembly(FileSystem, prepatcherPath);
                     Loader.AddJsonConverters(assembly);
                     PrePatcherAssemblies.Add(assembly);
 
@@ -231,26 +217,7 @@ namespace MonkeyLoader.Meta
                 {
                     Logger.Debug(() => $"Loading patcher assembly from: {patcherPath}");
 
-                    using var assemblyFile = FileSystem.OpenFile(patcherPath, FileMode.Open, FileAccess.Read);
-                    using var assemblyStream = new MemoryStream();
-                    assemblyFile.CopyTo(assemblyStream);
-
-                    var mdbPath = patcherPath + ".mdb";
-                    var pdbPath = patcherPath.GetDirectory() / $"{patcherPath.GetNameWithoutExtension()!}.pdb";
-                    using var symbolStream = new MemoryStream();
-
-                    if (FileSystem.FileExists(mdbPath))
-                    {
-                        using var mdbFile = FileSystem.OpenFile(mdbPath, FileMode.Open, FileAccess.Read);
-                        mdbFile.CopyTo(symbolStream);
-                    }
-                    else if (FileSystem.FileExists(pdbPath))
-                    {
-                        using var pdbFile = FileSystem.OpenFile(pdbPath, FileMode.Open, FileAccess.Read);
-                        pdbFile.CopyTo(symbolStream);
-                    }
-
-                    var assembly = Assembly.Load(assemblyStream.ToArray(), symbolStream.ToArray());
+                    var assembly = LoadAssembly(FileSystem, patcherPath);
                     Loader.AddJsonConverters(assembly);
                     PatcherAssemblies.Add(assembly);
 
@@ -275,6 +242,47 @@ namespace MonkeyLoader.Meta
             }
 
             return !error;
+        }
+
+        private Assembly LoadAssembly(IFileSystem fileSystem, UPath assemblyPath)
+        {
+            var filename = assemblyPath.GetNameWithoutExtension()!;
+
+            using var assemblyFile = fileSystem.OpenFile(assemblyPath, FileMode.Open, FileAccess.Read);
+            using var assemblyStream = new MemoryStream();
+            assemblyFile.CopyTo(assemblyStream);
+
+            var mdbPath = assemblyPath + ".mdb";
+            var pdbPath = assemblyPath.GetDirectory() / $"{filename}.pdb";
+            using var symbolStream = new MemoryStream();
+
+            if (fileSystem.FileExists(mdbPath))
+            {
+                using var mdbFile = fileSystem.OpenFile(mdbPath, FileMode.Open, FileAccess.Read);
+                mdbFile.CopyTo(symbolStream);
+            }
+            else if (fileSystem.FileExists(pdbPath))
+            {
+                using var pdbFile = fileSystem.OpenFile(pdbPath, FileMode.Open, FileAccess.Read);
+                pdbFile.CopyTo(symbolStream);
+            }
+
+            // TODO: Only when hot reloadable
+            assemblyStream.Position = 0;
+            //var assemblyDefinition = Loader.PatcherAssemblyPool.LoadDefinition(assemblyStream);
+            var assemblyDefinition = AssemblyDefinition.ReadAssembly(assemblyStream);
+            var newAssemblyStream = new MemoryStream();
+
+            if (AppDomain.CurrentDomain.GetAssemblies().Any(assembly => assembly.GetName().Name == assemblyDefinition.Name.Name))
+            {
+                //assemblyDefinition.Name = new AssemblyNameDefinition($"{filename}-{_assemblyCounter++}", assemblyDefinition.Name.Version);
+                assemblyDefinition.Name.Name += DateTime.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture);
+
+                //assemblyStream.SetLength(0);
+                assemblyDefinition.Write(newAssemblyStream);
+            }
+
+            return Assembly.Load((newAssemblyStream.Length == 0 ? assemblyStream : newAssemblyStream).ToArray(), symbolStream.ToArray());
         }
     }
 }

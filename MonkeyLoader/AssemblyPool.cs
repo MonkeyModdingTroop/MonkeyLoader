@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Xml.Linq;
 
 namespace MonkeyLoader
 {
@@ -147,6 +148,21 @@ namespace MonkeyLoader
 
             _assemblies.Add(name, new AssemblyEntry(name, definition));
             _logger.Debug(() => $"Loaded assembly definition from {path}");
+
+            return definition;
+        }
+
+        public AssemblyDefinition LoadDefinition(Stream assemblyStream, ReaderParameters? readerParameters = null)
+        {
+            readerParameters ??= new ReaderParameters() { AssemblyResolver = this };
+            var definition = AssemblyDefinition.ReadAssembly(assemblyStream, readerParameters);
+            var name = new AssemblyName(definition.Name.Name);
+
+            if (TryResolve(name, out var assemblyDefinition))
+                return assemblyDefinition;
+
+            _assemblies.Add(name, new AssemblyEntry(name, definition));
+            _logger.Debug(() => $"Loaded assembly definition [{definition.Name}] from a stream!");
 
             return definition;
         }
