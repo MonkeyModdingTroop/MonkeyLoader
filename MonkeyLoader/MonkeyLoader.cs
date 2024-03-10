@@ -28,6 +28,7 @@ namespace MonkeyLoader
         private readonly SortedSet<Mod> _allMods = new(Mod.AscendingComparer);
 
         private LoggingHandler _loggingHandler = MissingLoggingHandler.Instance;
+        private ExecutionPhase _phase;
 
         /// <summary>
         /// Gets the config that this loader uses to load <see cref="ConfigSection"/>s.
@@ -110,6 +111,26 @@ namespace MonkeyLoader
         public NuGetManager NuGet { get; private set; }
 
         /// <summary>
+        /// Gets this loader's current <see cref="ExecutionPhase"/>.
+        /// </summary>
+        public ExecutionPhase Phase
+        {
+            get => _phase;
+
+            private set
+            {
+                if (_phase == value)
+                    return;
+
+                if (_phase > value)
+                    throw new InvalidOperationException($"Attempted to regress from phase [{_phase}] to [{value}]!");
+
+                Logger.Info(() => $"Advanced from phase [{_phase}] to [{value}]!");
+                _phase = value;
+            }
+        }
+
+        /// <summary>
         /// Gets all loaded regular <see cref="Mod"/>s in topological order.
         /// </summary>
         public IEnumerable<Mod> RegularMods => _allMods.Where(mod => !mod.IsGamePack);
@@ -122,10 +143,12 @@ namespace MonkeyLoader
         /// <summary>
         /// Gets whether this loader's <see cref="Shutdown">Shutdown</see>() method has been called.
         /// </summary>
-        public bool ShutdownRan { get; private set; }
+        public bool ShutdownRan => Phase >= ExecutionPhase.ShuttingDown;
 
         internal Queue<MonkeyLogger.DeferredMessage> DeferredMessages { get; } = new();
+
         internal AssemblyPool GameAssemblyPool { get; }
+
         internal AssemblyPool PatcherAssemblyPool { get; }
 
         /// <summary>
@@ -178,6 +201,8 @@ namespace MonkeyLoader
 
             PatcherAssemblyPool = new AssemblyPool(this, "PatcherAssemblyPool", () => Locations.PatchedAssemblies);
             PatcherAssemblyPool.AddFallbackPool(GameAssemblyPool);
+
+            Phase = ExecutionPhase.Initialized;
         }
 
         /// <summary>
@@ -271,7 +296,7 @@ namespace MonkeyLoader
             RunGamePackEarlyMonkeys();
 
             LoadModEarlyMonkeys();
-            RunModEarlyMonkeys();
+            RunRegularEarlyMonkeys();
 
             LoadGameAssemblies();
 
@@ -279,7 +304,7 @@ namespace MonkeyLoader
             RunGamePackMonkeys();
 
             LoadModMonkeys();
-            RunModMonkeys();
+            RunRegularMonkeys();
         }
 
         /// <summary>
@@ -355,6 +380,8 @@ namespace MonkeyLoader
         /// </summary>
         public void LoadGameAssemblies()
         {
+            Phase = ExecutionPhase.LoadingGameAssemblies;
+
             GameAssemblyPool.LoadAll(Locations.PatchedAssemblies);
 
             // Load all unmodified assemblies that weren't loaded already
@@ -369,6 +396,8 @@ namespace MonkeyLoader
                     Logger.Debug(() => ex.Format($"Exception while trying to load assembly {assemblyFile}"));
                 }
             }
+
+            Phase = ExecutionPhase.LoadedGameAssemblies;
         }
 
         /// <summary>
@@ -376,6 +405,8 @@ namespace MonkeyLoader
         /// </summary>
         public void LoadGameAssemblyDefinitions()
         {
+            Phase = ExecutionPhase.LoadingGameAssemblyDefinitions;
+
             foreach (var assemblyFile in Directory.EnumerateFiles(GameAssemblyPath, "*.dll", SearchOption.TopDirectoryOnly))
             {
                 try
@@ -396,6 +427,8 @@ namespace MonkeyLoader
 
             //if (!loadedPackages.All(package => package.AllDependenciesLoaded))
             //    throw new InvalidOperationException("Game assemblies contained unresolvable references!");
+
+            Phase = ExecutionPhase.LoadedGameAssemblyDefinitions;
         }
 
         /// <summary>
@@ -506,8 +539,12 @@ namespace MonkeyLoader
         /// </summary>
         public void RunGamePackEarlyMonkeys()
         {
+            Phase = ExecutionPhase.RunningGamePackEarlyMonkeys;
+
             Logger.Info(() => "Running every loaded game pack mod's loaded early monkeys.");
             RunEarlyMonkeys(GamePacks);
+
+            Phase = ExecutionPhase.RanGamePackEarlyMonkeys;
         }
 
         /// <summary>
@@ -516,8 +553,12 @@ namespace MonkeyLoader
         /// </summary>
         public void RunGamePackMonkeys()
         {
+            Phase = ExecutionPhase.RunningGamePackMonkeys;
+
             Logger.Info(() => "Running every loaded game pack mod's loaded monkeys.");
             RunMonkeys(GamePacks);
+
+            Phase = ExecutionPhase.RanGamePackMonkeys;
         }
 
         /// <summary>
@@ -526,26 +567,6 @@ namespace MonkeyLoader
         /// </summary>
         /// <param name="mod">The mod to run.</param>
         public void RunMod(Mod mod) => RunMods(mod);
-
-        /// <summary>
-        /// Runs every loaded <see cref="RegularMods">regular mod's</see> loaded
-        /// <see cref="Mod.EarlyMonkeys">monkeys'</see> <see cref="MonkeyBase.Run">Run</see>() method.
-        /// </summary>
-        public void RunModEarlyMonkeys()
-        {
-            Logger.Info(() => "Running every loaded regular mod's loaded early monkeys.");
-            RunEarlyMonkeys(RegularMods);
-        }
-
-        /// <summary>
-        /// Runs every loaded <see cref="RegularMods">regular mod's</see> loaded
-        /// <see cref="Mod.Monkeys">monkeys'</see> <see cref="MonkeyBase.Run">Run</see>() method.
-        /// </summary>
-        public void RunModMonkeys()
-        {
-            Logger.Info(() => "Running every loaded regular mod's loaded monkeys.");
-            RunMonkeys(RegularMods);
-        }
 
         /// <summary>
         /// <see cref="MonkeyBase.Run">Runs</see> the given <see cref="Mod"/>s'
@@ -599,6 +620,34 @@ namespace MonkeyLoader
         }
 
         /// <summary>
+        /// Runs every loaded <see cref="RegularMods">regular mod's</see> loaded
+        /// <see cref="Mod.EarlyMonkeys">monkeys'</see> <see cref="MonkeyBase.Run">Run</see>() method.
+        /// </summary>
+        public void RunRegularEarlyMonkeys()
+        {
+            Phase = ExecutionPhase.RunningRegularEarlyMonkeys;
+
+            Logger.Info(() => "Running every loaded regular mod's loaded early monkeys.");
+            RunEarlyMonkeys(RegularMods);
+
+            Phase = ExecutionPhase.RanRegularEarlyMonkeys;
+        }
+
+        /// <summary>
+        /// Runs every loaded <see cref="RegularMods">regular mod's</see> loaded
+        /// <see cref="Mod.Monkeys">monkeys'</see> <see cref="MonkeyBase.Run">Run</see>() method.
+        /// </summary>
+        public void RunRegularMonkeys()
+        {
+            Phase = ExecutionPhase.RunningRegularMonkeys;
+
+            Logger.Info(() => "Running every loaded regular mod's loaded monkeys.");
+            RunMonkeys(RegularMods);
+
+            Phase = ExecutionPhase.RanRegularMonkeys;
+        }
+
+        /// <summary>
         /// Should be called by the game integration or application using this as a library when things are shutting down.<br/>
         /// Saves its config and triggers <see cref="Mod.Shutdown">Shutdown</see>() on all <see cref="RegularMods">Mods</see>.
         /// </summary>
@@ -611,7 +660,8 @@ namespace MonkeyLoader
                 return !ShutdownFailed;
             }
 
-            ShutdownRan = true;
+            Phase = ExecutionPhase.ShuttingDown;
+
             var sw = Stopwatch.StartNew();
             Logger.Warn(() => $"The loader's shutdown routine was triggered! Triggering shutdown for all {_allMods.Count} mods!");
 
@@ -630,6 +680,7 @@ namespace MonkeyLoader
             }
 
             Logger.Info(() => $"Processed shutdown in {sw.ElapsedMilliseconds}ms!");
+            Phase = ExecutionPhase.Shutdown;
 
             return !ShutdownFailed;
         }
@@ -849,5 +900,97 @@ namespace MonkeyLoader
         /// This gets fired <i>after</i> the source config's <see cref="Config.ItemChanged">ConfigurationChanged</see> event.
         /// </summary>
         public event ConfigKeyChangedEventHandler? AnyConfigChanged;
+
+        /// <summary>
+        /// Denotes the different stages of the loader's execution.<br/>
+        /// Some actions may only work before, in, or after certain phases.
+        /// </summary>
+        // TODO: Add Phase checks to methods?
+        public enum ExecutionPhase
+        {
+            /// <summary>
+            /// Before the constructor has run. Shouldn't be encountered.
+            /// </summary>
+            Uninitialized,
+
+            /// <summary>
+            /// After the constructor has run.
+            /// </summary>
+            Initialized,
+
+            /// <summary>
+            /// While <see cref="LoadGameAssemblyDefinitions"/> is executing.
+            /// </summary>
+            LoadingGameAssemblyDefinitions,
+
+            /// <summary>
+            /// After <see cref="LoadGameAssemblyDefinitions"/> is done.
+            /// </summary>
+            LoadedGameAssemblyDefinitions,
+
+            /// <summary>
+            /// While <see cref="RunGamePackEarlyMonkeys"/> is executing.
+            /// </summary>
+            RunningGamePackEarlyMonkeys,
+
+            /// <summary>
+            /// After <see cref="RunGamePackEarlyMonkeys"/> is done.
+            /// </summary>
+            RanGamePackEarlyMonkeys,
+
+            /// <summary>
+            /// While <see cref="RunRegularEarlyMonkeys"/> is executing.
+            /// </summary>
+            RunningRegularEarlyMonkeys,
+
+            /// <summary>
+            /// After <see cref="RunRegularEarlyMonkeys"/> is done.
+            /// </summary>
+            RanRegularEarlyMonkeys,
+
+            /// <summary>
+            /// While <see cref="LoadGameAssemblies"/> is executing.
+            /// </summary>
+            LoadingGameAssemblies,
+
+            /// <summary>
+            /// After <see cref="LoadGameAssemblies"/> is done.<br/>
+            /// No <see cref="EarlyMonkey{TMonkey}"/>s that target
+            /// the now loaded assemblies can work anymore now.
+            /// </summary>
+            LoadedGameAssemblies,
+
+            /// <summary>
+            /// While <see cref="RunGamePackMonkeys"/> is executing.
+            /// </summary>
+            RunningGamePackMonkeys,
+
+            /// <summary>
+            /// After <see cref="RunGamePackMonkeys"/> is done.
+            /// </summary>
+            RanGamePackMonkeys,
+
+            /// <summary>
+            /// While <see cref="RunRegularMonkeys"/> is executing.
+            /// </summary>
+            RunningRegularMonkeys,
+
+            /// <summary>
+            /// After <see cref="RunRegularMonkeys"/> is done.<br/>
+            /// This is the active phase until <see cref="MonkeyLoader.Shutdown"/> is triggered.
+            /// </summary>
+            RanRegularMonkeys,
+
+            /// <summary>
+            /// While <see cref="MonkeyLoader.Shutdown"/> is executing.
+            /// </summary>
+            ShuttingDown,
+
+            /// <summary>
+            /// After <see cref="MonkeyLoader.Shutdown"/> is done.<br/>
+            /// Nothing should be done with this loader anymore when in this phase.
+            /// </summary>
+            Shutdown
+        }
     }
 }

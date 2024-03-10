@@ -95,6 +95,15 @@ namespace MonkeyLoader.Patching
         /// </summary>
         protected abstract IEnumerable<PrePatchTarget> GetPrePatchTargets();
 
+        /// <inheritdoc/>
+        protected override bool OnShutdown()
+        {
+            if (Mod.Loader.Phase <= MonkeyLoader.ExecutionPhase.ShuttingDown)
+                Warn(() => "Early monkeys' effects cannot be undone at runtime!");
+
+            return base.OnShutdown();
+        }
+
         /// <summary>
         /// Receives the <see cref="MonkeyBase.PatchJob"/> for every <see cref="PrePatchTarget"/> to apply patches.
         /// Set <c>true</c> on <see cref="MonkeyBase.PatchJob.Changes"/> to indicate that any patching has happened.<br/>
