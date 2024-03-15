@@ -13,12 +13,15 @@ namespace MonkeyLoader.Logging
     public sealed class VoidLoggingHandler : LoggingHandler
     {
         /// <summary>
-        /// Gets a cached instance of the <see cref="VoidLoggingHandler"/>.
+        /// Gets the instance of the <see cref="VoidLoggingHandler"/>.
         /// </summary>
         public static VoidLoggingHandler Instance { get; } = new();
 
         /// <inheritdoc/>
         public override bool Connected => true;
+
+        private VoidLoggingHandler()
+        { }
 
         /// <inheritdoc/>
         public override void Debug(Func<object> messageProducer)
@@ -30,6 +33,10 @@ namespace MonkeyLoader.Logging
 
         /// <inheritdoc/>
         public override void Fatal(Func<object> messageProducer)
+        { }
+
+        /// <inheritdoc/>
+        public override void Flush()
         { }
 
         /// <inheritdoc/>

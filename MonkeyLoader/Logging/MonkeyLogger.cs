@@ -126,6 +126,11 @@ namespace MonkeyLoader.Logging
         public void Fatal(IEnumerable<Func<object>> messageProducers) => LogInternal(LoggingLevel.Fatal, messageProducers);
 
         /// <summary>
+        /// Flushes any not yet fully logged messages.
+        /// </summary>
+        public void Flush() => Handler.Flush();
+
+        /// <summary>
         /// Logs that something happened, which is purely informative and can be ignored during normal use.
         /// </summary>
         /// <param name="messageProducer">The producer to log if possible.</param>

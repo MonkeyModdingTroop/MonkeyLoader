@@ -1,5 +1,5 @@
-﻿using NuGet.Packaging;
-using System;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,17 +10,22 @@ namespace MonkeyLoader.Logging
     /// <summary>
     /// Implements an <see cref="LoggingHandler"/> that can delegate messages to multiple other handlers.
     /// </summary>
-    public sealed class MulticastLoggingHandler : LoggingHandler
+    public sealed class MulticastLoggingHandler : LoggingHandler, IEnumerable<LoggingHandler>
     {
         private readonly LoggingHandler[] _loggingHandlers;
 
         /// <inheritdoc/>
-        public override bool Connected => _loggingHandlers.Any(handler => handler.Connected);
+        public override bool Connected => _loggingHandlers.Any(IsConnected);
 
         /// <summary>
         /// Gets the currently <see cref="LoggingHandler.Connected">connected</see> logging handlers that this one delegates messages to.
         /// </summary>
         public IEnumerable<LoggingHandler> ConnectedHandlers => _loggingHandlers.Where(IsConnected);
+
+        /// <summary>
+        /// Gets the number of other handlers that messages are delegated to.
+        /// </summary>
+        public int Count => _loggingHandlers.Length;
 
         /// <summary>
         /// Gets all logging handlers that this one delegates messages to.
@@ -47,45 +52,78 @@ namespace MonkeyLoader.Logging
         /// <inheritdoc/>
         public override void Debug(Func<object> messageProducer)
         {
-            foreach (var loggingHandler in ConnectedHandlers)
+            messageProducer = PreloadMessage(messageProducer);
+
+            foreach (var loggingHandler in _loggingHandlers)
                 loggingHandler.Debug(messageProducer);
         }
 
         /// <inheritdoc/>
         public override void Error(Func<object> messageProducer)
         {
-            foreach (var loggingHandler in ConnectedHandlers)
+            messageProducer = PreloadMessage(messageProducer);
+
+            foreach (var loggingHandler in _loggingHandlers)
                 loggingHandler.Error(messageProducer);
         }
 
         /// <inheritdoc/>
         public override void Fatal(Func<object> messageProducer)
         {
-            foreach (var loggingHandler in ConnectedHandlers)
+            messageProducer = PreloadMessage(messageProducer);
+
+            foreach (var loggingHandler in _loggingHandlers)
                 loggingHandler.Fatal(messageProducer);
         }
 
         /// <inheritdoc/>
+        public override void Flush()
+        {
+            foreach (var loggingHandler in _loggingHandlers)
+                loggingHandler.Flush();
+        }
+
+        /// <inheritdoc/>
+        public IEnumerator<LoggingHandler> GetEnumerator() => ((IEnumerable<LoggingHandler>)_loggingHandlers).GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => _loggingHandlers.GetEnumerator();
+
+        /// <inheritdoc/>
+        public override int GetHashCode() => Count;
+
+        /// <inheritdoc/>
         public override void Info(Func<object> messageProducer)
         {
-            foreach (var loggingHandler in ConnectedHandlers)
+            messageProducer = PreloadMessage(messageProducer);
+
+            foreach (var loggingHandler in _loggingHandlers)
                 loggingHandler.Info(messageProducer);
         }
 
         /// <inheritdoc/>
         public override void Trace(Func<object> messageProducer)
         {
-            foreach (var loggingHandler in ConnectedHandlers)
+            messageProducer = PreloadMessage(messageProducer);
+
+            foreach (var loggingHandler in _loggingHandlers)
                 loggingHandler.Trace(messageProducer);
         }
 
         /// <inheritdoc/>
         public override void Warn(Func<object> messageProducer)
         {
-            foreach (var loggingHandler in ConnectedHandlers)
+            messageProducer = PreloadMessage(messageProducer);
+
+            foreach (var loggingHandler in _loggingHandlers)
                 loggingHandler.Warn(messageProducer);
         }
 
         private static bool IsConnected(LoggingHandler loggingHandler) => loggingHandler.Connected;
+
+        private static Func<object> PreloadMessage(Func<object> messageProducer)
+        {
+            var message = messageProducer();
+            return () => message;
+        }
     }
 }

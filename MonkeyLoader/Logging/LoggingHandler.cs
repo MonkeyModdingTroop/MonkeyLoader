@@ -24,15 +24,15 @@ namespace MonkeyLoader.Logging
         /// <returns>A new logging handler containing the remaining handler(s).</returns>
         public static LoggingHandler operator -(LoggingHandler? left, LoggingHandler? right)
         {
-            if (left is null or MissingLoggingHandler)
+            if (left == null)
             {
-                if (right is null or MissingLoggingHandler)
+                if (right == null)
                     return MissingLoggingHandler.Instance;
 
                 return right;
             }
 
-            if (right is null or MissingLoggingHandler)
+            if (right == null)
                 return left;
 
             if (left is MulticastLoggingHandler multiLeft)
@@ -57,11 +57,20 @@ namespace MonkeyLoader.Logging
                 return new MulticastLoggingHandler(newHandlers);
             }
 
-            if (left.Equals(right))
+            if (left == right)
                 return MissingLoggingHandler.Instance;
 
             return left;
         }
+
+        /// <summary>
+        /// Determines whether two <see cref="LoggingHandler"/>s are considered unequal.
+        /// </summary>
+        /// <param name="left">The first handler.</param>
+        /// <param name="right">The second handler.</param>
+        /// <returns><c>true</c> if they're considered unequal; otherwise <c>false</c>.</returns>
+        public static bool operator !=(LoggingHandler? left, LoggingHandler? right)
+            => !(left != right);
 
         /// <summary>
         /// Adds the right logging handler(s) to the left one(s).<br/>
@@ -73,15 +82,15 @@ namespace MonkeyLoader.Logging
         public static LoggingHandler operator +(LoggingHandler? left, LoggingHandler? right)
         {
             // Remove MissingLoggingHandler
-            if (left is null or MissingLoggingHandler)
+            if (left == null)
             {
-                if (right is null or MissingLoggingHandler)
+                if (right == null)
                     return MissingLoggingHandler.Instance;
 
                 return right;
             }
 
-            if (right is null or MissingLoggingHandler)
+            if (right == null)
                 return left;
 
             if (left is MulticastLoggingHandler multiLeft)
@@ -99,10 +108,33 @@ namespace MonkeyLoader.Logging
         }
 
         /// <summary>
+        /// Determines whether two <see cref="LoggingHandler"/>s are considered equal.
+        /// </summary>
+        /// <param name="left">The first handler.</param>
+        /// <param name="right">The second handler.</param>
+        /// <returns><c>true</c> if they're considered equal; otherwise <c>false</c>.</returns>
+        public static bool operator ==(LoggingHandler? left, LoggingHandler? right)
+        {
+            if (ReferenceEquals(left, right))
+                return true;
+
+            if (left is MissingLoggingHandler or null && right is MissingLoggingHandler or null)
+                return true;
+
+            if (left is MulticastLoggingHandler multiLeft && right is MulticastLoggingHandler multiRight && multiLeft.Count == multiRight.Count)
+                return multiLeft.LoggingHandlers.Intersect(multiRight.LoggingHandlers).Count() == multiLeft.Count;
+
+            return false;
+        }
+
+        /// <summary>
         /// Logs events considered to be useful during debugging when more granular information is needed.
         /// </summary>
         /// <param name="messageProducer">The producer to log if possible.</param>
         public abstract void Debug(Func<object> messageProducer);
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj) => obj is LoggingHandler otherHandler && this == otherHandler;
 
         /// <summary>
         /// Logs that one or more functionalities are not working, preventing some from working correctly.
@@ -115,6 +147,14 @@ namespace MonkeyLoader.Logging
         /// </summary>
         /// <param name="messageProducer">The producer to log if possible.</param>
         public abstract void Fatal(Func<object> messageProducer);
+
+        /// <summary>
+        /// Attempts to flush any not yet fully logged messages.
+        /// </summary>
+        public abstract void Flush();
+
+        /// <inheritdoc/>
+        public override int GetHashCode() => base.GetHashCode();
 
         /// <summary>
         /// Logs that something happened, which is purely informative and can be ignored during normal use.

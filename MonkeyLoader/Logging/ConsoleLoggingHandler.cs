@@ -13,8 +13,16 @@ namespace MonkeyLoader.Logging
     /// </summary>
     public sealed class ConsoleLoggingHandler : LoggingHandler
     {
+        /// <summary>
+        /// Gets the instance of the <see cref="ConsoleLoggingHandler"/>.
+        /// </summary>
+        public static ConsoleLoggingHandler Instance { get; } = new ConsoleLoggingHandler();
+
         /// <inheritdoc/>
         public override bool Connected => true;
+
+        private ConsoleLoggingHandler()
+        { }
 
         /// <inheritdoc/>
         public override void Debug(Func<object> messageProducer) => Log(messageProducer().ToString());
@@ -24,6 +32,10 @@ namespace MonkeyLoader.Logging
 
         /// <inheritdoc/>
         public override void Fatal(Func<object> messageProducer) => Log(messageProducer().ToString());
+
+        /// <inheritdoc/>
+        public override void Flush()
+        { }
 
         /// <inheritdoc/>
         public override void Info(Func<object> messageProducer) => Log(messageProducer().ToString());
