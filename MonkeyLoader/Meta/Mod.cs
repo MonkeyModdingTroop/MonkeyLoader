@@ -242,6 +242,11 @@ namespace MonkeyLoader.Meta
         public bool ShutdownRan { get; private set; } = false;
 
         /// <summary>
+        /// Gets whether this type of mod supports hot reloading.
+        /// </summary>
+        public abstract bool SupportsHotReload { get; }
+
+        /// <summary>
         /// Gets the tags of this mod.
         /// </summary>
         public IEnumerable<string> Tags => tags.AsSafeEnumerable();

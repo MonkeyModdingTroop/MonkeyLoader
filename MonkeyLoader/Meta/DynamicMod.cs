@@ -43,6 +43,9 @@ namespace MonkeyLoader.Meta
         public override string? ReleaseNotes { get; }
 
         /// <inheritdoc/>
+        public override bool SupportsHotReload => false;
+
+        /// <inheritdoc/>
         public override NuGetFramework TargetFramework => NuGetHelper.Framework;
 
         /// <inheritdoc/>

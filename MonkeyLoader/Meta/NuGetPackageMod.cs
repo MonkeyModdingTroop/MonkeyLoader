@@ -70,13 +70,17 @@ namespace MonkeyLoader.Meta
         public override string? ReleaseNotes { get; }
 
         /// <inheritdoc/>
+        public override bool SupportsHotReload => true;
+
+        /// <inheritdoc/>
         public override NuGetFramework TargetFramework { get; }
 
         /// <inheritdoc/>
         public override string Title => _title ?? base.Title;
 
         /// <summary>
-        /// Creates a new <see cref="NuGetPackageMod"/> instance for the given <paramref name="loader"/>, loading a .nupkg from the given <paramref name="location"/>.<br/>
+        /// Creates a new <see cref="NuGetPackageMod"/> instance for the given <paramref name="loader"/>,
+        /// loading a .nupkg into memory from the given <paramref name="location"/>.<br/>
         /// The metadata gets loaded from a <c>.nuspec</c> file, which must be at the root of the file system.
         /// </summary>
         /// <param name="loader">The loader instance that loaded this mod.</param>
@@ -277,6 +281,7 @@ namespace MonkeyLoader.Meta
             {
                 //assemblyDefinition.Name = new AssemblyNameDefinition($"{filename}-{_assemblyCounter++}", assemblyDefinition.Name.Version);
                 assemblyDefinition.Name.Name += DateTime.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture);
+                assemblyDefinition.MainModule.Mvid = Guid.NewGuid();
 
                 //assemblyStream.SetLength(0);
                 assemblyDefinition.Write(newAssemblyStream);
