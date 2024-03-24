@@ -54,18 +54,18 @@ namespace MonkeyLoader.Patching
             {
                 // Not doing anything from prepare is success
                 _executedPatches = Array.Empty<PrePatchTarget>();
-                Debug(() => "Skipping pre-patching as prepare failed!");
+                Logger.Debug(() => "Skipping pre-patching as prepare failed!");
                 return true;
             }
 
-            Trace(() => "Running EarlyMonkey's processing methods!");
+            Logger.Trace(() => "Running EarlyMonkey's processing methods!");
             var patchJobs = PrePatchTargets.TrySelect<PrePatchTarget, PatchJob>(TryFromPrePatchTarget).ToArray();
 
             if (!Prepare(patchJobs))
             {
                 // Not doing anything from prepare is success
                 _executedPatches = Array.Empty<PrePatchTarget>();
-                Debug(() => "Skipping pre-patching as prepare with targets failed!");
+                Logger.Debug(() => "Skipping pre-patching as prepare with targets failed!");
                 return true;
             }
 
@@ -99,7 +99,7 @@ namespace MonkeyLoader.Patching
         protected override bool OnShutdown(bool applicationExiting)
         {
             if (!applicationExiting)
-                Warn(() => "Early monkeys' effects cannot be undone at runtime!");
+                Logger.Warn(() => "Early monkeys' effects cannot be undone at runtime!");
 
             return base.OnShutdown(applicationExiting);
         }
@@ -152,17 +152,17 @@ namespace MonkeyLoader.Patching
         {
             try
             {
-                Trace(() => $"Applying pre-patcher to {patchJob.Target.Assembly}.");
+                Logger.Trace(() => $"Applying pre-patcher to {patchJob.Target.Assembly}.");
 
                 if (!Patch(patchJob))
                 {
                     patchJob.Failed = true;
-                    Warn(() => $"Pre-patcher failed on assembly [{patchJob.Target.Assembly}]!");
+                    Logger.Warn(() => $"Pre-patcher failed on assembly [{patchJob.Target.Assembly}]!");
                 }
             }
             catch (Exception ex)
             {
-                Error(() => ex.Format($"Pre-patcher threw an exception on assembly [{patchJob.Target.Assembly}]!"));
+                Logger.Error(() => ex.Format($"Pre-patcher threw an exception on assembly [{patchJob.Target.Assembly}]!"));
                 patchJob.Error = true;
             }
         }

@@ -98,20 +98,20 @@ namespace MonkeyLoader.Patching
             ThrowIfRan();
 
             Ran = true;
-            Debug(() => "Running OnLoaded!");
+            Logger.Debug(() => "Running OnLoaded!");
 
             try
             {
                 if (!OnLoaded())
                 {
                     Failed = true;
-                    Warn(() => "OnLoaded failed!");
+                    Logger.Warn(() => "OnLoaded failed!");
                 }
             }
             catch (Exception ex)
             {
                 Failed = true;
-                Error(() => ex.Format("OnLoaded threw an Exception:"));
+                Logger.Error(() => ex.Format("OnLoaded threw an Exception:"));
             }
 
             return !Failed;
