@@ -25,7 +25,7 @@ namespace MonkeyLoader
         private readonly HashSet<string> _directories = new(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<AssemblyPool> _fallbackPools = new();
         private readonly Func<string?>? _getPatchedAssemblyPath;
-        private readonly MonkeyLogger _logger;
+        private readonly Logger _logger;
 
         public MonkeyLoader Loader { get; }
 
@@ -44,7 +44,7 @@ namespace MonkeyLoader
         public AssemblyPool(MonkeyLoader loader, string poolName = "AssemblyPool", Func<string?>? getPatchedAssemblyPath = null, bool loadForResolve = true)
         {
             Loader = loader;
-            _logger = new MonkeyLogger(loader.Logger, poolName);
+            _logger = new Logger(loader.Logger, poolName);
             _getPatchedAssemblyPath = getPatchedAssemblyPath;
             LoadForResolve = loadForResolve;
 
@@ -351,7 +351,7 @@ namespace MonkeyLoader
 
             public AssemblyDefinition GetResolveDefinition() => _definition;
 
-            public Assembly LoadAssembly(MonkeyLogger logger, string? patchedAssemblyPath)
+            public Assembly LoadAssembly(Logger logger, string? patchedAssemblyPath)
             {
                 var saveAssemblies = true;
                 if (string.IsNullOrWhiteSpace(patchedAssemblyPath) || !Directory.Exists(patchedAssemblyPath))
@@ -432,7 +432,7 @@ namespace MonkeyLoader
                 return _definition;
             }
 
-            internal string? SaveAssembly(string path, MonkeyLogger logger)
+            internal string? SaveAssembly(string path, Logger logger)
             {
                 var targetPath = Path.Combine(path, $"{Name}.dll");
 

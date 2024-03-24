@@ -8,7 +8,7 @@ namespace MonkeyLoader.Logging
 {
     /// <summary>
     /// Implements a <see cref="LoggingHandler"/> that prevents messages from piling up, but doesn't do anything.<br/>
-    /// Set this as the only <see cref="MonkeyLoader.LoggingHandler"/> to void all logging.
+    /// Set this as the only <see cref="LoggingController.Handler"/> to void all logging.
     /// </summary>
     public sealed class VoidLoggingHandler : LoggingHandler
     {

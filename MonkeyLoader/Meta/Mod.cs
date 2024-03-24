@@ -63,7 +63,7 @@ namespace MonkeyLoader.Meta
 
         private readonly Lazy<string> _configPath;
 
-        private readonly Lazy<MonkeyLogger> _logger;
+        private readonly Lazy<Logger> _logger;
 
         private bool _allDependenciesLoaded = false;
 
@@ -211,9 +211,9 @@ namespace MonkeyLoader.Meta
         /// </summary>
         /// <remarks>
         /// Every mod instance has its own logger and can thus have a different <see cref="LoggingLevel"/>.<br/>
-        /// They do all share the <see cref="Loader">Loader's</see> <see cref="MonkeyLoader.LoggingHandler">LoggingHandler</see> though.
+        /// They do all share the <see cref="Loader">Loader's</see> <see cref="MonkeyLoader.LoggingController">LoggingController</see> though.
         /// </remarks>
-        public MonkeyLogger Logger => _logger.Value;
+        public Logger Logger => _logger.Value;
 
         /// <summary>
         /// Gets the available <see cref="IMonkey"/>s of this mod, with the highest impact ones coming first.
@@ -279,7 +279,7 @@ namespace MonkeyLoader.Meta
             IsGamePack = isGamePack;
 
             // Lazy, because the properties used to create them are only assigned after this constructor.
-            _logger = new(() => new MonkeyLogger(loader.Logger, Title));
+            _logger = new(() => new Logger(loader.Logger, Title));
             _configPath = new(() => Path.Combine(Loader.Locations.Configs, $"{Id}.json"));
             _config = new(() => new Config(this));
         }

@@ -56,9 +56,9 @@ namespace MonkeyLoader.Meta
         public Harmony Harmony { get; }
 
         /// <summary>
-        /// Gets the <see cref="MonkeyLogger"/> that this monkey can use to log messages to game-specific channels.
+        /// Gets the <see cref="Logging.Logger"/> that this monkey can use to log messages to game-specific channels.
         /// </summary>
-        public MonkeyLogger Logger { get; }
+        public Logger Logger { get; }
 
         /// <summary>
         /// Gets the mod that this monkey is a part of.

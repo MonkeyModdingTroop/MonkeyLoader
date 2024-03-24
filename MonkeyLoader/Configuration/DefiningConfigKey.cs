@@ -64,7 +64,7 @@ namespace MonkeyLoader.Configuration
         /// <summary>
         /// Gets the logger of the config this item belongs to if it's a <see cref="IsDefiningKey">defining key</see>.
         /// </summary>
-        protected MonkeyLogger Logger => Section.Config.Logger;
+        protected Logger Logger => Section.Config.Logger;
 
         /// <summary>
         /// Gets the config section this item belongs to.

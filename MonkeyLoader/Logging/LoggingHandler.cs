@@ -5,7 +5,7 @@ using System.Linq;
 namespace MonkeyLoader.Logging
 {
     /// <summary>
-    /// Defines the interface used by the <see cref="MonkeyLogger"/> class to send
+    /// Defines the interface used by the <see cref="Logger"/> class to send
     /// its logging requests to the game-specific channels.
     /// </summary>
     public abstract class LoggingHandler

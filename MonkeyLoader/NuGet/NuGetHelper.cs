@@ -68,7 +68,7 @@ namespace MonkeyLoader.NuGet
 
             //remaining = _reducer.ReduceEquivalent(remaining);
 
-            return remaining.OrderBy(f => f, new NuGetFrameworkSorter());
+            return remaining.OrderBy(f => f, NuGetFrameworkSorter.Instance);
         }
 
         private static string GetTargetFramework()

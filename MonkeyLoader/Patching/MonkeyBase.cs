@@ -41,7 +41,7 @@ namespace MonkeyLoader.Patching
         public Harmony Harmony => _harmony.Value;
 
         /// <inheritdoc/>
-        public MonkeyLogger Logger { get; private set; } = null!;
+        public Logger Logger { get; private set; } = null!;
 
         /// <inheritdoc/>
         public Mod Mod
@@ -61,7 +61,7 @@ namespace MonkeyLoader.Patching
                     throw new InvalidOperationException("Can't assign a different mod to a monkey!");
 
                 _mod = value;
-                Logger = new MonkeyLogger(_mod.Logger, Name);
+                Logger = new Logger(_mod.Logger, Name);
             }
         }
 
@@ -215,9 +215,9 @@ namespace MonkeyLoader.Patching
         public static MonkeyBase Instance { get; } = new TMonkey();
 
         /// <summary>
-        /// Gets the <see cref="MonkeyLogger"/> that this patcher can use to log messages to game-specific channels.
+        /// Gets the <see cref="Logging.Logger"/> that this patcher can use to log messages to game-specific channels.
         /// </summary>
-        public new static MonkeyLogger Logger => Instance.Logger;
+        public new static Logger Logger => Instance.Logger;
 
         /// <summary>
         /// Gets the mod that this patcher is a part of.

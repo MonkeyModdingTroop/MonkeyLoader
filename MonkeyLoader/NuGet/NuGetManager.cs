@@ -30,7 +30,7 @@ namespace MonkeyLoader.NuGet
         /// <summary>
         /// Gets the logger used by the manager.
         /// </summary>
-        public MonkeyLogger Logger { get; }
+        public Logger Logger { get; }
 
         /// <summary>
         /// Creates a new NuGet manager instance that works for the given loader.<br/>
@@ -40,7 +40,7 @@ namespace MonkeyLoader.NuGet
         internal NuGetManager(MonkeyLoader loader)
         {
             Loader = loader;
-            Logger = new MonkeyLogger(loader.Logger, "NuGet");
+            Logger = new Logger(loader.Logger, "NuGet");
             Config = loader.Config.LoadSection<NuGetConfigSection>();
 
             Logger.Info(() => $"Detected Runtime Target NuGet Framework: {NuGetHelper.Framework} ({NuGetHelper.Framework.GetShortFolderName()})");

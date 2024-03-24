@@ -19,8 +19,11 @@ namespace Doorstop
             {
                 AppDomain.CurrentDomain.UnhandledException += (sender, e) => log.Fatal(() => (e.ExceptionObject as Exception)?.Format("Unhandled Exception!") ?? "Unhandled Exception!");
 
-                var loader = new MonkeyLoader.MonkeyLoader(loggingLevel: LoggingLevel.Trace);
-                loader.LoggingHandler += log;
+                var loader = new MonkeyLoader.MonkeyLoader();
+                loader.LoggingController.Level = LoggingLevel.Trace;
+                loader.LoggingController.Handler += log;
+
+                AppDomain.CurrentDomain.ProcessExit += (_, _) => loader.Shutdown();
 
                 var type = Type.GetType("Mono.Runtime");
                 if (type != null)

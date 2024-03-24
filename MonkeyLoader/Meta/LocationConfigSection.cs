@@ -55,7 +55,7 @@ namespace MonkeyLoader.Meta
 
         public string PatchedAssemblies
         {
-            get => PatchedAssembliesKey.GetValue();
+            get => PatchedAssembliesKey.GetValue()!;
             set => PatchedAssembliesKey.SetValue(value, SetEventLabel);
         }
 

@@ -8,12 +8,16 @@ using Newtonsoft.Json;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Remoting.Messaging;
+using System.Threading;
 
 namespace MonkeyLoader
 {
@@ -40,8 +44,6 @@ namespace MonkeyLoader
         /// All the currently loaded and still active mods of this loader, kept in topological order.
         /// </summary>
         private readonly SortedSet<Mod> _allMods = new(Mod.AscendingComparer);
-
-        private LoggingHandler _loggingHandler = MissingLoggingHandler.Instance;
 
         private ExecutionPhase _phase;
 
@@ -89,31 +91,14 @@ namespace MonkeyLoader
         public LocationConfigSection Locations { get; }
 
         /// <summary>
-        /// Gets the logger that's used by the loader and "inherited" by everything loaded by it.
+        /// Gets the logger that's used by the loader and "inherited" from by everything loaded by it.
         /// </summary>
-        public MonkeyLogger Logger { get; }
+        public Logger Logger { get; }
 
         /// <summary>
-        /// Gets or sets the logging handler used by the loader and all <see cref="Mod"/>s loaded by this loader.
+        /// Gets the <see cref="LoggingController"/> used by this loader and everything loaded by it.
         /// </summary>
-        public LoggingHandler LoggingHandler
-        {
-            get => _loggingHandler;
-
-            [MemberNotNull(nameof(_loggingHandler))]
-            set
-            {
-                _loggingHandler = value ?? MissingLoggingHandler.Instance;
-
-                if (_loggingHandler.Connected)
-                    Logger.FlushDeferredMessages();
-            }
-        }
-
-        /// <summary>
-        /// Gets or sets the current <see cref="LoggingLevel"/> used to filter requests on <see cref="MonkeyLogger"/> instances.
-        /// </summary>
-        public LoggingLevel LoggingLevel { get; set; }
+        public LoggingController LoggingController { get; }
 
         /// <summary>
         /// Gets <i>all</i> loaded <see cref="Mod"/>s in topological order.
@@ -160,8 +145,6 @@ namespace MonkeyLoader
         /// </summary>
         public bool ShutdownRan => Phase >= ExecutionPhase.ShuttingDown;
 
-        internal Queue<MonkeyLogger.DeferredMessage> DeferredMessages { get; } = new();
-
         internal AssemblyPool GameAssemblyPool { get; }
 
         internal AssemblyPool PatcherAssemblyPool { get; }
@@ -170,14 +153,14 @@ namespace MonkeyLoader
         /// Creates a new mod loader with the given configuration file.
         /// </summary>
         /// <param name="configPath">The path to the configuration file to use.</param>
-        /// <param name="loggingLevel">The logging level to start with.</param>
-        public MonkeyLoader(string configPath = "MonkeyLoader/MonkeyLoader.json", LoggingLevel loggingLevel = LoggingLevel.Info)
+        /// <param name="loggingHandler">The logging handler that this loader should use or the default one when <c>null</c>.</param>
+        public MonkeyLoader(string configPath = "MonkeyLoader/MonkeyLoader.json", LoggingController? loggingHandler = null)
         {
-            Logger = new(this);
-            LoggingLevel = loggingLevel;
-
             ConfigPath = configPath;
             Id = Path.GetFileNameWithoutExtension(configPath);
+
+            LoggingController = loggingHandler ?? new LoggingController(Id);
+            Logger = new(LoggingController);
 
             JsonSerializer = new();
 
@@ -949,7 +932,7 @@ namespace MonkeyLoader
         public event ModsChangedEventHandler? ModsShutdown;
 
         /// <summary>
-        /// Called when <see cref="Mod"/>s are about to be <see cref="ShutdownMods(Mod[])">shut down</see> by this loader.
+        /// Called when <see cref="Mod"/>s are about to be <see cref="ShutdownMods(bool, Mod[])">shut down</see> by this loader.
         /// </summary>
         public event ModsChangedEventHandler? ModsShuttingDown;
 

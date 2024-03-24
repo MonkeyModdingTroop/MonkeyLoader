@@ -13,8 +13,6 @@ namespace MonkeyLoader.Logging
     /// </summary>
     public sealed class FileLoggingHandler : LoggingHandler, IDisposable
     {
-        private readonly int _flushTimeout;
-        private readonly Timer _flushTimer;
         private readonly StreamWriter _streamWriter;
 
         /// <inheritdoc/>
@@ -24,21 +22,18 @@ namespace MonkeyLoader.Logging
         /// Creates a new file logging handler with the file at the given path as the target.
         /// </summary>
         /// <param name="path">The file to write to.</param>
-        public FileLoggingHandler(string path) : this(new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read), 10000)
+        public FileLoggingHandler(string path)
+            : this(new FileStream(path, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read))
         { }
 
         /// <summary>
         /// Creates a new file logging handler with the given <see cref="FileStream"/> as the target.
         /// </summary>
         /// <param name="fileStream">The file to write to.</param>
-        /// <param name="flushTimeout">The time in ms to wait for more logging before flushing after non-critical messages.</param>
-        public FileLoggingHandler(FileStream fileStream, int flushTimeout)
+        public FileLoggingHandler(FileStream fileStream)
         {
             fileStream.SetLength(0);
             _streamWriter = new StreamWriter(fileStream);
-
-            _flushTimeout = flushTimeout;
-            _flushTimer = new Timer(Flush, null, Timeout.Infinite, flushTimeout);
         }
 
         /// <inheritdoc/>
@@ -49,8 +44,6 @@ namespace MonkeyLoader.Logging
         {
             _streamWriter.Flush();
             _streamWriter.Dispose();
-
-            _flushTimer.Dispose();
         }
 
         /// <inheritdoc/>
@@ -63,10 +56,7 @@ namespace MonkeyLoader.Logging
         public override void Flush()
         {
             lock (_streamWriter)
-            {
                 _streamWriter.Flush();
-                _flushTimer.Change(Timeout.Infinite, _flushTimeout);
-            }
         }
 
         /// <inheritdoc/>
@@ -79,10 +69,7 @@ namespace MonkeyLoader.Logging
         public void Log(string message)
         {
             lock (_streamWriter)
-            {
                 _streamWriter.WriteLine($"[{DateTime.Now:HH:mm:ss.ffff}] {message}");
-                _flushTimer.Change(0, _flushTimeout);
-            }
         }
 
         /// <inheritdoc/>
@@ -90,7 +77,5 @@ namespace MonkeyLoader.Logging
 
         /// <inheritdoc/>
         public override void Warn(Func<object> messageProducer) => Log(messageProducer().ToString());
-
-        private void Flush(object state) => Flush();
     }
 }

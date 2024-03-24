@@ -32,9 +32,8 @@ namespace MonkeyLoader.Configuration
         /// Gets the logger to be used by this owner.
         /// </summary>
         /// <remarks>
-        /// Every owner instance has its own logger and can thus have a different <see cref="LoggingLevel"/>.<br/>
-        /// They do all share the <see cref="Loader">Loader's</see> <see cref="MonkeyLoader.LoggingHandler">LoggingHandler</see> though.
+        /// All loggers share the <see cref="Loader">Loader</see>'s <see cref="MonkeyLoader.LoggingController">LoggingController</see>.
         /// </remarks>
-        public MonkeyLogger Logger { get; }
+        public Logger Logger { get; }
     }
 }

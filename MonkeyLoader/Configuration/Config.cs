@@ -38,7 +38,7 @@ namespace MonkeyLoader.Configuration
         /// <summary>
         /// Gets the logger used by this config.
         /// </summary>
-        public MonkeyLogger Logger { get; }
+        public Logger Logger { get; }
 
         /// <summary>
         /// Gets the mod that owns this config.
@@ -70,7 +70,7 @@ namespace MonkeyLoader.Configuration
         internal Config(IConfigOwner owner)
         {
             Owner = owner;
-            Logger = new MonkeyLogger(owner.Logger, "Config");
+            Logger = new Logger(owner.Logger, "Config");
 
             _loadedConfig = LoadConfig();
             if (_loadedConfig[OwnerKey]?.ToObject<string>() != Owner.Id)
