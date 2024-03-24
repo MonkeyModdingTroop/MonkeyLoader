@@ -13,7 +13,6 @@ namespace Doorstop
     {
         public static void Start()
         {
-            Debugger.Break();
             var log = new FileLoggingHandler("MonkeyLoader/MonkeyLog.log");
 
             try

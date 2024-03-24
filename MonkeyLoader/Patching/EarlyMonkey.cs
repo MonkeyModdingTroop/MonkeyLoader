@@ -96,12 +96,12 @@ namespace MonkeyLoader.Patching
         protected abstract IEnumerable<PrePatchTarget> GetPrePatchTargets();
 
         /// <inheritdoc/>
-        protected override bool OnShutdown()
+        protected override bool OnShutdown(bool applicationExiting)
         {
-            if (Mod.Loader.Phase <= MonkeyLoader.ExecutionPhase.ShuttingDown)
+            if (!applicationExiting)
                 Warn(() => "Early monkeys' effects cannot be undone at runtime!");
 
-            return base.OnShutdown();
+            return base.OnShutdown(applicationExiting);
         }
 
         /// <summary>

@@ -36,7 +36,7 @@ namespace MonkeyLoader.ConsoleTest
 
             var loader = new MonkeyLoader();
             loader.LoggingLevel = LoggingLevel.Trace;
-            loader.LoggingHandler = new ConsoleLoggingHandler();
+            loader.LoggingHandler = ConsoleLoggingHandler.Instance;
 
             loader.FullLoad();
 

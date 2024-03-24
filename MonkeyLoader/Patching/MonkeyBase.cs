@@ -4,7 +4,6 @@ using MonkeyLoader.Logging;
 using MonkeyLoader.Meta;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
@@ -118,7 +117,7 @@ namespace MonkeyLoader.Patching
         /// Must only be called once.
         /// </summary>
         /// <inheritdoc/>
-        public bool Shutdown()
+        public bool Shutdown(bool applicationExiting)
         {
             if (ShutdownRan)
                 throw new InvalidOperationException("A monkey's Shutdown() method must only be called once!");
@@ -128,7 +127,7 @@ namespace MonkeyLoader.Patching
 
             try
             {
-                if (!OnShutdown())
+                if (!OnShutdown(applicationExiting))
                 {
                     ShutdownFailed = true;
                     Logger.Warn(() => "OnShutdown failed!");
@@ -171,13 +170,16 @@ namespace MonkeyLoader.Patching
         /// </summary>
         /// <remarks>
         /// <i>By default:</i> Removes all <see cref="Harmony"/> patches done
-        /// using this Monkey's <see cref="MonkeyBase.Harmony">Harmony</see> instance
-        /// and returns <c>true</c>.
+        /// using this Monkey's <see cref="MonkeyBase.Harmony">Harmony</see> instance,
+        /// if not exiting, and returns <c>true</c>.
         /// </remarks>
-        /// <returns>Whether it ran successfully.</returns>
-        protected virtual bool OnShutdown()
+        /// <param name="applicationExiting">Whether the shutdown was caused by the application exiting.</param>
+        /// <returns><c>true</c> if it ran successfully; otherwise, <c>false</c>.</returns>
+        protected virtual bool OnShutdown(bool applicationExiting)
         {
-            Harmony.UnpatchAll(Harmony.Id);
+            // Application Exit clears patches anyways
+            if (!applicationExiting)
+                Harmony.UnpatchAll(Harmony.Id);
 
             return true;
         }

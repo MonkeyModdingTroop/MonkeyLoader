@@ -16,13 +16,14 @@ namespace MonkeyLoader.Meta
         /// aggregating their success state as an 'all'.
         /// </summary>
         /// <param name="shutdowns">The <see cref="IShutdown"/> instances to process.</param>
+        /// <param name="applicationExiting">Whether the shutdown was caused by the application exiting.</param>
         /// <returns><c>true</c> if all instances successfully shut down, <c>false</c> otherwise.</returns>
-        public static bool ShutdownAll(this IEnumerable<IShutdown> shutdowns)
+        public static bool ShutdownAll(this IEnumerable<IShutdown> shutdowns, bool applicationExiting)
         {
             var success = true;
 
             foreach (var shutdown in shutdowns)
-                success &= shutdown.Shutdown();
+                success &= shutdown.Shutdown(applicationExiting);
 
             return success;
         }
@@ -47,8 +48,9 @@ namespace MonkeyLoader.Meta
         /// Lets this object cleanup and shutdown.<br/>
         /// Must only be called once.
         /// </summary>
-        /// <returns>Whether it ran successfully.</returns>
+        /// <param name="applicationExiting">Whether the shutdown was caused by the application exiting.</param>
+        /// <returns><c>true</c> if it ran successfully; otherwise, <c>false</c>.</returns>
         /// <exception cref="InvalidOperationException">If it gets called more than once.</exception>
-        public bool Shutdown();
+        public bool Shutdown(bool applicationExiting);
     }
 }

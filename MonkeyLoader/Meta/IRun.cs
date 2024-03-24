@@ -25,7 +25,7 @@ namespace MonkeyLoader.Meta
         /// Runs this object to activate its effects.<br/>
         /// Must only be called once.
         /// </summary>
-        /// <returns>Whether it ran successfully.</returns>
+        /// <returns><c>true</c> if it ran successfully; otherwise, <c>false</c>.</returns>
         /// <exception cref="InvalidOperationException">If it gets called more than once.</exception>
         public bool Run();
     }

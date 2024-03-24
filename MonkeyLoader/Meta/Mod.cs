@@ -308,16 +308,15 @@ namespace MonkeyLoader.Meta
         /// Efficiently checks, whether a given tag is listed for this mod.
         /// </summary>
         /// <param name="tag">The tag to check for.</param>
-        /// <returns><c>true</c> if the given tag is listed for this mod.</returns>
+        /// <returns><c>true</c> if the given tag is listed for this mod; otherwise, <c>false</c>.</returns>
         public bool HasTag(string tag) => tags.Contains(tag);
 
         /// <summary>
         /// Lets this mod cleanup and shutdown.<br/>
         /// Must only be called once.
         /// </summary>
-        /// <returns>Whether it ran successfully.</returns>
         /// <inheritdoc/>
-        public bool Shutdown()
+        public bool Shutdown(bool applicationExiting)
         {
             if (ShutdownRan)
                 throw new InvalidOperationException("A mod's Shutdown() method must only be called once!");
@@ -326,7 +325,7 @@ namespace MonkeyLoader.Meta
 
             try
             {
-                if (!OnShutdown())
+                if (!OnShutdown(applicationExiting))
                 {
                     ShutdownFailed = true;
                     Logger.Warn(() => "OnShutdown failed!");
@@ -398,13 +397,13 @@ namespace MonkeyLoader.Meta
         /// <summary>
         /// Loads the mod's <see cref="EarlyMonkeys">early monkeys</see>.
         /// </summary>
-        /// <returns>Whether it ran successfully.</returns>
+        /// <returns><c>true</c> if it ran successfully; otherwise, <c>false</c>.</returns>
         protected abstract bool OnLoadEarlyMonkeys();
 
         /// <summary>
         /// Loads the mod's <see cref="Monkeys">monkeys</see>.
         /// </summary>
-        /// <returns>Whether it ran successfully.</returns>
+        /// <returns><c>true</c> if it ran successfully; otherwise, <c>false</c>.</returns>
         protected abstract bool OnLoadMonkeys();
 
         /// <summary>
@@ -414,8 +413,9 @@ namespace MonkeyLoader.Meta
         /// <i>By default:</i> <see cref="Config.Save">Saves</see> this mod's <see cref="Config">Config</see>
         /// and <see cref="Harmony.UnpatchAll(string)">unpatches</see> everything patched with its <see cref="Harmony">Harmony</see> instance.
         /// </remarks>
-        /// <returns>Whether it ran successfully.</returns>
-        protected virtual bool OnShutdown()
+        /// <param name="applicationExiting">Whether the shutdown was caused by the application exiting.</param>
+        /// <returns><c>true</c> if it ran successfully; otherwise, <c>false</c>.</returns>
+        protected virtual bool OnShutdown(bool applicationExiting)
         {
             Config.Save();
 

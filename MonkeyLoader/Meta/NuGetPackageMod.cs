@@ -277,13 +277,18 @@ namespace MonkeyLoader.Meta
             var assemblyDefinition = AssemblyDefinition.ReadAssembly(assemblyStream);
             var newAssemblyStream = new MemoryStream();
 
-            if (AppDomain.CurrentDomain.GetAssemblies().Any(assembly => assembly.GetName().Name == assemblyDefinition.Name.Name))
-            {
-                //assemblyDefinition.Name = new AssemblyNameDefinition($"{filename}-{_assemblyCounter++}", assemblyDefinition.Name.Version);
-                assemblyDefinition.Name.Name += DateTime.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture);
-                assemblyDefinition.MainModule.Mvid = Guid.NewGuid();
+            var loadedModules = AppDomain.CurrentDomain.GetAssemblies().SelectMany(assembly => assembly.GetLoadedModules()).Select(module => module.ModuleVersionId).ToHashSet();
 
-                //assemblyStream.SetLength(0);
+            var anyConflicting = false;
+            foreach (var conflictingModule in assemblyDefinition.Modules.Where(moduleDef => loadedModules.Contains(moduleDef.Mvid)))
+            {
+                anyConflicting = true;
+                conflictingModule.Mvid = Guid.NewGuid();
+            }
+
+            if (anyConflicting || AppDomain.CurrentDomain.GetAssemblies().Any(assembly => assembly.GetName().Name == assemblyDefinition.Name.Name))
+            {
+                assemblyDefinition.Name.Name += $"-{DateTime.UtcNow.Ticks.ToString(CultureInfo.InvariantCulture)}";
                 assemblyDefinition.Write(newAssemblyStream);
             }
 

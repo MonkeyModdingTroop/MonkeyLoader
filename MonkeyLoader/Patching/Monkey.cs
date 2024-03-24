@@ -126,7 +126,7 @@ namespace MonkeyLoader.Patching
         /// <see cref="Harmony.PatchCategory(string)">category</see> with this patcher's type's name.<br/>
         /// Easy to apply by using <c>[<see cref="HarmonyPatchCategory"/>(nameof(MyPatcher))]</c> attribute.
         /// </remarks>
-        /// <returns>Whether the patching was successful.</returns>
+        /// <returns><c>true</c> if it ran successfully; otherwise, <c>false</c>.</returns>
         protected virtual bool OnLoaded()
         {
             Harmony.PatchCategory(type.Assembly, type.Name);

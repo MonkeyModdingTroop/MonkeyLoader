@@ -672,8 +672,9 @@ namespace MonkeyLoader
         /// Should be called by the game integration or application using this as a library when things are shutting down.<br/>
         /// Saves its config and triggers <see cref="Mod.Shutdown">Shutdown</see>() on all <see cref="RegularMods">Mods</see>.
         /// </summary>
+        /// <param name="applicationExiting">Whether the shutdown is caused by the application exiting.</param>
         /// <inheritdoc/>
-        public bool Shutdown()
+        public bool Shutdown(bool applicationExiting = true)
         {
             if (ShutdownRan)
             {
@@ -686,7 +687,7 @@ namespace MonkeyLoader
             var sw = Stopwatch.StartNew();
             Logger.Warn(() => $"The loader's shutdown routine was triggered! Triggering shutdown for all {_allMods.Count} mods!");
 
-            ShutdownFailed |= !ShutdownMods(_allMods);
+            ShutdownFailed |= !ShutdownMods(_allMods, applicationExiting);
 
             Logger.Info(() => $"Saving the loader's config!");
 
@@ -711,8 +712,9 @@ namespace MonkeyLoader
         /// and removes it from this loader's <see cref="Mods">Mods</see>.
         /// </summary>
         /// <param name="mod">The mod to shut down.</param>
-        /// <returns>Whether it ran successfully.</returns>
-        public bool ShutdownMod(Mod mod)
+        /// <param name="applicationExiting">Whether the shutdown is caused by the application exiting.</param>
+        /// <returns><c>true</c> if it ran successfully; otherwise, <c>false</c>.</returns>
+        public bool ShutdownMod(Mod mod, bool applicationExiting = false)
         {
             ModsShuttingDown?.TryInvokeAll(this, mod.Yield());
 
@@ -722,8 +724,8 @@ namespace MonkeyLoader
             Logger.Info(() => $"Shutting down {mod} with {earlyMonkeys.Length} early and {monkeys.Length} regular monkeys.");
 
             var success = true;
-            success &= ShutdownMonkeys(earlyMonkeys, monkeys);
-            success &= mod.Shutdown();
+            success &= ShutdownMonkeys(earlyMonkeys, monkeys, applicationExiting);
+            success &= mod.Shutdown(applicationExiting);
 
             _allMods.Remove(mod);
             ModsShutdown?.TryInvokeAll(this, mod.Yield());
@@ -736,11 +738,13 @@ namespace MonkeyLoader
         /// and removes them from this loader's <see cref="Mods">Mods</see> in reverse topological order.
         /// </summary>
         /// <remarks>
-        /// Use <see cref="Mod.ShutdownFailed"/> if you want to check if any failed.
+        /// Use the individual <see cref="Mod.ShutdownFailed"/> properties if you want to check <i>which</i> failed.
         /// </remarks>
+        /// <param name="applicationExiting">Whether the shutdown is caused by the application exiting.</param>
         /// <param name="mods">The mods to shut down.</param>
+        /// <returns><c>true</c> if it ran successfully; otherwise, <c>false</c>.</returns>
         /// <exception cref="InvalidOperationException">When <paramref name="mods"/> contains invalid items.</exception>
-        public bool ShutdownMods(params Mod[] mods)
+        public bool ShutdownMods(bool applicationExiting = false, params Mod[] mods)
         {
             var success = true;
             Array.Sort(mods, Mod.DescendingComparer);
@@ -752,12 +756,12 @@ namespace MonkeyLoader
 
             Logger.Info(() => $"Shutting down {mods.Length} mods with {earlyMonkeys.Length} early and {monkeys.Length} regular monkeys.");
 
-            success &= ShutdownMonkeys(earlyMonkeys, monkeys);
+            success &= ShutdownMonkeys(earlyMonkeys, monkeys, applicationExiting);
 
             Logger.Trace(() => "Shutting down mods in this order:");
             Logger.Trace(mods);
 
-            success &= mods.ShutdownAll();
+            success &= mods.ShutdownAll(applicationExiting);
 
             foreach (var mod in mods)
                 _allMods.Remove(mod);
@@ -772,7 +776,9 @@ namespace MonkeyLoader
         /// and removes them from this loader's <see cref="Mods">Mods</see> in reverse topological order.
         /// </summary>
         /// <param name="mods">The mods to shut down.</param>
-        public bool ShutdownMods(IEnumerable<Mod> mods) => ShutdownMods(mods.ToArray());
+        /// <param name="applicationExiting">Whether the shutdown is caused by the application exiting.</param>
+        /// <returns><c>true</c> if it ran successfully; otherwise, <c>false</c>.</returns>
+        public bool ShutdownMods(IEnumerable<Mod> mods, bool applicationExiting = false) => ShutdownMods(applicationExiting, mods.ToArray());
 
         /// <summary>
         /// Searches all of this loader's loaded <see cref="Mods">Mods</see> to find a single one with the given <see cref="Mod.Location">location</see>.
@@ -846,7 +852,7 @@ namespace MonkeyLoader
         /// <param name="path">The path to the file to load as a mod.</param>
         /// <param name="mod">The resulting mod when successful, or null when not.</param>
         /// <param name="isGamePack">Whether the mod is a game pack.</param>
-        /// <returns><c>true</c> when the file was successfully loaded.</returns>
+        /// <returns><c>true</c> when the file was successfully loaded; otherwise, <c>false</c>.</returns>
         public bool TryLoadAndRunMod(string path, [NotNullWhen(true)] out NuGetPackageMod? mod, bool isGamePack = false)
         {
             Logger.Debug(() => $"Loading and running {(isGamePack ? "game pack" : "regular")} mod from: {path}");
@@ -865,7 +871,7 @@ namespace MonkeyLoader
         /// <param name="path">The path to the file to load as a mod.</param>
         /// <param name="mod">The resulting mod when successful, or null when not.</param>
         /// <param name="isGamePack">Whether the mod is a game pack.</param>
-        /// <returns><c>true</c> when the file was successfully loaded.</returns>
+        /// <returns><c>true</c> when the file was successfully loaded; otherwise, <c>false</c>.</returns>
         public bool TryLoadMod(string path, [NotNullWhen(true)] out NuGetPackageMod? mod, bool isGamePack = false)
         {
             mod = null;
@@ -898,19 +904,19 @@ namespace MonkeyLoader
             }
         }
 
-        private bool ShutdownMonkeys(IEarlyMonkey[] earlyMonkeys, IMonkey[] monkeys)
+        private bool ShutdownMonkeys(IEarlyMonkey[] earlyMonkeys, IMonkey[] monkeys, bool applicationExiting)
         {
             var success = true;
 
             Logger.Trace(() => "Shutting down monkeys in this order:");
             Logger.Trace(monkeys);
 
-            success &= monkeys.ShutdownAll();
+            success &= monkeys.ShutdownAll(applicationExiting);
 
             Logger.Trace(() => "Shutting down early monkeys in this order:");
             Logger.Trace(earlyMonkeys);
 
-            success &= earlyMonkeys.ShutdownAll();
+            success &= earlyMonkeys.ShutdownAll(applicationExiting);
 
             return success;
         }
