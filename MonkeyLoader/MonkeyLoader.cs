@@ -153,13 +153,13 @@ namespace MonkeyLoader
         /// Creates a new mod loader with the given configuration file.
         /// </summary>
         /// <param name="configPath">The path to the configuration file to use.</param>
-        /// <param name="loggingHandler">The logging handler that this loader should use or the default one when <c>null</c>.</param>
-        public MonkeyLoader(string configPath = "MonkeyLoader/MonkeyLoader.json", LoggingController? loggingHandler = null)
+        /// <param name="loggingController">The logging controller that this loader should use or a default one when <c>null</c>.</param>
+        public MonkeyLoader(string configPath = "MonkeyLoader/MonkeyLoader.json", LoggingController? loggingController = null)
         {
             ConfigPath = configPath;
             Id = Path.GetFileNameWithoutExtension(configPath);
 
-            LoggingController = loggingHandler ?? new LoggingController(Id);
+            LoggingController = loggingController ?? new LoggingController(Id);
             Logger = new(LoggingController);
 
             JsonSerializer = new();

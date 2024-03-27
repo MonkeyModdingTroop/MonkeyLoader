@@ -17,7 +17,7 @@ namespace MonkeyLoader.Logging
         private readonly ConcurrentQueue<DeferredMessage> _deferredMessages = new();
 
         private readonly Timer _flushTimer;
-        private bool _autoFlush;
+        private bool _autoFlush = true;
 
         private LoggingHandler _handler = MissingLoggingHandler.Instance;
 
@@ -43,19 +43,13 @@ namespace MonkeyLoader.Logging
         }
 
         /// <summary>
-        /// Gets the timeout currently used for <see cref="AutoFlush">automatic flushing</see>.
-        /// </summary>
-        /// <value>
-        /// The loader's <c><see cref="FlushTimeout">LoggingFlushTimeout</see></c> when
-        /// <see cref="AutoFlush">automatic flushing</see> is active; otherwise, <see cref="Timeout.InfiniteTimeSpan"/>.
-        /// </value>
-        public TimeSpan AutoFlushTimeout => AutoFlush ? FlushTimeout : Timeout.InfiniteTimeSpan;
-
-        /// <summary>
         /// Gets or sets the time to wait for more logging before
         /// <see cref="Logger.Flush()">flushing</see> after non-critical messages.
         /// </summary>
-        public TimeSpan FlushTimeout { get; set; }
+        /// <remarks>
+        /// <i>Default:</i> 2 seconds.
+        /// </remarks>
+        public TimeSpan FlushTimeout { get; set; } = TimeSpan.FromMilliseconds(2000);
 
         /// <summary>
         /// Gets the <see cref="LoggingHandler"/> used to send logging requests to the game-specific channels.<br/>
@@ -83,26 +77,38 @@ namespace MonkeyLoader.Logging
         /// <summary>
         /// Gets or sets the current <see cref="Level"/> used to filter requests on <see cref="Logger"/> instances.
         /// </summary>
-        public LoggingLevel Level { get; set; }
+        /// <remarks>
+        /// <i>Default:</i> <see cref="LoggingLevel.Info"/>.
+        /// </remarks>
+        public LoggingLevel Level { get; set; } = LoggingLevel.Info;
+
+        /// <summary>
+        /// Gets the timeout currently used for <see cref="AutoFlush">automatic flushing</see>.
+        /// </summary>
+        /// <value>
+        /// The loader's <c><see cref="FlushTimeout">LoggingFlushTimeout</see></c> when
+        /// <see cref="AutoFlush">automatic flushing</see> is active; otherwise, <see cref="Timeout.InfiniteTimeSpan"/>.
+        /// </value>
+        private TimeSpan AutoFlushTimeout => AutoFlush ? FlushTimeout : Timeout.InfiniteTimeSpan;
 
         /// <summary>
         /// Creates a new <see cref="LoggingHandler"/> to control <see cref="Logger"/>s.
         /// </summary>
         /// <param name="id">The controller's id.</param>
-        /// <param name="level">The logging level to start with.</param>
-        /// <param name="flushTimeout">The time in ms to wait for more logging before flushing after non-critical messages.</param>
-        public LoggingController(string id, LoggingLevel level = LoggingLevel.Info, int flushTimeout = 2000)
+        public LoggingController(string id)
         {
             Id = id;
-            Level = level;
-            FlushTimeout = TimeSpan.FromMilliseconds(flushTimeout);
             _flushTimer = new(Flush);
         }
 
         /// <summary>
         /// Flushes any not yet fully logged messages.
         /// </summary>
-        public void Flush() => Handler.Flush();
+        public void Flush()
+        {
+            Handler.Flush();
+            _flushTimer.Change(Timeout.InfiniteTimeSpan, Timeout.InfiniteTimeSpan);
+        }
 
         /// <summary>
         /// Determines whether the given <see cref="Level"/> should be logged at the current <see cref="Level">Level</see>.
@@ -179,6 +185,7 @@ namespace MonkeyLoader.Logging
                 }
 
                 AutoFlush = autoFlush;
+                Flush();
             }
         }
 

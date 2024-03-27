@@ -37,7 +37,7 @@ namespace MonkeyLoader.Logging
         }
 
         /// <inheritdoc/>
-        public override void Debug(Func<object> messageProducer) => Log(messageProducer().ToString());
+        public override void Debug(Func<object> messageProducer) => Log(messageProducer);
 
         /// <inheritdoc/>
         public void Dispose()
@@ -47,10 +47,10 @@ namespace MonkeyLoader.Logging
         }
 
         /// <inheritdoc/>
-        public override void Error(Func<object> messageProducer) => Log(messageProducer().ToString());
+        public override void Error(Func<object> messageProducer) => Log(messageProducer);
 
         /// <inheritdoc/>
-        public override void Fatal(Func<object> messageProducer) => Log(messageProducer().ToString());
+        public override void Fatal(Func<object> messageProducer) => Log(messageProducer);
 
         /// <inheritdoc/>
         public override void Flush()
@@ -60,7 +60,7 @@ namespace MonkeyLoader.Logging
         }
 
         /// <inheritdoc/>
-        public override void Info(Func<object> messageProducer) => Log(messageProducer().ToString());
+        public override void Info(Func<object> messageProducer) => Log(messageProducer);
 
         /// <summary>
         /// Writes a message prefixed with a timestamp to the log file.
@@ -72,10 +72,16 @@ namespace MonkeyLoader.Logging
                 _streamWriter.WriteLine($"[{DateTime.Now:HH:mm:ss.ffff}] {message}");
         }
 
-        /// <inheritdoc/>
-        public override void Trace(Func<object> messageProducer) => Log(messageProducer().ToString());
+        /// <summary>
+        /// Writes the message from the producer, prefixed with a timestamp, to the log file.
+        /// </summary>
+        /// <param name="messageProducer">The producer for the message to write.</param>
+        public void Log(Func<object> messageProducer) => Log(messageProducer().ToString());
 
         /// <inheritdoc/>
-        public override void Warn(Func<object> messageProducer) => Log(messageProducer().ToString());
+        public override void Trace(Func<object> messageProducer) => Log(messageProducer);
+
+        /// <inheritdoc/>
+        public override void Warn(Func<object> messageProducer) => Log(messageProducer);
     }
 }
