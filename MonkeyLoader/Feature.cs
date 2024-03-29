@@ -128,7 +128,7 @@ namespace MonkeyLoader
         /// </summary>
         /// <param name="left">The first feature.</param>
         /// <param name="right">The second feature.</param>
-        /// <returns>Whether the features are unequal.</returns>
+        /// <returns><c>true</c> if the features are unequal; otherwise, <c>false</c>.</returns>
         public static bool operator !=(Feature left, Feature right)
             => !EqualityComparer.Equals(left, right);
 
@@ -137,7 +137,7 @@ namespace MonkeyLoader
         /// </summary>
         /// <param name="left">The first feature.</param>
         /// <param name="right">The second feature.</param>
-        /// <returns>Whether the left features comes first in the sort order.</returns>
+        /// <returns><c>true</c> if the left feature comes first in the sort order; otherwise, <c>false</c>.</returns>
         public static bool operator <(Feature left, Feature right)
             => AscendingComparer.Compare(left, right) < 0;
 
@@ -146,7 +146,7 @@ namespace MonkeyLoader
         /// </summary>
         /// <param name="left">The first feature.</param>
         /// <param name="right">The second feature.</param>
-        /// <returns>Whether the features are equal.</returns>
+        /// <returns><c>true</c> if the features are equal; otherwise, <c>false</c>.</returns>
         public static bool operator ==(Feature left, Feature right)
             => EqualityComparer.Equals(left, right);
 
@@ -155,7 +155,7 @@ namespace MonkeyLoader
         /// </summary>
         /// <param name="left">The first feature.</param>
         /// <param name="right">The second feature.</param>
-        /// <returns>Whether the right features comes first in the sort order.</returns>
+        /// <returns><c>true</c> if the right feature comes first in the sort order; otherwise, <c>false</c>.</returns>
         public static bool operator >(Feature left, Feature right)
             => left.CompareTo(right) > 0;
 
