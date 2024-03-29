@@ -18,7 +18,10 @@ namespace MonkeyLoader.Configuration
     /// </remarks>
     public abstract class ConfigSection
     {
-        private readonly HashSet<IDefiningConfigKey> _keys;
+        /// <summary>
+        /// Stores the <see cref="IDefiningConfigKey"/>s tracked by this section.
+        /// </summary>
+        protected readonly HashSet<IDefiningConfigKey> keys;
 
         /// <summary>
         /// Gets the <see cref="Configuration.Config"/> that this section is a part of.
@@ -34,12 +37,12 @@ namespace MonkeyLoader.Configuration
         /// <summary>
         /// Gets whether there are any config keys with unsaved changes in this section.
         /// </summary>
-        public bool HasChanges => _keys.Any(key => key.HasChanges);
+        public bool HasChanges => keys.Any(key => key.HasChanges);
 
         /// <summary>
         /// Gets all the config keys of this section.
         /// </summary>
-        public IEnumerable<IDefiningConfigKey> Keys => _keys.AsSafeEnumerable();
+        public IEnumerable<IDefiningConfigKey> Keys => keys.AsSafeEnumerable();
 
         /// <summary>
         /// Gets the name of the section.<br/>
@@ -70,9 +73,9 @@ namespace MonkeyLoader.Configuration
         /// </summary>
         protected ConfigSection()
         {
-            _keys = new(GetConfigKeys());
+            keys = new(GetConfigKeys());
 
-            foreach (var key in _keys)
+            foreach (var key in keys)
                 key.Section = this;
         }
 
@@ -105,7 +108,7 @@ namespace MonkeyLoader.Configuration
         /// <inheritdoc/>
         public override int GetHashCode() => Name.GetHashCode();
 
-        internal void LoadSection(JObject source, JsonSerializer jsonSerializer)
+        internal void Load(JObject source, JsonSerializer jsonSerializer)
         {
             Version serializedVersion;
 
@@ -122,29 +125,12 @@ namespace MonkeyLoader.Configuration
 
             ValidateCompatibility(serializedVersion);
 
-            foreach (var key in _keys)
-            {
-                try
-                {
-                    if (source[key.Name] is JToken token)
-                    {
-                        var value = token.ToObject(key.ValueType, jsonSerializer);
-                        key.SetValue(value, "Load");
-                        key.HasChanges = false;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // I know not what exceptions the JSON library will throw, but they must be contained
-                    Saveable = false;
-                    throw new ConfigLoadException($"Error loading key [{key.Name}] of type [{key.ValueType}] in section [{Name}]!", ex);
-                }
-            }
+            OnLoad(source, jsonSerializer);
         }
 
         internal void ResetHasChanges()
         {
-            foreach (var key in _keys)
+            foreach (var key in keys)
                 key.HasChanges = false;
         }
 
@@ -156,14 +142,8 @@ namespace MonkeyLoader.Configuration
             var result = new JObject();
             result["Version"] = Version.ToString();
 
-            foreach (var key in _keys)
-            {
-                if (!Config.TryGetValue(key, out var value))
-                    continue;
-
-                // I don't need to typecheck this as there's no way to sneak a bad type past my Set() API
-                result[key.Name] = value == null ? null : JToken.FromObject(value, jsonSerializer);
-            }
+            // Any exceptions get handled by the Config.Save method
+            OnSave(result, jsonSerializer);
 
             return result;
         }
@@ -188,10 +168,63 @@ namespace MonkeyLoader.Configuration
         /// Gets all <see cref="IDefiningConfigKey"/>s which should be tracked for this <see cref="ConfigSection"/>.
         /// </summary>
         /// <remarks>
-        /// Calls <see cref="GetAutoConfigKeys"/> by default, but can be overridden to add others.
+        /// <i>By default</i>: Calls <see cref="GetAutoConfigKeys"/>.
         /// </remarks>
-        /// <returns></returns>
+        /// <returns>All <see cref="IDefiningConfigKey"/>s to track.</returns>
         protected virtual IEnumerable<IDefiningConfigKey> GetConfigKeys() => GetAutoConfigKeys();
+
+        /// <summary>
+        /// Deserializes all <see cref="Keys">keys</see> of this
+        /// <see cref="ConfigSection"/> from the <paramref name="source"/> <see cref="JObject"/>.
+        /// </summary>
+        /// <remarks>
+        /// <i>By default</i>: Deserializes all <see cref="Keys">keys</see> from the <paramref name="source"/> with the <paramref name="jsonSerializer"/>.
+        /// </remarks>
+        /// <param name="source">The <see cref="JObject"/> being deserialized from.</param>
+        /// <param name="jsonSerializer">The <see cref="JsonSerializer"/> to deserialize objects with.</param>
+        /// <exception cref="ConfigLoadException">When the value for a key fails to deserialize.</exception>
+        protected virtual void OnLoad(JObject source, JsonSerializer jsonSerializer)
+        {
+            foreach (var key in keys)
+            {
+                try
+                {
+                    if (source[key.Name] is JToken token)
+                    {
+                        var value = token.ToObject(key.ValueType, jsonSerializer);
+                        key.SetValue(value, "Load");
+                        key.HasChanges = false;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // I know not what exceptions the JSON library will throw, but they must be contained
+                    Saveable = false;
+                    throw new ConfigLoadException($"Error loading key [{key.Name}] of type [{key.ValueType}] in section [{Name}]!", ex);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Serializes all <see cref="Keys">keys</see> of this
+        /// <see cref="ConfigSection"/> to the <paramref name="result"/> <see cref="JObject"/>.
+        /// </summary>
+        /// <remarks>
+        /// <i>By default</i>: Serializes all <see cref="Keys">keys</see> to the <paramref name="result"/> with the <paramref name="jsonSerializer"/>.
+        /// </remarks>
+        /// <param name="result">The <see cref="JObject"/> being serialized to.</param>
+        /// <param name="jsonSerializer">The <see cref="JsonSerializer"/> to serialize objects with.</param>
+        protected virtual void OnSave(JObject result, JsonSerializer jsonSerializer)
+        {
+            foreach (var key in keys)
+            {
+                if (!key.TryGetValue(out var value))
+                    continue;
+
+                // I don't need to typecheck this as there's no way to sneak a bad type past my Set() API
+                result[key.Name] = value == null ? null : JToken.FromObject(value, jsonSerializer);
+            }
+        }
 
         private static bool AreVersionsCompatible(Version serializedVersion, Version currentVersion)
         {

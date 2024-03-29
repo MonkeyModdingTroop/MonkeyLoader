@@ -149,7 +149,7 @@ namespace MonkeyLoader.Configuration
             if (_loadedConfig[SectionsKey]![section.Name] is not JObject sectionObject)
                 Logger.Warn(() => $"Section [{section.Name}] didn't appear in the loaded config - using defaults!");
             else
-                section.LoadSection(sectionObject, Owner.Loader.JsonSerializer);
+                section.Load(sectionObject, Owner.Loader.JsonSerializer);
 
             foreach (var key in section.Keys)
                 _configurationItemDefinitionsSelfMap.Add(key, key);
