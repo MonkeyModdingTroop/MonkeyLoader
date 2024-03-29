@@ -12,12 +12,13 @@ namespace MonkeyLoader.Configuration
     /// Represents the typed definition for a config item.
     /// </summary>
     /// <inheritdoc/>
-    public class DefiningConfigKey<T> : IDefiningConfigKey<T>, IDefiningConfigKeyInternal
+    public class DefiningConfigKey<T> : IDefiningConfigKey<T>
     {
         private readonly Func<T>? _computeDefault;
 
         private readonly Predicate<T?>? _isValueValid;
 
+        private ConfigSection? _configSection;
         private ConfigKeyChangedEventHandler? _untypedChanged;
         private T? _value;
 
@@ -27,14 +28,8 @@ namespace MonkeyLoader.Configuration
         /// <inheritdoc/>
         public string? Description { get; }
 
-        bool IDefiningConfigKeyInternal.HasChanges
-        {
-            get => HasChanges;
-            set => HasChanges = value;
-        }
-
         /// <inheritdoc/>
-        public bool HasChanges { get; internal set; }
+        public bool HasChanges { get; set; }
 
         /// <inheritdoc/>
         [MemberNotNullWhen(true, nameof(Description))]
@@ -52,10 +47,17 @@ namespace MonkeyLoader.Configuration
         /// <inheritdoc/>
         public string Name { get; }
 
-        ConfigSection IDefiningConfigKeyInternal.Section
+        /// <inheritdoc/>
+        public ConfigSection Section
         {
-            get => Section;
-            set => Section = value;
+            get => _configSection!;
+            set
+            {
+                if (_configSection is not null)
+                    throw new InvalidOperationException("ConfigSection can only be set once!");
+
+                _configSection = value;
+            }
         }
 
         /// <inheritdoc/>
@@ -65,11 +67,6 @@ namespace MonkeyLoader.Configuration
         /// Gets the logger of the config this item belongs to if it's a <see cref="IsDefiningKey">defining key</see>.
         /// </summary>
         protected Logger Logger => Section.Config.Logger;
-
-        /// <summary>
-        /// Gets the config section this item belongs to.
-        /// </summary>
-        protected ConfigSection Section { get; private set; }
 
         /// <summary>
         /// Creates a new instance of the <see cref="DefiningConfigKey{T}"/> class with the given parameters.
@@ -302,9 +299,9 @@ namespace MonkeyLoader.Configuration
         public string? Description { get; }
 
         /// <summary>
-        /// Gets whether this configuration item has unsaved changes.
+        /// Gets or sets whether this configuration item has unsaved changes.
         /// </summary>
-        public bool HasChanges { get; }
+        public bool HasChanges { get; set; }
 
         /// <summary>
         /// Gets whether this config item has a useable <see cref="Description">description</see>.
@@ -315,12 +312,23 @@ namespace MonkeyLoader.Configuration
         /// <summary>
         /// Gets whether this config item has a set value.
         /// </summary>
+        /// <remarks>
+        /// Should be automatomatically set to <c>true</c> when a different value is <see cref="SetValue">set</see>.
+        /// </remarks>
         public bool HasValue { get; }
 
         /// <summary>
         /// Gets whether only the owning mod should have access to this config item.
         /// </summary>
         public bool InternalAccessOnly { get; }
+
+        /// <summary>
+        /// Gets the <see cref="ConfigSection"/> this item belongs to.
+        /// </summary>
+        /// <remarks>
+        /// Should only be set once when the owning <see cref="ConfigSection"/> is initializing.
+        /// </remarks>
+        public ConfigSection Section { get; set; }
 
         /// <summary>
         /// Gets this config item's set value, falling back to the <see cref="TryComputeDefault">computed default</see>.
@@ -429,18 +437,5 @@ namespace MonkeyLoader.Configuration
         /// Triggered when the internal value of this config item changes.
         /// </summary>
         public new event ConfigKeyChangedEventHandler<T>? Changed;
-    }
-
-    internal interface IDefiningConfigKeyInternal : IDefiningConfigKey
-    {
-        /// <summary>
-        /// Gets or sets whether this configuration item has unsaved changes.
-        /// </summary>
-        public new bool HasChanges { get; set; }
-
-        /// <summary>
-        /// Gets the config section this item belongs to.
-        /// </summary>
-        public ConfigSection Section { get; set; }
     }
 }

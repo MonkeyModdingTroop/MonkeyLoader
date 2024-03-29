@@ -18,12 +18,13 @@ namespace MonkeyLoader.Configuration
     /// </remarks>
     public abstract class ConfigSection
     {
-        private readonly HashSet<IDefiningConfigKeyInternal> _keys;
+        private readonly HashSet<IDefiningConfigKey> _keys;
 
         /// <summary>
         /// Gets the <see cref="Configuration.Config"/> that this section is a part of.
         /// </summary>
-        public Config Config { get; internal set; }
+        // Make the Compiler shut up about Config not being set - it gets set by the Config loading the section.
+        public Config Config { get; internal set; } = null!;
 
         /// <summary>
         /// Gets a description of the config items found in this section.
@@ -69,13 +70,10 @@ namespace MonkeyLoader.Configuration
         /// </summary>
         protected ConfigSection()
         {
-            _keys = new(GetConfigKeys().Cast<IDefiningConfigKeyInternal>());
+            _keys = new(GetConfigKeys());
 
             foreach (var key in _keys)
                 key.Section = this;
-
-            // Make the Compiler shut up about Config not being set - it gets set by the Config loading the section.
-            Config = null!;
         }
 
         /// <summary>
