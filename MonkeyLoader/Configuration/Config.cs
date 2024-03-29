@@ -127,12 +127,7 @@ namespace MonkeyLoader.Configuration
         /// <returns>The loaded section.</returns>
         /// <exception cref="ConfigLoadException">If section has already been loaded, or something goes wrong while loading.</exception>
         public TSection LoadSection<TSection>() where TSection : ConfigSection, new()
-        {
-            var section = new TSection();
-            section.Config = this;
-
-            return LoadSection(section);
-        }
+            => LoadSection(new TSection());
 
         /// <summary>
         /// Loads the given section.<br/>
@@ -146,15 +141,16 @@ namespace MonkeyLoader.Configuration
             if (_sections.Contains(section))
                 throw new ConfigLoadException($"Attempted to load section [{section.Name}] twice!");
 
-            if (_loadedConfig[SectionsKey]![section.Name] is not JObject sectionObject)
-                Logger.Warn(() => $"Section [{section.Name}] didn't appear in the loaded config - using defaults!");
-            else
-                section.Load(sectionObject, Owner.Loader.JsonSerializer);
+            section.Config = this;
+            _sections.Add(section);
 
             foreach (var key in section.Keys)
                 _configurationItemDefinitionsSelfMap.Add(key, key);
 
-            _sections.Add(section);
+            if (_loadedConfig[SectionsKey]![section.Name] is not JObject sectionObject)
+                Logger.Warn(() => $"Section [{section.Name}] didn't appear in the loaded config - using defaults!");
+            else
+                section.Load(sectionObject, Owner.Loader.JsonSerializer);
 
             return section;
         }
@@ -349,6 +345,9 @@ namespace MonkeyLoader.Configuration
 
             Owner.Loader.OnAnyConfigChanged(configKeyChangedEventArgs);
         }
+
+        internal void RegisterConfigKey(IDefiningConfigKey definingKey)
+            => _configurationItemDefinitionsSelfMap.Add(definingKey, definingKey);
 
         private JObject LoadConfig()
         {

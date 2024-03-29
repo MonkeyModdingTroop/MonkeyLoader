@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace MonkeyLoader.Configuration
 {
     /// <summary>
-    /// Represents a name-only configuration item, which can be used to
+    /// Represents a name-only config item, which can be used to
     /// get or set the values of defining keys with the same <see cref="Name">name</see>.
     /// </summary>
     public class ConfigKey : IConfigKey
@@ -19,6 +19,8 @@ namespace MonkeyLoader.Configuration
         /// </summary>
         public static readonly IEqualityComparer<IConfigKey> EqualityComparer = new ConfigKeyEqualityComparer();
 
+        IConfigKey IConfigKey.AsUntyped => this;
+
         /// <inheritdoc/>
         public bool IsDefiningKey => false;
 
@@ -26,9 +28,9 @@ namespace MonkeyLoader.Configuration
         public string Name { get; }
 
         /// <summary>
-        /// Creates a new name-only configuration item with the given name.
+        /// Creates a new name-only config item with the given name.
         /// </summary>
-        /// <param name="name">The mod-unique name of the configuration item. Must not be null or whitespace.</param>
+        /// <param name="name">The mod-unique name of the config item. Must not be null or whitespace.</param>
         /// <exception cref="ArgumentNullException">If the <paramref name="name"/> is null or whitespace.</exception>
         public ConfigKey(string name)
         {
@@ -108,11 +110,16 @@ namespace MonkeyLoader.Configuration
     public class ConfigKey<T> : ConfigKey, ITypedConfigKey<T>
     {
         /// <inheritdoc/>
+        public IConfigKey AsUntyped { get; }
+
+        /// <inheritdoc/>
         public Type ValueType { get; } = typeof(T);
 
         /// <inheritdoc/>
         public ConfigKey(string name) : base(name)
-        { }
+        {
+            AsUntyped = new ConfigKey(name);
+        }
 
         /// <summary>
         /// Creates a new <see cref="ConfigKey{T}"/> instance from the given name.
@@ -122,10 +129,15 @@ namespace MonkeyLoader.Configuration
     }
 
     /// <summary>
-    /// Represents a name-only configuration item, which can be used to get or set the values of defining keys with the same name.
+    /// Defines a name-only config item, which can be used to get or set the values of defining keys with the same name.
     /// </summary>
     public interface IConfigKey : IEquatable<IConfigKey>
     {
+        /// <summary>
+        /// Gets the untyped version of this config item.
+        /// </summary>
+        public IConfigKey AsUntyped { get; }
+
         /// <summary>
         /// Gets whether this instance defines the config item with this <see cref="Name">Name</see>.
         /// </summary>
@@ -138,7 +150,7 @@ namespace MonkeyLoader.Configuration
     }
 
     /// <summary>
-    /// Represents a name-only typed configuration item, which can be used to get or set the values of defining keys with the same name.
+    /// Defines a name-only typed config item, which can be used to get or set the values of defining keys with the same name.
     /// </summary>
     /// <remarks>
     /// Generally <see cref="ITypedConfigKey{T}"/> should be used instead, unless the generic type gets in the way.
@@ -146,14 +158,15 @@ namespace MonkeyLoader.Configuration
     public interface ITypedConfigKey : IConfigKey
     {
         /// <summary>
-        /// Get the <see cref="Type"/> of this config item's value.
+        /// Gets the <see cref="Type"/> of this config item's value.
         /// </summary>
         public Type ValueType { get; }
     }
 
     /// <summary>
-    /// Represents a name-only typed configuration item, which can be used to get or set the values of defining keys with the same name.
+    /// Defines a name-only typed config item, which can be used to get or set the values of defining keys with the same name.
     /// </summary>
+    /// <typeparam name="T">The type of the config item's value.</typeparam>
     public interface ITypedConfigKey<T> : ITypedConfigKey
     { }
 }

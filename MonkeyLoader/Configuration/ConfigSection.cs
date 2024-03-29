@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -105,8 +106,58 @@ namespace MonkeyLoader.Configuration
         /// <returns><c>true</c> if the other object is considered equal.</returns>
         public override bool Equals(object obj) => obj is ConfigSection section && section == this;
 
+        /// <summary>
+        /// Gets the <see cref="IDefiningConfigKey"/> defined in this config section,
+        /// which matches the given <paramref name="templateKey"/>.
+        /// </summary>
+        /// <param name="templateKey">The config item to search for.</param>
+        /// <returns>The matching item defined in this config section.</returns>
+        /// <exception cref="KeyNotFoundException">When no matching item is defined in this config section.</exception>
+        public IDefiningConfigKey GetDefinedKey(IConfigKey templateKey)
+        {
+            if (!TryGetDefinedKey(templateKey, out var definingKey))
+                ThrowKeyNotFound(templateKey);
+
+            return definingKey;
+        }
+
+        /// <summary>
+        /// Gets the <see cref="IDefiningConfigKey{T}"/> defined in this config section,
+        /// which matches the given <paramref name="templateKey"/>.
+        /// </summary>
+        /// <param name="templateKey">The config item to search for.</param>
+        /// <returns>The matching item defined in this config section.</returns>
+        /// <exception cref="KeyNotFoundException">When no matching item is defined in this config section.</exception>
+        public IDefiningConfigKey<T> GetDefinedKey<T>(IDefiningConfigKey<T> templateKey)
+        {
+            if (!TryGetDefinedKey(templateKey, out var definingKey))
+                ThrowKeyNotFound(templateKey);
+
+            return definingKey;
+        }
+
         /// <inheritdoc/>
         public override int GetHashCode() => Name.GetHashCode();
+
+        /// <summary>
+        /// Determines if this config section contains an item matching the <paramref name="typedTemplateKey"/>
+        /// and returns the optional match as <paramref name="definingKey"/>.
+        /// </summary>
+        /// <param name="typedTemplateKey">The config item to search for.</param>
+        /// <param name="definingKey">The optional match for the searched item. Will also contain a match not from this config section.</param>
+        /// <returns><c>true</c> if this config section contains the matching item; otherwise, <c>false</c>.</returns>
+        public bool TryGetDefinedKey<T>(ITypedConfigKey<T> typedTemplateKey, [NotNullWhen(true)] out IDefiningConfigKey<T>? definingKey)
+            => Config.TryGetDefiningKey(typedTemplateKey, out definingKey) && keys.Contains(definingKey);
+
+        /// <summary>
+        /// Determines if this config section contains an item matching the <paramref name="templateKey"/>
+        /// and returns the optional match as <paramref name="definingKey"/>.
+        /// </summary>
+        /// <param name="templateKey">The config item to search for.</param>
+        /// <param name="definingKey">The optional match for the searched item. Will also contain a match not from this config section.</param>
+        /// <returns><c>true</c> if this config section contains the matching item; otherwise, <c>false</c>.</returns>
+        public bool TryGetDefinedKey(IConfigKey templateKey, [NotNullWhen(true)] out IDefiningConfigKey? definingKey)
+            => Config.TryGetDefiningKey(templateKey.AsUntyped, out definingKey) && keys.Contains(definingKey);
 
         internal void Load(JObject source, JsonSerializer jsonSerializer)
         {
@@ -146,6 +197,23 @@ namespace MonkeyLoader.Configuration
             OnSave(result, jsonSerializer);
 
             return result;
+        }
+
+        /// <summary>
+        /// Deserializes the given <paramref name="key"/> from the <paramref name="source"/>
+        /// with the <paramref name="jsonSerializer"/>, if there is a value.
+        /// </summary>
+        /// <param name="key">The key to deserialize.</param>
+        /// <param name="source">The <see cref="JObject"/> being deserialized from.</param>
+        /// <param name="jsonSerializer">The <see cref="JsonSerializer"/> to deserialize objects with.</param>
+        protected void DeserializeKey(IDefiningConfigKey key, JObject source, JsonSerializer jsonSerializer)
+        {
+            if (source[key.Name] is not JToken token)
+                return;
+
+            var value = token.ToObject(key.ValueType, jsonSerializer);
+            key.SetValue(value, "Load");
+            key.HasChanges = false;
         }
 
         /// <summary>
@@ -189,12 +257,7 @@ namespace MonkeyLoader.Configuration
             {
                 try
                 {
-                    if (source[key.Name] is JToken token)
-                    {
-                        var value = token.ToObject(key.ValueType, jsonSerializer);
-                        key.SetValue(value, "Load");
-                        key.HasChanges = false;
-                    }
+                    DeserializeKey(key, source, jsonSerializer);
                 }
                 catch (Exception ex)
                 {
@@ -217,14 +280,33 @@ namespace MonkeyLoader.Configuration
         protected virtual void OnSave(JObject result, JsonSerializer jsonSerializer)
         {
             foreach (var key in keys)
-            {
-                if (!key.TryGetValue(out var value))
-                    continue;
-
-                // I don't need to typecheck this as there's no way to sneak a bad type past my Set() API
-                result[key.Name] = value == null ? null : JToken.FromObject(value, jsonSerializer);
-            }
+                SerializeKey(key, result, jsonSerializer);
         }
+
+        /// <summary>
+        /// Serializes the given <paramref name="key"/> to the <paramref name="result"/>
+        /// with the <paramref name="jsonSerializer"/>, if the value can be gotten.
+        /// </summary>
+        /// <param name="key">The key to serialize.</param>
+        /// <param name="result">The <see cref="JObject"/> being serialized to.</param>
+        /// <param name="jsonSerializer">The <see cref="JsonSerializer"/> to serialize objects with.</param>
+        protected void SerializeKey(IDefiningConfigKey key, JObject result, JsonSerializer jsonSerializer)
+        {
+            if (!key.TryGetValue(out var value))
+                return;
+
+            // I don't need to typecheck this as there's no way to sneak a bad type past my Set() API
+            result[key.Name] = value == null ? null : JToken.FromObject(value, jsonSerializer);
+        }
+
+        /// <summary>
+        /// Throws a <see cref="KeyNotFoundException"/> for the given <paramref name="key"/> in this config section.
+        /// </summary>
+        /// <param name="key">The key that wasn't found.</param>
+        /// <exception cref="KeyNotFoundException">Always.</exception>
+        [DoesNotReturn]
+        protected void ThrowKeyNotFound(IConfigKey key)
+            => throw new KeyNotFoundException($"Key [{key.Name}] not found in this config section!");
 
         private static bool AreVersionsCompatible(Version serializedVersion, Version currentVersion)
         {

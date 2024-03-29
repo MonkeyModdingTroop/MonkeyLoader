@@ -11,7 +11,7 @@ namespace MonkeyLoader.Configuration
     /// <summary>
     /// Represents the typed definition for a config item.
     /// </summary>
-    /// <inheritdoc/>
+    /// <typeparam name="T">The type of the config item's value.</typeparam>
     public class DefiningConfigKey<T> : IDefiningConfigKey<T>
     {
         private readonly Func<T>? _computeDefault;
@@ -21,6 +21,9 @@ namespace MonkeyLoader.Configuration
         private ConfigSection? _configSection;
         private ConfigKeyChangedEventHandler? _untypedChanged;
         private T? _value;
+
+        /// <inheritdoc/>
+        public IConfigKey AsUntyped { get; }
 
         /// <inheritdoc/>
         public Config Config => Section.Config;
@@ -75,10 +78,12 @@ namespace MonkeyLoader.Configuration
         /// <param name="description">The human-readable description of this config item.</param>
         /// <param name="computeDefault">The function that computes a default value for this key. Otherwise <c>default(<typeparamref name="T"/>)</c> will be used.</param>
         /// <param name="internalAccessOnly">If <c>true</c>, only the owning mod should have access to this config item.</param>
-        /// <param name="valueValidator">The function that checks if the given value is valid for this configuration item. Otherwise everything will be accepted.</param>
+        /// <param name="valueValidator">The function that checks if the given value is valid for this config item. Otherwise everything will be accepted.</param>
         public DefiningConfigKey(string name, string? description = null, Func<T>? computeDefault = null, bool internalAccessOnly = false, Predicate<T?>? valueValidator = null)
         {
             Name = name;
+            AsUntyped = new ConfigKey(name);
+
             Description = description;
             _computeDefault = computeDefault;
             InternalAccessOnly = internalAccessOnly;
@@ -239,7 +244,7 @@ namespace MonkeyLoader.Configuration
         /// </summary>
         /// <param name="hadValue">Whether the old value existed.</param>
         /// <param name="oldValue">The old value.</param>
-        /// <param name="eventLabel">The custom label that may be set by whoever changed the configuration.</param>
+        /// <param name="eventLabel">The custom label that may be set by whoever changed the config.</param>
         protected virtual void OnChanged(bool hadValue, T? oldValue, string? eventLabel)
         {
             // Don't fire event if value didn't change
@@ -284,7 +289,7 @@ namespace MonkeyLoader.Configuration
     }
 
     /// <summary>
-    /// Represents the definition for a config item.
+    /// Defines the definition for a config item.
     /// </summary>
     public interface IDefiningConfigKey : ITypedConfigKey
     {
@@ -299,7 +304,7 @@ namespace MonkeyLoader.Configuration
         public string? Description { get; }
 
         /// <summary>
-        /// Gets or sets whether this configuration item has unsaved changes.
+        /// Gets or sets whether this config item has unsaved changes.
         /// </summary>
         public bool HasChanges { get; set; }
 
@@ -340,7 +345,7 @@ namespace MonkeyLoader.Configuration
         /// Set the config item's internal value to the given one.
         /// </summary>
         /// <param name="value">The value to set.</param>
-        /// <param name="eventLabel">The custom label that may be set by whoever changed the configuration.</param>
+        /// <param name="eventLabel">The custom label that may be set by whoever changed the config.</param>
         /// <exception cref="ArgumentException">The <paramref name="value"/> didn't pass <see cref="Validate">validation</see>.</exception>
         public void SetValue(object? value, string? eventLabel = null);
 
@@ -362,7 +367,7 @@ namespace MonkeyLoader.Configuration
         /// Tries to set the config item's internal value to the given one if it passes <see cref="Validate">validation</see>.
         /// </summary>
         /// <param name="value">The value to set.</param>
-        /// <param name="eventLabel">The custom label that may be set by whoever changed the configuration.</param>
+        /// <param name="eventLabel">The custom label that may be set by whoever changed the config.</param>
         /// <returns><c>true</c> if the value was successfully set, otherwise <c>false</c>.</returns>
         public bool TrySetValue(object? value, string? eventLabel = null);
 
@@ -373,7 +378,7 @@ namespace MonkeyLoader.Configuration
         public bool Unset();
 
         /// <summary>
-        /// Checks if a value is valid for this configuration item.
+        /// Checks if a value is valid for this config item.
         /// </summary>
         /// <param name="value">The value to check.</param>
         /// <returns><c>true</c> if the value is valid.</returns>
@@ -386,8 +391,9 @@ namespace MonkeyLoader.Configuration
     }
 
     /// <summary>
-    /// Represents the typed definition for a config item.
+    /// Defines the typed definition for a config item.
     /// </summary>
+    /// <typeparam name="T">The type of the config item's value.</typeparam>
     public interface IDefiningConfigKey<T> : IDefiningConfigKey, ITypedConfigKey<T>
     {
         /// <summary>
@@ -400,7 +406,7 @@ namespace MonkeyLoader.Configuration
         /// Set the config item's internal value to the given one.
         /// </summary>
         /// <param name="value">The value to set.</param>
-        /// <param name="eventLabel">The custom label that may be set by whoever changed the configuration.</param>
+        /// <param name="eventLabel">The custom label that may be set by whoever changed the config.</param>
         /// <exception cref="ArgumentException">Tthe <paramref name="value"/> didn't pass <see cref="Validate">validation</see>.</exception>
         public void SetValue(T value, string? eventLabel = null);
 
@@ -422,12 +428,12 @@ namespace MonkeyLoader.Configuration
         /// Tries to set the config item's internal value to the given one if it passes <see cref="Validate">validation</see>.
         /// </summary>
         /// <param name="value">The value to set.</param>
-        /// <param name="eventLabel">The custom label that may be set by whoever changed the configuration.</param>
+        /// <param name="eventLabel">The custom label that may be set by whoever changed the config.</param>
         /// <returns><c>true</c> if the value was successfully set, otherwise <c>false</c>.</returns>
         public bool TrySetValue(T value, string? eventLabel = null);
 
         /// <summary>
-        /// Checks if a value is valid for this configuration item.
+        /// Checks if a value is valid for this config item.
         /// </summary>
         /// <param name="value">The value to check.</param>
         /// <returns><c>true</c> if the value is valid.</returns>

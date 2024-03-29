@@ -13,6 +13,9 @@ namespace MonkeyLoader.Configuration
         where TKey : IConfigKey
     {
         /// <inheritdoc/>
+        public IConfigKey AsUntyped => Key.AsUntyped;
+
+        /// <inheritdoc/>
         public bool IsDefiningKey => Key.IsDefiningKey;
 
         /// <summary>

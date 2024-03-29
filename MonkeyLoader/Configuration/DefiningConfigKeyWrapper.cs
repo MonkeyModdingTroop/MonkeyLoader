@@ -12,6 +12,9 @@ namespace MonkeyLoader.Configuration
     public abstract class DefiningConfigKeyWrapper<TValue> : IDefiningConfigKey<TValue>
     {
         /// <inheritdoc/>
+        public IConfigKey AsUntyped => Key.AsUntyped;
+
+        /// <inheritdoc/>
         public Config Config => Key.Config;
 
         /// <inheritdoc/>
