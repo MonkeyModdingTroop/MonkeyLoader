@@ -1,12 +1,11 @@
-using MonkeyLoader.Logging;
 using System;
 using System.Collections.Generic;
-using System.Xml.Linq;
 
 namespace MonkeyLoader.Configuration
 {
     /// <summary>
-    /// Represents a name-only configuration item, which can be used to get or set the values of defining keys with the same name.
+    /// Represents a name-only configuration item, which can be used to
+    /// get or set the values of defining keys with the same <see cref="Name">name</see>.
     /// </summary>
     public class ConfigKey : IConfigKey
     {
@@ -20,14 +19,10 @@ namespace MonkeyLoader.Configuration
         /// </summary>
         public static readonly IEqualityComparer<IConfigKey> EqualityComparer = new ConfigKeyEqualityComparer();
 
-        /// <summary>
-        /// Gets whether this instance defines the config item with this <see cref="Name">Name</see>.
-        /// </summary>
-        public virtual bool IsDefiningKey => false;
+        /// <inheritdoc/>
+        public bool IsDefiningKey => false;
 
-        /// <summary>
-        /// Gets the mod-unique name of this config item.
-        /// </summary>
+        /// <inheritdoc/>
         public string Name { get; }
 
         /// <summary>
@@ -159,6 +154,6 @@ namespace MonkeyLoader.Configuration
     /// <summary>
     /// Represents a name-only typed configuration item, which can be used to get or set the values of defining keys with the same name.
     /// </summary>
-    public interface ITypedConfigKey<T> : IConfigKey
+    public interface ITypedConfigKey<T> : ITypedConfigKey
     { }
 }

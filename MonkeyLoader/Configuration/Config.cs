@@ -29,11 +29,9 @@ namespace MonkeyLoader.Configuration
         private readonly HashSet<ConfigSection> _sections = new();
 
         /// <summary>
-        /// Gets the set of configuration keys defined in this configuration definition.
+        /// Gets the config keys defined in this configuration.
         /// </summary>
-        // clone the collection because I don't trust giving public API users shallow copies one bit
-        public ISet<IDefiningConfigKey> ConfigurationItemDefinitions
-            => new HashSet<IDefiningConfigKey>(_configurationItemDefinitionsSelfMap.Values, ConfigKey.EqualityComparer);
+        public IEnumerable<IDefiningConfigKey> ConfigurationItemDefinitions => _configurationItemDefinitionsSelfMap.Values.AsSafeEnumerable();
 
         /// <summary>
         /// Gets the logger used by this config.
@@ -377,7 +375,7 @@ namespace MonkeyLoader.Configuration
             };
         }
 
-        private bool NeedsToSave() => ConfigurationItemDefinitions.Any(key => key.HasValue && key.HasChanges);
+        private bool NeedsToSave() => _configurationItemDefinitionsSelfMap.Values.Any(key => key.HasValue && key.HasChanges);
 
         [DoesNotReturn]
         private void ThrowKeyNotFound(IConfigKey key)
