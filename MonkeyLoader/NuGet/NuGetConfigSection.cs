@@ -38,7 +38,7 @@ namespace MonkeyLoader.NuGet
         }
 
         /// <inheritdoc/>
-        public override string Name { get; } = "NuGet";
+        public override string Id { get; } = "NuGet";
 
         /// <summary>
         /// Gets the NuGet feeds to check for game packs.

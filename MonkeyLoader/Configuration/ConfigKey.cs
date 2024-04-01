@@ -4,8 +4,8 @@ using System.Collections.Generic;
 namespace MonkeyLoader.Configuration
 {
     /// <summary>
-    /// Represents a name-only config item, which can be used to
-    /// get or set the values of defining keys with the same <see cref="Name">name</see>.
+    /// Represents a identifier-only config item, which can be used to
+    /// get or set the values of defining keys with the same <see cref="Id">Id</see>.
     /// </summary>
     public class ConfigKey : IConfigKey
     {
@@ -22,29 +22,29 @@ namespace MonkeyLoader.Configuration
         IConfigKey IConfigKey.AsUntyped => this;
 
         /// <inheritdoc/>
-        public bool IsDefiningKey => false;
+        public string Id { get; }
 
         /// <inheritdoc/>
-        public string Name { get; }
+        public bool IsDefiningKey => false;
 
         /// <summary>
-        /// Creates a new name-only config item with the given name.
+        /// Creates a new identifier-only config item with the given id.
         /// </summary>
-        /// <param name="name">The mod-unique name of the config item. Must not be null or whitespace.</param>
-        /// <exception cref="ArgumentNullException">If the <paramref name="name"/> is null or whitespace.</exception>
-        public ConfigKey(string name)
+        /// <param name="id">The mod-unique identifier of the config item. Must not be null or whitespace.</param>
+        /// <exception cref="ArgumentNullException">If the <paramref name="id"/> is null or whitespace.</exception>
+        public ConfigKey(string id)
         {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentNullException("Config key name must not be null or whitespace!");
+            if (string.IsNullOrWhiteSpace(id))
+                throw new ArgumentNullException(nameof(id), "Config key identifier must not be null or whitespace!");
 
-            Name = name;
+            Id = id;
         }
 
         /// <summary>
         /// Creates a new <see cref="ConfigKey"/> instance from the given name.
         /// </summary>
-        /// <param name="name">The mod-unique name of the config item.</param>
-        public static implicit operator ConfigKey(string name) => new(name);
+        /// <param name="id">The mod-unique identifier of the config item.</param>
+        public static implicit operator ConfigKey(string id) => new(id);
 
         /// <summary>
         /// Checks if two <see cref="ConfigKey"/>s are unequal.
@@ -89,18 +89,18 @@ namespace MonkeyLoader.Configuration
                     return true;
 
                 if (x is ITypedConfigKey typedX && y is ITypedConfigKey typedY)
-                    return typedX.ValueType == typedY.ValueType && typedX.Name == typedY.Name;
+                    return typedX.ValueType == typedY.ValueType && typedX.Id == typedY.Id;
 
-                return x is not null && y is not null && x.Name == y.Name;
+                return x is not null && y is not null && x.Id == y.Id;
             }
 
             /// <inheritdoc/>
             public int GetHashCode(IConfigKey? obj)
             {
                 if (obj is ITypedConfigKey typedKey)
-                    return unchecked((31 * typedKey.ValueType.GetHashCode()) + obj.Name.GetHashCode());
+                    return unchecked((31 * typedKey.ValueType.GetHashCode()) + obj.Id.GetHashCode());
 
-                return obj?.Name.GetHashCode() ?? 0;
+                return obj?.Id.GetHashCode() ?? 0;
             }
         }
     }
@@ -116,9 +116,9 @@ namespace MonkeyLoader.Configuration
         public Type ValueType { get; } = typeof(T);
 
         /// <inheritdoc/>
-        public ConfigKey(string name) : base(name)
+        public ConfigKey(string id) : base(id)
         {
-            AsUntyped = new ConfigKey(name);
+            AsUntyped = new ConfigKey(id);
         }
 
         /// <summary>
@@ -139,14 +139,14 @@ namespace MonkeyLoader.Configuration
         public IConfigKey AsUntyped { get; }
 
         /// <summary>
-        /// Gets whether this instance defines the config item with this <see cref="Name">Name</see>.
+        /// Gets the mod-unique identifier of this config item.
         /// </summary>
-        public bool IsDefiningKey { get; }
+        public string Id { get; }
 
         /// <summary>
-        /// Gets the mod-unique name of this config item.
+        /// Gets whether this instance defines the config item with this <see cref="Id">Name</see>.
         /// </summary>
-        public string Name { get; }
+        public bool IsDefiningKey { get; }
     }
 
     /// <summary>

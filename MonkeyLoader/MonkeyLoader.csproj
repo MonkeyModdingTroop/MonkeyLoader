@@ -11,7 +11,7 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>MonkeyLoader</Title>
     <Authors>Banane9</Authors>
-    <Version>0.9.0-beta</Version>
+    <Version>0.11.0-beta</Version>
     <Description>A convenience and extendability focused mod loader using NuGet packages.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
@@ -54,7 +54,7 @@
   </Target>
 
   <ItemGroup>
-    <PackageReference Include="Lib.Harmony.Thin" Version="2.3.2" />
+    <PackageReference Include="Lib.Harmony.Thin" Version="2.3.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="NuGet.Packaging" Version="6.9.1" />
     <PackageReference Include="NuGet.Protocol" Version="6.9.1" />

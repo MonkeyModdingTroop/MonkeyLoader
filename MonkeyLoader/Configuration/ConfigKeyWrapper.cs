@@ -44,15 +44,15 @@ namespace MonkeyLoader.Configuration
         IConfigKey IConfigKey.AsUntyped => Key.AsUntyped;
 
         /// <inheritdoc/>
+        public string Id => Key.Id;
+
+        /// <inheritdoc/>
         public bool IsDefiningKey => Key.IsDefiningKey;
 
         /// <inheritdoc/>
         public TKey Key { get; }
 
         IConfigKey IConfigKeyWrapper.Key => Key;
-
-        /// <inheritdoc/>
-        public string Name => Key.Name;
 
         /// <summary>
         /// Wraps the given config key.

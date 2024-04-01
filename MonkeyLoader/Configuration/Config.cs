@@ -139,7 +139,7 @@ namespace MonkeyLoader.Configuration
         public TSection LoadSection<TSection>(TSection section) where TSection : ConfigSection
         {
             if (_sections.Contains(section))
-                throw new ConfigLoadException($"Attempted to load section [{section.Name}] twice!");
+                throw new ConfigLoadException($"Attempted to load section [{section.Id}] twice!");
 
             section.Config = this;
             _sections.Add(section);
@@ -147,8 +147,8 @@ namespace MonkeyLoader.Configuration
             foreach (var key in section.Keys)
                 _configurationItemDefinitionsSelfMap.Add(key, key);
 
-            if (_loadedConfig[SectionsKey]![section.Name] is not JObject sectionObject)
-                Logger.Warn(() => $"Section [{section.Name}] didn't appear in the loaded config - using defaults!");
+            if (_loadedConfig[SectionsKey]![section.Id] is not JObject sectionObject)
+                Logger.Warn(() => $"Section [{section.Id}] didn't appear in the loaded config - using defaults!");
             else
                 section.Load(sectionObject, Owner.Loader.JsonSerializer);
 
@@ -182,11 +182,11 @@ namespace MonkeyLoader.Configuration
                             continue;
 
                         successfulSections.Add(section);
-                        sectionsJson[section.Name] = sectionJson;
+                        sectionsJson[section.Id] = sectionJson;
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error(() => ex.Format($"Exception while serializing section [{section.Name}] - skipping it!"));
+                        Logger.Error(() => ex.Format($"Exception while serializing section [{section.Id}] - skipping it!"));
                     }
                 }
 
@@ -378,7 +378,7 @@ namespace MonkeyLoader.Configuration
 
         [DoesNotReturn]
         private void ThrowKeyNotFound(IConfigKey key)
-            => throw new KeyNotFoundException($"Key [{key.Name}] not found in this config!");
+            => throw new KeyNotFoundException($"Key [{key.Id}] not found in this config!");
 
         /// <summary>
         /// Called when the value of one of this config's items gets changed.

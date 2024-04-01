@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MonkeyLoader.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,6 +12,8 @@ namespace MonkeyLoader.Configuration
     /// </summary>
     public abstract class DefiningConfigKeyWrapper<TValue> : IDefiningConfigKeyWrapper<TValue>
     {
+        private ConfigKeyChangedEventHandler? _untypedChanged;
+
         /// <inheritdoc/>
         IConfigKey IConfigKey.AsUntyped => Key.AsUntyped;
 
@@ -19,6 +22,9 @@ namespace MonkeyLoader.Configuration
 
         /// <inheritdoc/>
         public string? Description => Key.Description;
+
+        /// <inheritdoc/>
+        public string FullId => Key.FullId;
 
         /// <inheritdoc/>
         public bool HasChanges
@@ -32,6 +38,9 @@ namespace MonkeyLoader.Configuration
 
         /// <inheritdoc/>
         public bool HasValue => Key.HasValue;
+
+        /// <inheritdoc/>
+        public string Id => Key.Id;
 
         /// <inheritdoc/>
         public bool InternalAccessOnly => Key.InternalAccessOnly;
@@ -49,9 +58,6 @@ namespace MonkeyLoader.Configuration
         IConfigKey IConfigKeyWrapper.Key => Key;
 
         /// <inheritdoc/>
-        public string Name => Key.Name;
-
-        /// <inheritdoc/>
         public ConfigSection Section
         {
             get => Key.Section;
@@ -62,12 +68,18 @@ namespace MonkeyLoader.Configuration
         public Type ValueType => Key.ValueType;
 
         /// <summary>
+        /// Gets the logger of the config this item belongs to if it's a <see cref="IsDefiningKey">defining key</see>.
+        /// </summary>
+        protected Logger Logger => Key.Section.Config.Logger;
+
+        /// <summary>
         /// Wraps the given defining config key.
         /// </summary>
         /// <param name="definingKey">The defining key to wrap.</param>
         protected DefiningConfigKeyWrapper(IDefiningConfigKey<TValue> definingKey)
         {
             Key = definingKey;
+            definingKey.Changed += OnTypedChange;
         }
 
         /// <inheritdoc/>
@@ -111,17 +123,41 @@ namespace MonkeyLoader.Configuration
         /// <inheritdoc/>
         public bool Validate(object? value) => Key.Validate(value);
 
-        /// <inheritdoc/>
-        public event ConfigKeyChangedEventHandler<TValue>? Changed
+        private void OnTypedChange(object sender, ConfigKeyChangedEventArgs<TValue> configKeyChangedEventArgs)
         {
-            add => Key.Changed += value;
-            remove => Key.Changed -= value;
+            var eventArgs = new ConfigKeyChangedEventArgs<TValue>(Config, this,
+                configKeyChangedEventArgs.HadValue, configKeyChangedEventArgs.OldValue,
+                configKeyChangedEventArgs.HasValue, configKeyChangedEventArgs.NewValue,
+                configKeyChangedEventArgs.Label);
+
+            try
+            {
+                Changed?.TryInvokeAll(this, eventArgs);
+            }
+            catch (AggregateException ex)
+            {
+                Logger.Error(() => ex.Format($"Some typed {nameof(Changed)} event subscriber(s) of key [{Id}] threw an exception:"));
+            }
+
+            try
+            {
+                _untypedChanged?.TryInvokeAll(this, eventArgs);
+            }
+            catch (AggregateException ex)
+            {
+                Logger.Error(() => ex.Format($"Some untyped {nameof(Changed)} event subscriber(s) of key [{Id}] threw an exception:"));
+            }
+
+            Config.OnItemChanged(eventArgs);
         }
+
+        /// <inheritdoc/>
+        public event ConfigKeyChangedEventHandler<TValue>? Changed;
 
         event ConfigKeyChangedEventHandler? IDefiningConfigKey.Changed
         {
-            add => ((IDefiningConfigKey)Key).Changed += value;
-            remove => ((IDefiningConfigKey)Key).Changed -= value;
+            add => _untypedChanged += value;
+            remove => _untypedChanged -= value;
         }
     }
 

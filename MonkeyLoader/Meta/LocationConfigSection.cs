@@ -37,6 +37,9 @@ namespace MonkeyLoader.Meta
             set => GamePacksKey.SetValue(value, SetEventLabel);
         }
 
+        /// <inheritdoc/>
+        public override string Id { get; } = "Locations";
+
         public string Libs
         {
             get => LibsKey.GetValue()!;
@@ -49,9 +52,6 @@ namespace MonkeyLoader.Meta
             get => ModsKey.GetValue()!;
             set => ModsKey.SetValue(value, SetEventLabel);
         }
-
-        /// <inheritdoc/>
-        public override string Name { get; } = "Locations";
 
         public string PatchedAssemblies
         {

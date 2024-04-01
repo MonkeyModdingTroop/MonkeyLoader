@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics.CodeAnalysis;
+using MonkeyLoader.Meta;
 
 namespace MonkeyLoader.Configuration
 {
@@ -16,6 +17,7 @@ namespace MonkeyLoader.Configuration
     {
         private readonly Func<T>? _computeDefault;
 
+        private readonly Lazy<string> _fullId;
         private readonly Predicate<T?>? _isValueValid;
 
         private ConfigSection? _configSection;
@@ -32,6 +34,9 @@ namespace MonkeyLoader.Configuration
         public string? Description { get; }
 
         /// <inheritdoc/>
+        public string FullId => _fullId.Value;
+
+        /// <inheritdoc/>
         public bool HasChanges { get; set; }
 
         /// <inheritdoc/>
@@ -42,13 +47,13 @@ namespace MonkeyLoader.Configuration
         public bool HasValue { get; private set; }
 
         /// <inheritdoc/>
+        public string Id => AsUntyped.Id;
+
+        /// <inheritdoc/>
         public bool InternalAccessOnly { get; }
 
         /// <inheritdoc/>
         public bool IsDefiningKey => true;
-
-        /// <inheritdoc/>
-        public string Name { get; }
 
         /// <inheritdoc/>
         public ConfigSection Section
@@ -74,21 +79,27 @@ namespace MonkeyLoader.Configuration
         /// <summary>
         /// Creates a new instance of the <see cref="DefiningConfigKey{T}"/> class with the given parameters.
         /// </summary>
-        /// <param name="name">The mod-unique name of this config item.</param>
+        /// <param name="id">The mod-unique identifier of this config item. Must not be null or whitespace.</param>
         /// <param name="description">The human-readable description of this config item.</param>
         /// <param name="computeDefault">The function that computes a default value for this key. Otherwise <c>default(<typeparamref name="T"/>)</c> will be used.</param>
         /// <param name="internalAccessOnly">If <c>true</c>, only the owning mod should have access to this config item.</param>
         /// <param name="valueValidator">The function that checks if the given value is valid for this config item. Otherwise everything will be accepted.</param>
-        public DefiningConfigKey(string name, string? description = null, Func<T>? computeDefault = null, bool internalAccessOnly = false, Predicate<T?>? valueValidator = null)
+        /// <exception cref="ArgumentNullException">If the <paramref name="id"/> is null or whitespace.</exception>
+        public DefiningConfigKey(string id, string? description = null, Func<T>? computeDefault = null, bool internalAccessOnly = false, Predicate<T?>? valueValidator = null)
         {
-            Name = name;
-            AsUntyped = new ConfigKey(name);
+            if (string.IsNullOrWhiteSpace(id))
+                throw new ArgumentNullException(nameof(id), "Config key identifier must not be null or whitespace!");
+
+            AsUntyped = new ConfigKey(id);
 
             Description = description;
+            HasDescription = !string.IsNullOrWhiteSpace(description);
+
             _computeDefault = computeDefault;
             InternalAccessOnly = internalAccessOnly;
             _isValueValid = valueValidator;
-            HasDescription = !string.IsNullOrWhiteSpace(description);
+
+            _fullId = new(() => $"{Config.Owner.Id}.{Section.Id}.{Id}");
 
             // Make the Compiler shut up about Section not being set - it gets set by the ConfigSection loading the keys.
             Section = default!;
@@ -116,13 +127,13 @@ namespace MonkeyLoader.Configuration
         public void SetValue(T value, string? eventLabel = null)
         {
             if (!TrySetValue(value, eventLabel))
-                throw new ArgumentException($"Tried to set key [{Name}] to invalid value!", nameof(value));
+                throw new ArgumentException($"Tried to set key [{Id}] to invalid value!", nameof(value));
         }
 
         void IDefiningConfigKey.SetValue(object? value, string? eventLabel)
         {
             if (!((IDefiningConfigKey)this).TrySetValue(value, eventLabel))
-                throw new ArgumentException($"Tried to set key [{Name}] to invalid value!", nameof(value));
+                throw new ArgumentException($"Tried to set key [{Id}] to invalid value!", nameof(value));
         }
 
         /// <inheritdoc/>
@@ -150,7 +161,7 @@ namespace MonkeyLoader.Configuration
             }
 
             if (!Validate((object?)defaultValue))
-                throw new InvalidOperationException($"(Computed) default value for key [{Name}] did not pass validation!");
+                throw new InvalidOperationException($"(Computed) default value for key [{Id}] did not pass validation!");
 
             return success;
         }
@@ -260,7 +271,7 @@ namespace MonkeyLoader.Configuration
             }
             catch (AggregateException ex)
             {
-                Logger!.Error(() => ex.Format($"Some typed {nameof(Changed)} event subscriber(s) of key [{Name}] threw an exception:"));
+                Logger.Error(() => ex.Format($"Some typed {nameof(Changed)} event subscriber(s) of key [{Id}] threw an exception:"));
             }
 
             try
@@ -269,7 +280,7 @@ namespace MonkeyLoader.Configuration
             }
             catch (AggregateException ex)
             {
-                Logger!.Error(() => ex.Format($"Some untyped {nameof(Changed)} event subscriber(s) of key [{Name}] threw an exception:"));
+                Logger.Error(() => ex.Format($"Some untyped {nameof(Changed)} event subscriber(s) of key [{Id}] threw an exception:"));
             }
 
             Config.OnItemChanged(eventArgs);
@@ -302,6 +313,15 @@ namespace MonkeyLoader.Configuration
         /// Gets the human-readable description of this config item.
         /// </summary>
         public string? Description { get; }
+
+        /// <summary>
+        /// Gets the fully unique identifier for this config item.
+        /// </summary>
+        /// <remarks>
+        /// Format:
+        /// <c>$"{<see cref="Config">Config</see>.<see cref="Config.Owner">Owner</see>.<see cref="IConfigOwner.Id">Id</see>}.{<see cref="Section">Section</see>.<see cref="ConfigSection.Id">Id</see>}.{<see cref="IConfigKey.Id">Id</see>}"</c>
+        /// </remarks>
+        public string FullId { get; }
 
         /// <summary>
         /// Gets or sets whether this config item has unsaved changes.

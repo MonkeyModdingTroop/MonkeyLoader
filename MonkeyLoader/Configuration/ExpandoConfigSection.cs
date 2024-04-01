@@ -46,9 +46,9 @@ namespace MonkeyLoader.Configuration
                     Func<T>? computeDefault = null, bool internalAccessOnly = false, Predicate<T?>? valueValidator = null)
         {
             if (Config.TryGetDefiningKey(templateKey, out _))
-                throw new InvalidOperationException($"Key matching the template's Name [{templateKey.Name}] already exists!");
+                throw new InvalidOperationException($"Key matching the template's Name [{templateKey.Id}] already exists!");
 
-            return AddDefiningKey(templateKey.Name, description, computeDefault, internalAccessOnly, valueValidator);
+            return AddDefiningKey(templateKey.Id, description, computeDefault, internalAccessOnly, valueValidator);
         }
 
         /// <summary>
@@ -68,12 +68,12 @@ namespace MonkeyLoader.Configuration
             string? description = null, Func<T>? computeDefault = null, bool internalAccessOnly = false, Predicate<T?>? valueValidator = null)
         {
             if (TryGetDefinedKey(templateKey.AsUntyped, out var definingKey))
-                return definingKey as IDefiningConfigKey<T> ?? throw new InvalidOperationException($"Key matching the template's Name [{templateKey.Name}] exists, but has the wrong type!");
+                return definingKey as IDefiningConfigKey<T> ?? throw new InvalidOperationException($"Key matching the template's Name [{templateKey.Id}] exists, but has the wrong type!");
 
             if (definingKey is not null)
-                throw new InvalidOperationException($"Key matching the template's Name [{templateKey.Name}] exists, but wasn't defined by this config section!");
+                throw new InvalidOperationException($"Key matching the template's Name [{templateKey.Id}] exists, but wasn't defined by this config section!");
 
-            return AddDefiningKey(templateKey.Name, description, computeDefault, internalAccessOnly, valueValidator);
+            return AddDefiningKey(templateKey.Id, description, computeDefault, internalAccessOnly, valueValidator);
         }
 
         /// <summary>
@@ -106,7 +106,7 @@ namespace MonkeyLoader.Configuration
                 return false;
             }
 
-            typedDefiningKey = AddDefiningKey(typedTemplateKey.Name, description, computeDefault, internalAccessOnly, valueValidator);
+            typedDefiningKey = AddDefiningKey(typedTemplateKey.Id, description, computeDefault, internalAccessOnly, valueValidator);
             return true;
         }
 
@@ -135,7 +135,7 @@ namespace MonkeyLoader.Configuration
             {
                 // I know not what exceptions the JSON library will throw, but they must be contained
                 // Saveable = false;
-                Config.Logger.Error(() => ex.Format($"Error loading expando key [{name}] of type [{definingKey.ValueType}] in section [{Name}]!"));
+                Config.Logger.Error(() => ex.Format($"Error loading expando key [{name}] of type [{definingKey.ValueType}] in section [{Id}]!"));
             }
 
             return definingKey;

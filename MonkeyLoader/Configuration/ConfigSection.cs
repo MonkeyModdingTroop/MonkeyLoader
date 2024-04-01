@@ -41,15 +41,19 @@ namespace MonkeyLoader.Configuration
         public bool HasChanges => keys.Any(key => key.HasChanges);
 
         /// <summary>
+        /// Gets the mod-unique identifier of this section.
+        /// </summary>
+        public abstract string Id { get; }
+
+        /// <summary>
         /// Gets all the config keys of this section.
         /// </summary>
         public IEnumerable<IDefiningConfigKey> Keys => keys.AsSafeEnumerable();
 
         /// <summary>
-        /// Gets the name of the section.<br/>
-        /// Must be unique for a given mod.
+        /// Gets the name for this section.
         /// </summary>
-        public abstract string Name { get; }
+        public virtual string Name => Id;
 
         /// <summary>
         /// Gets whether this config section is allowed to be saved.<br/>
@@ -97,7 +101,7 @@ namespace MonkeyLoader.Configuration
         /// <returns><c>true</c> if they're considered equal.</returns>
         public static bool operator ==(ConfigSection? left, ConfigSection? right)
             => ReferenceEquals(left, right)
-            || (left is not null && right is not null && left.Name == right.Name);
+            || (left is not null && right is not null && left.Id == right.Id);
 
         /// <summary>
         /// Checks if the given object can be considered equal to this one.
@@ -137,7 +141,7 @@ namespace MonkeyLoader.Configuration
         }
 
         /// <inheritdoc/>
-        public override int GetHashCode() => Name.GetHashCode();
+        public override int GetHashCode() => Id.GetHashCode();
 
         /// <summary>
         /// Determines if this config section contains an item matching the <paramref name="typedTemplateKey"/>
@@ -171,7 +175,7 @@ namespace MonkeyLoader.Configuration
             {
                 // I know not what exceptions the JSON library will throw, but they must be contained
                 Saveable = false;
-                throw new ConfigLoadException($"Error loading version for section [{Name}]!", ex);
+                throw new ConfigLoadException($"Error loading version for section [{Id}]!", ex);
             }
 
             ValidateCompatibility(serializedVersion);
@@ -208,7 +212,7 @@ namespace MonkeyLoader.Configuration
         /// <param name="jsonSerializer">The <see cref="JsonSerializer"/> to deserialize objects with.</param>
         protected void DeserializeKey(IDefiningConfigKey key, JObject source, JsonSerializer jsonSerializer)
         {
-            if (source[key.Name] is not JToken token)
+            if (source[key.Id] is not JToken token)
                 return;
 
             var value = token.ToObject(key.ValueType, jsonSerializer);
@@ -263,7 +267,7 @@ namespace MonkeyLoader.Configuration
                 {
                     // I know not what exceptions the JSON library will throw, but they must be contained
                     Saveable = false;
-                    throw new ConfigLoadException($"Error loading key [{key.Name}] of type [{key.ValueType}] in section [{Name}]!", ex);
+                    throw new ConfigLoadException($"Error loading key [{key.Id}] of type [{key.ValueType}] in section [{Id}]!", ex);
                 }
             }
         }
@@ -296,7 +300,7 @@ namespace MonkeyLoader.Configuration
                 return;
 
             // I don't need to typecheck this as there's no way to sneak a bad type past my Set() API
-            result[key.Name] = value == null ? null : JToken.FromObject(value, jsonSerializer);
+            result[key.Id] = value == null ? null : JToken.FromObject(value, jsonSerializer);
         }
 
         /// <summary>
@@ -306,7 +310,7 @@ namespace MonkeyLoader.Configuration
         /// <exception cref="KeyNotFoundException">Always.</exception>
         [DoesNotReturn]
         protected void ThrowKeyNotFound(IConfigKey key)
-            => throw new KeyNotFoundException($"Key [{key.Name}] not found in this config section!");
+            => throw new KeyNotFoundException($"Key [{key.Id}] not found in this config section!");
 
         private static bool AreVersionsCompatible(Version serializedVersion, Version currentVersion)
         {
@@ -335,7 +339,7 @@ namespace MonkeyLoader.Configuration
                 switch (IncompatibilityHandling)
                 {
                     case IncompatibleConfigHandling.Clobber:
-                        Config.Logger.Warn(() => $"Saved section [{Name}] version [{serializedVersion}] is incompatible with mod's version [{Version}]. Clobbering old config and starting fresh.");
+                        Config.Logger.Warn(() => $"Saved section [{Id}] version [{serializedVersion}] is incompatible with mod's version [{Version}]. Clobbering old config and starting fresh.");
                         return;
 
                     case IncompatibleConfigHandling.ForceLoad:
@@ -345,7 +349,7 @@ namespace MonkeyLoader.Configuration
                     case IncompatibleConfigHandling.Error: // fall through to default
                     default:
                         Saveable = false;
-                        throw new ConfigLoadException($"Saved section [{Name}] version [{serializedVersion}] is incompatible with mod's version [{Version}]!");
+                        throw new ConfigLoadException($"Saved section [{Id}] version [{serializedVersion}] is incompatible with mod's version [{Version}]!");
                 }
             }
         }

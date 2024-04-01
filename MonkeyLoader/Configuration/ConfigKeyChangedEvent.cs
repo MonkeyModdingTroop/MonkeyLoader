@@ -41,7 +41,7 @@ namespace MonkeyLoader.Configuration
         /// <summary>
         /// Gets the configuration item who's value changed.
         /// </summary>
-        public DefiningConfigKey<T> Key { get; }
+        public IDefiningConfigKey<T> Key { get; }
 
         IDefiningConfigKey IConfigKeyChangedEventArgs.Key => Key;
 
@@ -64,7 +64,17 @@ namespace MonkeyLoader.Configuration
 
         object? IConfigKeyChangedEventArgs.OldValue => OldValue;
 
-        internal ConfigKeyChangedEventArgs(Config config, DefiningConfigKey<T> key, bool hadValue, T? oldValue, bool hasValue, T? newValue, string? label)
+        /// <summary>
+        /// Creates a new event args instance for a changed config item.
+        /// </summary>
+        /// <param name="config">The config the item belongs to.</param>
+        /// <param name="key">The config item that changed.</param>
+        /// <param name="hadValue">Whether the config item had a value before the change.</param>
+        /// <param name="oldValue">The optional old value.</param>
+        /// <param name="hasValue">Whether the config item has a value now.</param>
+        /// <param name="newValue">The optional new value.</param>
+        /// <param name="label">A custom label assigned to the change.</param>
+        public ConfigKeyChangedEventArgs(Config config, IDefiningConfigKey<T> key, bool hadValue, T? oldValue, bool hasValue, T? newValue, string? label)
         {
             Config = config;
             Key = key;
