@@ -9,10 +9,10 @@ namespace MonkeyLoader.Configuration
     /// <summary>
     /// Base class for defining config key wrappers.
     /// </summary>
-    public abstract class DefiningConfigKeyWrapper<TValue> : IDefiningConfigKey<TValue>
+    public abstract class DefiningConfigKeyWrapper<TValue> : IDefiningConfigKeyWrapper<TValue>
     {
         /// <inheritdoc/>
-        public IConfigKey AsUntyped => Key.AsUntyped;
+        IConfigKey IConfigKey.AsUntyped => Key.AsUntyped;
 
         /// <inheritdoc/>
         public Config Config => Key.Config;
@@ -43,6 +43,10 @@ namespace MonkeyLoader.Configuration
         /// Gets the wrapped defining config key.
         /// </summary>
         public IDefiningConfigKey<TValue> Key { get; }
+
+        IDefiningConfigKey IConfigKeyWrapper<IDefiningConfigKey>.Key => Key;
+
+        IConfigKey IConfigKeyWrapper.Key => Key;
 
         /// <inheritdoc/>
         public string Name => Key.Name;
@@ -120,4 +124,17 @@ namespace MonkeyLoader.Configuration
             remove => ((IDefiningConfigKey)Key).Changed -= value;
         }
     }
+
+    /// <summary>
+    /// Defines the interface for <see cref="IDefiningConfigKey"/> wrappers.
+    /// </summary>
+    public interface IDefiningConfigKeyWrapper : IDefiningConfigKey, IConfigKeyWrapper<IDefiningConfigKey>
+    { }
+
+    /// <summary>
+    /// Defines the interface for <see cref="IDefiningConfigKey{T}"/> wrappers.
+    /// </summary>
+    /// <typeparam name="T">The typeparameter of the wrapped <see cref="IDefiningConfigKey{T}"/>.</typeparam>
+    public interface IDefiningConfigKeyWrapper<T> : IDefiningConfigKey<T>, IDefiningConfigKeyWrapper, IConfigKeyWrapper<IDefiningConfigKey<T>>
+    { }
 }
