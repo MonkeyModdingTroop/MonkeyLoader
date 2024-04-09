@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using Zio;
 
 namespace MonkeyLoader.Meta
@@ -297,6 +298,13 @@ namespace MonkeyLoader.Meta
         /// </returns>
         public int CompareTo(Mod other) => AscendingComparer.Compare(this, other);
 
+        /// <inheritdoc/>
+        public bool DependsOn(string otherId)
+            => otherId == Identity.Id || Dependencies.Any(reference => reference.TransitivelyReferences(otherId));
+
+        /// <inheritdoc/>
+        public bool DependsOn(ILoadedNuGetPackage otherPackage) => DependsOn(otherPackage.Identity.Id);
+
         /// <summary>
         /// Efficiently checks, whether a given name is listed as an author for this mod.
         /// </summary>
@@ -343,6 +351,7 @@ namespace MonkeyLoader.Meta
         /// <inheritdoc/>
         public override string ToString() => $"{Title} ({(IsGamePack ? "Game Pack" : "Regular")})";
 
+        /// <inheritdoc/>
         public bool TryResolveDependencies()
             => dependencies.Values.Select(dep => dep.TryResolve()).All();
 
@@ -410,8 +419,7 @@ namespace MonkeyLoader.Meta
         /// Lets this mod cleanup and shutdown.
         /// </summary>
         /// <remarks>
-        /// <i>By default:</i> <see cref="Config.Save">Saves</see> this mod's <see cref="Config">Config</see>
-        /// and <see cref="Harmony.UnpatchAll(string)">unpatches</see> everything patched with its <see cref="Harmony">Harmony</see> instance.
+        /// <i>By default:</i> <see cref="Config.Save">Saves</see> this mod's <see cref="Config">Config</see>.
         /// </remarks>
         /// <param name="applicationExiting">Whether the shutdown was caused by the application exiting.</param>
         /// <returns><c>true</c> if it ran successfully; otherwise, <c>false</c>.</returns>
@@ -438,14 +446,11 @@ namespace MonkeyLoader.Meta
                 if (x.IsGamePack ^ y.IsGamePack)
                     return _factor * (x.IsGamePack ? -1 : 1);
 
-                // TODO: Make this not a partial order?
-                // If x depends on a mod depending on y, it should count the same
+                var xDependsOnY = x.DependsOn(y);
+                var yDependsOnX = y.DependsOn(x);
 
-                if (x.Dependencies.Any(dep => dep.Id.Equals(y.Id)))
-                    return _factor;
-
-                if (y.Dependencies.Any(dep => dep.Id.Equals(x.Id)))
-                    return -1 * _factor;
+                if (xDependsOnY ^ yDependsOnX)
+                    return _factor * (xDependsOnY ? 1 : -1);
 
                 // Fall back to alphabetical order to prevent false equivalence
                 return _factor * x.Id.CompareTo(y.Id);

@@ -13,6 +13,9 @@ namespace MonkeyLoader.NuGet
     /// </summary>
     public interface ILoadedNuGetPackage
     {
+        /// <summary>
+        /// Gets whether all <see cref="Dependencies">dependencies</see> of this package are loaded.
+        /// </summary>
         public bool AllDependenciesLoaded { get; }
 
         /// <summary>
@@ -30,6 +33,25 @@ namespace MonkeyLoader.NuGet
         /// </summary>
         public NuGetFramework TargetFramework { get; }
 
+        /// <summary>
+        /// Determines whether this package depends on <paramref name="otherPackage"/> directly or transitively.
+        /// </summary>
+        /// <param name="otherPackage">The other package to check for.</param>
+        /// <returns><c>true</c> if this package (transitively) depends on <paramref name="otherPackage"/>; otherwise, <c>false</c>.</returns>
+        public bool DependsOn(ILoadedNuGetPackage otherPackage);
+
+        /// <summary>
+        /// Determines whether this package depends on <paramref name="otherId"/> directly or transitively.
+        /// </summary>
+        /// <param name="otherId"></param>
+        /// <returns><c>true</c> if this package (transitively) depends on <paramref name="otherId"/>; otherwise, <c>false</c>.</returns>
+        public bool DependsOn(string otherId);
+
+        /// <summary>
+        /// Tries to <see cref="DependencyReference.TryResolve">resolve</see>
+        /// all <see cref="Dependencies">dependencies</see> of this package.
+        /// </summary>
+        /// <returns></returns>
         public bool TryResolveDependencies();
     }
 
@@ -86,6 +108,14 @@ namespace MonkeyLoader.NuGet
             : this(identity, targetFramework, dependencies.ToArray())
         { }
 
+        /// <inheritdoc/>
+        public bool DependsOn(ILoadedNuGetPackage otherPackage) => DependsOn(otherPackage.Identity.Id);
+
+        /// <inheritdoc/>
+        public bool DependsOn(string otherId)
+            => otherId == Identity.Id || Dependencies.Any(reference => reference.TransitivelyReferences(otherId));
+
+        /// <inheritdoc/>
         public bool TryResolveDependencies()
             => _dependencies.Select(dep => dep.TryResolve()).All();
     }
