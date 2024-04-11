@@ -1,0 +1,47 @@
+{
+  "metadata": [
+    {
+      "src": [
+        {
+          "src": "./MonkeyLoader/",
+          "files": [
+            "**/*.csproj"
+          ]
+        }
+      ],
+      "dest": "./Docs/api"
+    }
+  ],
+  "build": {
+    "content": [
+      {
+        "src": "./Docs/",
+        "files": [
+          "**/*.{md,yml}"
+        ],
+        "exclude": [
+          "_site/**"
+        ]
+      }
+    ],
+    "resource": [
+      {
+        "src": "./Docs/",
+        "files": [
+          "images/**"
+        ]
+      }
+    ],
+    "output": "./Docs/_site",
+    "template": [
+      "default",
+      "modern"
+    ],
+    "globalMetadata": {
+      "_appName": "MonkeyLoader",
+      "_appTitle": "MonkeyLoader",
+      "_enableSearch": true,
+      "pdf": false
+    }
+  }
+}
