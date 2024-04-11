@@ -162,6 +162,29 @@ namespace MonkeyLoader
             };
         }
 
+        public static TValue GetOrCreateValue<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key, Func<TValue> valueFactory)
+        {
+            if (dictionary.TryGetValue(key, out var value))
+                return value;
+
+            value = valueFactory();
+            dictionary.Add(key, value);
+
+            return value;
+        }
+
+        public static TValue GetOrCreateValue<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, TKey key)
+            where TValue : new()
+        {
+            if (dictionary.TryGetValue(key, out var value))
+                return value;
+
+            value = new TValue();
+            dictionary.Add(key, value);
+
+            return value;
+        }
+
         /// <summary>
         /// Filters a source sequence of <see cref="Type"/>s to only contain the ones instantiable
         /// without parameters and assignable to <typeparamref name="TInstance"/>.
@@ -189,8 +212,8 @@ namespace MonkeyLoader
         /// <typeparam name="TFrom">The items in the source sequence.</typeparam>
         /// <typeparam name="TTo">The items in the result sequence.</typeparam>
         /// <param name="source">The items to try and cast.</param>
-        /// <returns>All items from the source that were castable to <typeparamref name="TTo"/>.</returns>
-        public static IEnumerable<TTo> SelectCastable<TFrom, TTo>(this IEnumerable<TFrom> source)
+        /// <returns>All items from the source that were castable to <typeparamref name="TTo"/> and not <c>null</c>.</returns>
+        public static IEnumerable<TTo> SelectCastable<TFrom, TTo>(this IEnumerable<TFrom?> source)
         {
             foreach (var item in source)
             {

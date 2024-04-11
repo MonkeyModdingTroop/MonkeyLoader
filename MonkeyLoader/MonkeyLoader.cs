@@ -1,4 +1,5 @@
 ﻿using MonkeyLoader.Configuration;
+using MonkeyLoader.Events;
 using MonkeyLoader.Logging;
 using MonkeyLoader.Meta;
 using MonkeyLoader.NuGet;
@@ -145,6 +146,7 @@ namespace MonkeyLoader
         /// </summary>
         public bool ShutdownRan => Phase >= ExecutionPhase.ShuttingDown;
 
+        internal EventManager EventManager { get; }
         internal AssemblyPool GameAssemblyPool { get; }
 
         internal AssemblyPool PatcherAssemblyPool { get; }
@@ -201,6 +203,7 @@ namespace MonkeyLoader
             PatcherAssemblyPool.AddFallbackPool(GameAssemblyPool);
 
             Phase = ExecutionPhase.Initialized;
+            EventManager = new(this);
         }
 
         /// <summary>
@@ -665,10 +668,11 @@ namespace MonkeyLoader
                 return !ShutdownFailed;
             }
 
+            Logger.Warn(() => $"The loader's shutdown routine was triggered! Triggering shutdown for all {_allMods.Count} mods!");
             Phase = ExecutionPhase.ShuttingDown;
+            OnShuttingDown(applicationExiting);
 
             var sw = Stopwatch.StartNew();
-            Logger.Warn(() => $"The loader's shutdown routine was triggered! Triggering shutdown for all {_allMods.Count} mods!");
 
             ShutdownFailed |= !ShutdownMods(_allMods, applicationExiting);
 
@@ -685,7 +689,9 @@ namespace MonkeyLoader
             }
 
             Logger.Info(() => $"Processed shutdown in {sw.ElapsedMilliseconds}ms!");
+
             Phase = ExecutionPhase.Shutdown;
+            OnShutdownDone(applicationExiting);
 
             return !ShutdownFailed;
         }
@@ -887,6 +893,30 @@ namespace MonkeyLoader
             }
         }
 
+        private void OnShutdownDone(bool applicationExiting)
+        {
+            try
+            {
+                ShutdownDone?.TryInvokeAll(this, applicationExiting);
+            }
+            catch (AggregateException ex)
+            {
+                Logger.Error(() => ex.Format($"Some {nameof(ShutdownDone)} event subscriber(s) threw an exception:"));
+            }
+        }
+
+        private void OnShuttingDown(bool applicationExiting)
+        {
+            try
+            {
+                ShuttingDown?.TryInvokeAll(this, applicationExiting);
+            }
+            catch (AggregateException ex)
+            {
+                Logger.Error(() => ex.Format($"Some {nameof(ShuttingDown)} event subscriber(s) threw an exception:"));
+            }
+        }
+
         private bool ShutdownMonkeys(IEarlyMonkey[] earlyMonkeys, IMonkey[] monkeys, bool applicationExiting)
         {
             var success = true;
@@ -935,6 +965,12 @@ namespace MonkeyLoader
         /// Called when <see cref="Mod"/>s are about to be <see cref="ShutdownMods(bool, Mod[])">shut down</see> by this loader.
         /// </summary>
         public event ModsChangedEventHandler? ModsShuttingDown;
+
+        /// <inheritdoc/>
+        public event ShutdownHandler? ShutdownDone;
+
+        /// <inheritdoc/>
+        public event ShutdownHandler? ShuttingDown;
 
         /// <summary>
         /// Denotes the different stages of the loader's execution.<br/>

@@ -22,6 +22,7 @@ namespace MonkeyLoader.Patching
         private readonly Lazy<IFeaturePatch[]> _featurePatches;
         private readonly Lazy<Harmony> _harmony;
         private Mod _mod = null!;
+        /// <inheritdoc/>
 
         /// <inheritdoc/>
         public AssemblyName AssemblyName { get; }
@@ -123,7 +124,9 @@ namespace MonkeyLoader.Patching
                 throw new InvalidOperationException("A monkey's Shutdown() method must only be called once!");
 
             ShutdownRan = true;
+
             Logger.Debug(() => "Running OnShutdown!");
+            OnShuttingDown(applicationExiting);
 
             try
             {
@@ -138,6 +141,9 @@ namespace MonkeyLoader.Patching
                 ShutdownFailed = true;
                 Logger.Error(() => ex.Format("OnShutdown threw an Exception:"));
             }
+
+            OnShutdownDone(applicationExiting);
+            Logger.Debug(() => "OnShutdown done!");
 
             return !ShutdownFailed;
         }
@@ -193,6 +199,35 @@ namespace MonkeyLoader.Patching
             if (Ran)
                 throw new InvalidOperationException("A monkey's Run() method must only be called once!");
         }
+
+        private void OnShutdownDone(bool applicationExiting)
+        {
+            try
+            {
+                ShutdownDone?.TryInvokeAll(this, applicationExiting);
+            }
+            catch (AggregateException ex)
+            {
+                Logger.Error(() => ex.Format($"Some {nameof(ShutdownDone)} event subscriber(s) threw an exception:"));
+            }
+        }
+
+        private void OnShuttingDown(bool applicationExiting)
+        {
+            try
+            {
+                ShuttingDown?.TryInvokeAll(this, applicationExiting);
+            }
+            catch (AggregateException ex)
+            {
+                Logger.Error(() => ex.Format($"Some {nameof(ShuttingDown)} event subscriber(s) threw an exception:"));
+            }
+        }
+
+        public event ShutdownHandler? ShutdownDone;
+
+        /// <inheritdoc/>
+        public event ShutdownHandler? ShuttingDown;
     }
 
     /// <inheritdoc/>

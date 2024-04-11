@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using MonkeyLoader.Configuration;
+using MonkeyLoader.Events;
 using MonkeyLoader.Logging;
 using MonkeyLoader.NuGet;
 using MonkeyLoader.Patching;
@@ -8,6 +9,7 @@ using NuGet.Packaging.Core;
 using NuGet.Versioning;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Tracing;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -319,6 +321,22 @@ namespace MonkeyLoader.Meta
         /// <returns><c>true</c> if the given tag is listed for this mod; otherwise, <c>false</c>.</returns>
         public bool HasTag(string tag) => tags.Contains(tag);
 
+        public void RegisterEventHandler<TEvent, TTarget>(IEventHandler<TEvent, TTarget> eventHandler)
+                    where TEvent : IEvent<TTarget>
+                    => Loader.EventManager.RegisterEventHandler(this, eventHandler);
+
+        public void RegisterEventHandler<TEvent, TTarget>(ICancelableEventHandler<TEvent, TTarget> cancelableEventHandler)
+                    where TEvent : ICancelableEvent<TTarget>
+                    => Loader.EventManager.RegisterEventHandler(this, cancelableEventHandler);
+
+        public void RegisterEventSource<TEvent, TTarget>(IEventSource<TEvent, TTarget> eventSource)
+                    where TEvent : IEvent<TTarget>
+                    => Loader.EventManager.RegisterEventSource(this, eventSource);
+
+        public void RegisterEventSource<TEvent, TTarget>(ICancelableEventSource<TEvent, TTarget> cancelableEventSource)
+                    where TEvent : ICancelableEvent<TTarget>
+                    => Loader.EventManager.RegisterEventSource(this, cancelableEventSource);
+
         /// <summary>
         /// Lets this mod cleanup and shutdown.<br/>
         /// Must only be called once.
@@ -330,6 +348,12 @@ namespace MonkeyLoader.Meta
                 throw new InvalidOperationException("A mod's Shutdown() method must only be called once!");
 
             ShutdownRan = true;
+
+            Logger.Debug(() => "Running OnShutdown!");
+            OnShuttingDown(applicationExiting);
+
+            if (!applicationExiting)
+                Loader.EventManager.UnregisterMod(this);
 
             try
             {
@@ -344,6 +368,9 @@ namespace MonkeyLoader.Meta
                 ShutdownFailed = true;
                 Logger.Error(() => ex.Format("OnShutdown threw an Exception:"));
             }
+
+            OnShutdownDone(applicationExiting);
+            Logger.Debug(() => "OnShutdown done!");
 
             return !ShutdownFailed;
         }
@@ -429,6 +456,36 @@ namespace MonkeyLoader.Meta
 
             return true;
         }
+
+        private void OnShutdownDone(bool applicationExiting)
+        {
+            try
+            {
+                ShutdownDone?.TryInvokeAll(this, applicationExiting);
+            }
+            catch (AggregateException ex)
+            {
+                Logger.Error(() => ex.Format($"Some {nameof(ShutdownDone)} event subscriber(s) threw an exception:"));
+            }
+        }
+
+        private void OnShuttingDown(bool applicationExiting)
+        {
+            try
+            {
+                ShuttingDown?.TryInvokeAll(this, applicationExiting);
+            }
+            catch (AggregateException ex)
+            {
+                Logger.Error(() => ex.Format($"Some {nameof(ShuttingDown)} event subscriber(s) threw an exception:"));
+            }
+        }
+
+        /// <inheritdoc/>
+        public event ShutdownHandler? ShutdownDone;
+
+        /// <inheritdoc/>
+        public event ShutdownHandler? ShuttingDown;
 
         private sealed class ModComparer : IComparer<Mod>
         {

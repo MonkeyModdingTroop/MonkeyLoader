@@ -117,7 +117,7 @@ namespace MonkeyLoader
         /// <returns>The first index of the item if it was found; otherwise, <c>-1</c>.</returns>
         public int IndexOf(T item)
         {
-            var i = ÍndexOfEqualityClass(item);
+            var i = IndexOfEqualityClass(item);
 
             if (i < 0)
                 return -1;
@@ -137,7 +137,7 @@ namespace MonkeyLoader
         /// </summary>
         /// <param name="needle">The item to search for.</param>
         /// <returns>The last index if equal items are found; otherwise, <c>-1</c>.</returns>
-        public int ÍndexOfEqualityClass(T needle)
+        public int IndexOfEqualityClass(T needle)
         {
             var i = IndexInEqualityClass(needle);
 
