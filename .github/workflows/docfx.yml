@@ -1,10 +1,10 @@
 name: docfx Deployment
 
-# Trigger the action on push to main
+# Trigger the action on push to master
 on:
   push:
     branches:
-      - main
+      - master
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
