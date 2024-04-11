@@ -10,16 +10,16 @@ namespace MonkeyLoader.Events
 {
     internal sealed class CancelableEventDispatcher<TEvent, TTarget>
         : EventDispatcherBase<ICancelableEventSource<TEvent, TTarget>, ICancelableEventHandler<TEvent, TTarget>>
-        where TEvent : ICancelableEvent<TTarget>
+        where TEvent : class, ICancelableEvent<TTarget>
     {
         public CancelableEventDispatcher(EventManager manager) : base(manager)
         { }
 
         protected override void AddSource(ICancelableEventSource<TEvent, TTarget> eventSource)
-            => eventSource.Dispatched += DispatchEvents;
+            => eventSource.Dispatching += DispatchEvents;
 
         protected override void RemoveSource(ICancelableEventSource<TEvent, TTarget> eventSource)
-            => eventSource.Dispatched -= DispatchEvents;
+            => eventSource.Dispatching -= DispatchEvents;
 
         private void DispatchEvents(TEvent eventArgs)
         {
@@ -45,16 +45,16 @@ namespace MonkeyLoader.Events
 
     internal sealed class EventDispatcher<TEvent, TTarget>
         : EventDispatcherBase<IEventSource<TEvent, TTarget>, IEventHandler<TEvent, TTarget>>
-        where TEvent : IEvent<TTarget>
+        where TEvent : class, IEvent<TTarget>
     {
         public EventDispatcher(EventManager manager) : base(manager)
         { }
 
         protected override void AddSource(IEventSource<TEvent, TTarget> eventSource)
-            => eventSource.Dispatched += DispatchEvents;
+            => eventSource.Dispatching += DispatchEvents;
 
         protected override void RemoveSource(IEventSource<TEvent, TTarget> eventSource)
-            => eventSource.Dispatched -= DispatchEvents;
+            => eventSource.Dispatching -= DispatchEvents;
 
         private void DispatchEvents(TEvent eventArgs)
         {

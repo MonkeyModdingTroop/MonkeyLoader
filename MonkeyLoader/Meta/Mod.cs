@@ -321,21 +321,61 @@ namespace MonkeyLoader.Meta
         /// <returns><c>true</c> if the given tag is listed for this mod; otherwise, <c>false</c>.</returns>
         public bool HasTag(string tag) => tags.Contains(tag);
 
-        public void RegisterEventHandler<TEvent, TTarget>(IEventHandler<TEvent, TTarget> eventHandler)
-                    where TEvent : IEvent<TTarget>
-                    => Loader.EventManager.RegisterEventHandler(this, eventHandler);
+        /// <summary>
+        /// Registers the given <see cref="IEventHandler{TEvent, TTarget}">event handler</see> for this mod.
+        /// </summary>
+        /// <remarks>
+        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
+        /// </remarks>
+        /// <typeparam name="TEvent">The type of events handled.</typeparam>
+        /// <typeparam name="TTarget">The type of the target objects that are the focus of the events.</typeparam>
+        /// <param name="eventHandler">The <see cref="IEventHandler{TEvent, TTarget}">event handler</see> to register.</param>
+        /// <returns><c>true</c> if the <paramref name="eventHandler"/> was newly registered; otherwise, <c>false</c>.</returns>
+        public bool RegisterEventHandler<TEvent, TTarget>(IEventHandler<TEvent, TTarget> eventHandler)
+            where TEvent : class, IEvent<TTarget>
+            => Loader.EventManager.RegisterEventHandler(this, eventHandler);
 
-        public void RegisterEventHandler<TEvent, TTarget>(ICancelableEventHandler<TEvent, TTarget> cancelableEventHandler)
-                    where TEvent : ICancelableEvent<TTarget>
-                    => Loader.EventManager.RegisterEventHandler(this, cancelableEventHandler);
+        /// <summary>
+        /// Registers the given <see cref="ICancelableEventHandler{TEvent, TTarget}">cancelable event handler</see> for this mod.
+        /// </summary>
+        /// <remarks>
+        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
+        /// </remarks>
+        /// <typeparam name="TEvent">The type of cancelable events handled.</typeparam>
+        /// <typeparam name="TTarget">The type of the target objects that are the focus of the events.</typeparam>
+        /// <param name="cancelableEventHandler">The <see cref="ICancelableEventHandler{TEvent, TTarget}">cancelable event handler</see> to register.</param>
+        /// <returns><c>true</c> if the <paramref name="cancelableEventHandler"/> was newly registered; otherwise, <c>false</c>.</returns>
+        public bool RegisterEventHandler<TEvent, TTarget>(ICancelableEventHandler<TEvent, TTarget> cancelableEventHandler)
+            where TEvent : class, ICancelableEvent<TTarget>
+            => Loader.EventManager.RegisterEventHandler(this, cancelableEventHandler);
 
-        public void RegisterEventSource<TEvent, TTarget>(IEventSource<TEvent, TTarget> eventSource)
-                    where TEvent : IEvent<TTarget>
-                    => Loader.EventManager.RegisterEventSource(this, eventSource);
+        /// <summary>
+        /// Registers the given <see cref="IEventSource{TEvent, TTarget}">event source</see> for this mod.
+        /// </summary>
+        /// <remarks>
+        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
+        /// </remarks>
+        /// <typeparam name="TEvent">The type of events handled.</typeparam>
+        /// <typeparam name="TTarget">The type of the target objects that are the focus of the events.</typeparam>
+        /// <param name="eventSource">The <see cref="IEventSource{TEvent, TTarget}">event source</see> to register.</param>
+        /// <returns><c>true</c> if the <paramref name="eventSource"/> was newly registered; otherwise, <c>false</c>.</returns>
+        public bool RegisterEventSource<TEvent, TTarget>(IEventSource<TEvent, TTarget> eventSource)
+            where TEvent : class, IEvent<TTarget>
+            => Loader.EventManager.RegisterEventSource(this, eventSource);
 
-        public void RegisterEventSource<TEvent, TTarget>(ICancelableEventSource<TEvent, TTarget> cancelableEventSource)
-                    where TEvent : ICancelableEvent<TTarget>
-                    => Loader.EventManager.RegisterEventSource(this, cancelableEventSource);
+        /// <summary>
+        /// Registers the given <see cref="ICancelableEventSource{TEvent, TTarget}">cancelable event source</see> for this mod.
+        /// </summary>
+        /// <remarks>
+        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
+        /// </remarks>
+        /// <typeparam name="TEvent">The type of events handled.</typeparam>
+        /// <typeparam name="TTarget">The type of the target objects that are the focus of the events.</typeparam>
+        /// <param name="cancelableEventSource">The <see cref="ICancelableEventSource{TEvent, TTarget}">cancelable event source</see> to register.</param>
+        /// <returns><c>true</c> if the <paramref name="cancelableEventSource"/> was newly registered; otherwise, <c>false</c>.</returns>
+        public bool RegisterEventSource<TEvent, TTarget>(ICancelableEventSource<TEvent, TTarget> cancelableEventSource)
+            where TEvent : class, ICancelableEvent<TTarget>
+            => Loader.EventManager.RegisterEventSource(this, cancelableEventSource);
 
         /// <summary>
         /// Lets this mod cleanup and shutdown.<br/>
@@ -381,6 +421,62 @@ namespace MonkeyLoader.Meta
         /// <inheritdoc/>
         public bool TryResolveDependencies()
             => dependencies.Values.Select(dep => dep.TryResolve()).All();
+
+        /// <summary>
+        /// Unregisters the given <see cref="IEventHandler{TEvent, TTarget}">event handler</see> for this mod.
+        /// </summary>
+        /// <remarks>
+        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
+        /// </remarks>
+        /// <typeparam name="TEvent">The type of events handled.</typeparam>
+        /// <typeparam name="TTarget">The type of the target objects that are the focus of the events.</typeparam>
+        /// <param name="eventHandler">The <see cref="IEventHandler{TEvent, TTarget}">event handler</see> to unregister.</param>
+        /// <returns><c>true</c> if the <paramref name="eventHandler"/> was found and unregistered; otherwise, <c>false</c>.</returns>
+        public bool UnregisterEventHandler<TEvent, TTarget>(IEventHandler<TEvent, TTarget> eventHandler)
+            where TEvent : class, IEvent<TTarget>
+            => Loader.EventManager.UnregisterEventHandler(this, eventHandler);
+
+        /// <summary>
+        /// Unregisters the given <see cref="ICancelableEventHandler{TEvent, TTarget}">cancelable event handler</see> for this mod.
+        /// </summary>
+        /// <remarks>
+        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
+        /// </remarks>
+        /// <typeparam name="TEvent">The type of cancelable events handled.</typeparam>
+        /// <typeparam name="TTarget">The type of the target objects that are the focus of the events.</typeparam>
+        /// <param name="cancelableEventHandler">The <see cref="ICancelableEventHandler{TEvent, TTarget}">cancelable event handler</see> to unregister.</param>
+        /// <returns><c>true</c> if the <paramref name="cancelableEventHandler"/> was found and unregistered; otherwise, <c>false</c>.</returns>
+        public bool UnregisterEventHandler<TEvent, TTarget>(ICancelableEventHandler<TEvent, TTarget> cancelableEventHandler)
+            where TEvent : class, ICancelableEvent<TTarget>
+            => Loader.EventManager.UnregisterEventHandler(this, cancelableEventHandler);
+
+        /// <summary>
+        /// Unregisters the given <see cref="IEventSource{TEvent, TTarget}">event source</see> for this mod.
+        /// </summary>
+        /// <remarks>
+        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
+        /// </remarks>
+        /// <typeparam name="TEvent">The type of events handled.</typeparam>
+        /// <typeparam name="TTarget">The type of the target objects that are the focus of the events.</typeparam>
+        /// <param name="eventSource">The <see cref="IEventSource{TEvent, TTarget}">event source</see> to unregister.</param>
+        /// <returns><c>true</c> if the <paramref name="eventSource"/> was found and unregistered; otherwise, <c>false</c>.</returns>
+        public bool UnregisterEventSource<TEvent, TTarget>(IEventSource<TEvent, TTarget> eventSource)
+            where TEvent : class, IEvent<TTarget>
+            => Loader.EventManager.UnregisterEventSource(this, eventSource);
+
+        /// <summary>
+        /// Unregisters the given <see cref="ICancelableEventSource{TEvent, TTarget}">cancelable event source</see> for this mod.
+        /// </summary>
+        /// <remarks>
+        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
+        /// </remarks>
+        /// <typeparam name="TEvent">The type of events handled.</typeparam>
+        /// <typeparam name="TTarget">The type of the target objects that are the focus of the events.</typeparam>
+        /// <param name="cancelableEventSource">The <see cref="ICancelableEventSource{TEvent, TTarget}">cancelable event source</see> to unregister.</param>
+        /// <returns><c>true</c> if the <paramref name="cancelableEventSource"/> was found and unregistered; otherwise, <c>false</c>.</returns>
+        public bool UnregisterEventSource<TEvent, TTarget>(ICancelableEventSource<TEvent, TTarget> cancelableEventSource)
+            where TEvent : class, ICancelableEvent<TTarget>
+            => Loader.EventManager.UnregisterEventSource(this, cancelableEventSource);
 
         internal bool LoadEarlyMonkeys()
         {

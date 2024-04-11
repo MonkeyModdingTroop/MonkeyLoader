@@ -21,36 +21,80 @@ namespace MonkeyLoader.Events
             Logger = new(loader.Logger, "EventManager");
         }
 
-        internal void RegisterEventHandler<TEvent, TTarget>(Mod mod, IEventHandler<TEvent, TTarget> eventHandler)
-            where TEvent : IEvent<TTarget>
+        internal bool RegisterEventHandler<TEvent, TTarget>(Mod mod, IEventHandler<TEvent, TTarget> eventHandler)
+            where TEvent : class, IEvent<TTarget>
         {
             ValidateLoader(mod);
 
-            _eventDispatchers.GetOrCreateValue(CreateDispatcher<TEvent, TTarget>).AddHandler(mod, eventHandler);
+            return _eventDispatchers.GetOrCreateValue(CreateDispatcher<TEvent, TTarget>).AddHandler(mod, eventHandler);
         }
 
-        internal void RegisterEventHandler<TEvent, TTarget>(Mod mod, ICancelableEventHandler<TEvent, TTarget> cancelableEventHandler)
-            where TEvent : ICancelableEvent<TTarget>
+        internal bool RegisterEventHandler<TEvent, TTarget>(Mod mod, ICancelableEventHandler<TEvent, TTarget> cancelableEventHandler)
+            where TEvent : class, ICancelableEvent<TTarget>
         {
             ValidateLoader(mod);
 
-            _eventDispatchers.GetOrCreateValue(CreateCancelableDispatcher<TEvent, TTarget>).AddHandler(mod, cancelableEventHandler);
+            return _eventDispatchers.GetOrCreateValue(CreateCancelableDispatcher<TEvent, TTarget>).AddHandler(mod, cancelableEventHandler);
         }
 
-        internal void RegisterEventSource<TEvent, TTarget>(Mod mod, IEventSource<TEvent, TTarget> eventSource)
-            where TEvent : IEvent<TTarget>
+        internal bool RegisterEventSource<TEvent, TTarget>(Mod mod, IEventSource<TEvent, TTarget> eventSource)
+            where TEvent : class, IEvent<TTarget>
         {
             ValidateLoader(mod);
 
-            _eventDispatchers.GetOrCreateValue(CreateDispatcher<TEvent, TTarget>).AddSource(mod, eventSource);
+            return _eventDispatchers.GetOrCreateValue(CreateDispatcher<TEvent, TTarget>).AddSource(mod, eventSource);
         }
 
-        internal void RegisterEventSource<TEvent, TTarget>(Mod mod, ICancelableEventSource<TEvent, TTarget> cancelableEventSource)
-            where TEvent : ICancelableEvent<TTarget>
+        internal bool RegisterEventSource<TEvent, TTarget>(Mod mod, ICancelableEventSource<TEvent, TTarget> cancelableEventSource)
+            where TEvent : class, ICancelableEvent<TTarget>
         {
             ValidateLoader(mod);
 
-            _eventDispatchers.GetOrCreateValue(CreateCancelableDispatcher<TEvent, TTarget>).AddSource(mod, cancelableEventSource);
+            return _eventDispatchers.GetOrCreateValue(CreateCancelableDispatcher<TEvent, TTarget>).AddSource(mod, cancelableEventSource);
+        }
+
+        internal bool UnregisterEventHandler<TEvent, TTarget>(Mod mod, ICancelableEventHandler<TEvent, TTarget> cancelableEventHandler)
+            where TEvent : class, ICancelableEvent<TTarget>
+        {
+            ValidateLoader(mod);
+
+            if (_eventDispatchers.TryGetValue<CancelableEventDispatcher<TEvent, TTarget>>(out var cancelableEventDispatcher))
+                return cancelableEventDispatcher!.RemoveHandler(mod, cancelableEventHandler);
+
+            return false;
+        }
+
+        internal bool UnregisterEventHandler<TEvent, TTarget>(Mod mod, IEventHandler<TEvent, TTarget> eventHandler)
+            where TEvent : class, IEvent<TTarget>
+        {
+            ValidateLoader(mod);
+
+            if (_eventDispatchers.TryGetValue<EventDispatcher<TEvent, TTarget>>(out var eventDispatcher))
+                return eventDispatcher!.RemoveHandler(mod, eventHandler);
+
+            return false;
+        }
+
+        internal bool UnregisterEventSource<TEvent, TTarget>(Mod mod, ICancelableEventSource<TEvent, TTarget> cancelableEventSource)
+            where TEvent : class, ICancelableEvent<TTarget>
+        {
+            ValidateLoader(mod);
+
+            if (_eventDispatchers.TryGetValue<CancelableEventDispatcher<TEvent, TTarget>>(out var cancelableEventDispatcher))
+                return cancelableEventDispatcher!.RemoveSource(mod, cancelableEventSource);
+
+            return false;
+        }
+
+        internal bool UnregisterEventSource<TEvent, TTarget>(Mod mod, IEventSource<TEvent, TTarget> eventSource)
+            where TEvent : class, IEvent<TTarget>
+        {
+            ValidateLoader(mod);
+
+            if (_eventDispatchers.TryGetValue<EventDispatcher<TEvent, TTarget>>(out var eventDispatcher))
+                return eventDispatcher!.RemoveSource(mod, eventSource);
+
+            return false;
         }
 
         internal void UnregisterMod(Mod mod)
@@ -62,15 +106,15 @@ namespace MonkeyLoader.Events
         }
 
         private CancelableEventDispatcher<TEvent, TTarget> CreateCancelableDispatcher<TEvent, TTarget>()
-            where TEvent : ICancelableEvent<TTarget> => new(this);
+            where TEvent : class, ICancelableEvent<TTarget> => new(this);
 
         private EventDispatcher<TEvent, TTarget> CreateDispatcher<TEvent, TTarget>()
-            where TEvent : IEvent<TTarget> => new(this);
+            where TEvent : class, IEvent<TTarget> => new(this);
 
         private void ValidateLoader(Mod mod)
         {
             if (mod.Loader != _loader)
-                throw new InvalidOperationException("Can't register event handler of mod from another loader!");
+                throw new InvalidOperationException("Can't (un)register event handler of mod from another loader!");
         }
     }
 }
