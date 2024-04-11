@@ -2,6 +2,8 @@
 
 *A convenience and extendability focused mod loader using NuGet packages.*
 
+Online Documentation is [here](https://monkeymoddingtroop.github.io/MonkeyLoader/).
+
 ## What's this?
 
 MonkeyLoader is a mod loader that aims to combine easy usability for developers and users,
