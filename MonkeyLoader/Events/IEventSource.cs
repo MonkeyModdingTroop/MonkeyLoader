@@ -11,8 +11,8 @@ namespace MonkeyLoader.Events
     /// </summary>
     /// <typeparam name="TEvent">The type representing the event arguments.</typeparam>
     /// <typeparam name="TTarget">The type of the target objects that are the focus of the events.</typeparam>
-    /// <param name="eventArgs">An object containing all the relevant information for the events, including canceling the action.</param>
-    public delegate void CancelableEventDispatching<in TEvent, in TTarget>(TEvent eventArgs)
+    /// <param name="eventData">An object containing all the relevant information for the events, including canceling the action.</param>
+    public delegate void CancelableEventDispatching<in TEvent, in TTarget>(TEvent eventData)
         where TEvent : class, ICancelableEvent<TTarget>;
 
     /// <summary>
@@ -20,8 +20,8 @@ namespace MonkeyLoader.Events
     /// </summary>
     /// <typeparam name="TEvent">The type representing the event arguments.</typeparam>
     /// <typeparam name="TTarget">The type of the target objects that are the focus of the events.</typeparam>
-    /// <param name="eventArgs">An object containing all the relevant information for the events.</param>
-    public delegate void EventDispatching<in TEvent, in TTarget>(TEvent eventArgs)
+    /// <param name="eventData">An object containing all the relevant information for the events.</param>
+    public delegate void EventDispatching<in TEvent, in TTarget>(TEvent eventData)
         where TEvent : class, IEvent<TTarget>;
 
     /// <summary>

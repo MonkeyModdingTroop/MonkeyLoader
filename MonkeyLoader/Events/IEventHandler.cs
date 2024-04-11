@@ -21,15 +21,15 @@ namespace MonkeyLoader.Events
         public bool SkipCanceled { get; }
 
         /// <summary>
-        /// Handles the given cancelable event.
+        /// Handles the given cancelable event based on its data.
         /// </summary>
         /// <remarks>
-        /// When this method sets <c><paramref name="eventArgs"/>.<see cref="ICancelableEvent{TTarget}.Canceled">Canceled</see>
+        /// When this method sets <c><paramref name="eventData"/>.<see cref="ICancelableEvent{TTarget}.Canceled">Canceled</see>
         /// = true</c>, the default action should be prevented from happening and further
         /// <see cref="ICancelableEventHandler{TEvent, TTarget}">event handlers</see> may be skipped.
         /// </remarks>
-        /// <param name="eventArgs">An object containing all the relevant information for the event.</param>
-        public void Handle(TEvent eventArgs);
+        /// <param name="eventData">An object containing all the relevant information for the event.</param>
+        public void Handle(TEvent eventData);
     }
 
     /// <summary>
@@ -41,9 +41,9 @@ namespace MonkeyLoader.Events
         where TEvent : IEvent<TTarget>
     {
         /// <summary>
-        /// Handles the given event.
+        /// Handles the given event based on its data.
         /// </summary>
-        /// <param name="eventArgs">An object containing all the relevant information for the event.</param>
-        public void Handle(TEvent eventArgs);
+        /// <param name="eventData">An object containing all the relevant information for the event.</param>
+        public void Handle(TEvent eventData);
     }
 }

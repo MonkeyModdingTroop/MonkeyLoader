@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace MonkeyLoader.Events
 {
     /// <summary>
-    /// Defines the interface for cancelable events with a
+    /// Defines the interface for cancelable event data with a
     /// <see cref="IEvent{TTarget}.Target">target object</see> that's the focus of the event.
     /// </summary>
     /// <inheritdoc/>
@@ -24,7 +24,7 @@ namespace MonkeyLoader.Events
     }
 
     /// <summary>
-    /// Defines the interface for events with a
+    /// Defines the interface for event data with a
     /// <see cref="Target">target object</see> that's the focus of the event.
     /// </summary>
     /// <typeparam name="TTarget">The type of the target object that is the focus of the event.</typeparam>
