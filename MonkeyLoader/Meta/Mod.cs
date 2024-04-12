@@ -350,6 +350,34 @@ namespace MonkeyLoader.Meta
             => Loader.EventManager.RegisterEventHandler(this, cancelableEventHandler);
 
         /// <summary>
+        /// Registers the given <see cref="IAsyncEventHandler{TEvent, TTarget}">async event handler</see> for this mod.
+        /// </summary>
+        /// <remarks>
+        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
+        /// </remarks>
+        /// <typeparam name="TEvent">The type of async events handled.</typeparam>
+        /// <typeparam name="TTarget">The type of the target objects that are the focus of the async events.</typeparam>
+        /// <param name="asyncEventHandler">The <see cref="IAsyncEventHandler{TEvent, TTarget}">async event handler</see> to register.</param>
+        /// <returns><c>true</c> if the <paramref name="asyncEventHandler"/> was newly registered; otherwise, <c>false</c>.</returns>
+        public bool RegisterEventHandler<TEvent, TTarget>(IAsyncEventHandler<TEvent, TTarget> asyncEventHandler)
+            where TEvent : class, IAsyncEvent<TTarget>
+            => Loader.EventManager.RegisterEventHandler(this, asyncEventHandler);
+
+        /// <summary>
+        /// Registers the given <see cref="ICancelableAsyncEventHandler{TEvent, TTarget}">cancelable async event handler</see> for this mod.
+        /// </summary>
+        /// <remarks>
+        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
+        /// </remarks>
+        /// <typeparam name="TEvent">The type of cancelable async events handled.</typeparam>
+        /// <typeparam name="TTarget">The type of the target objects that are the focus of the async events.</typeparam>
+        /// <param name="cancelableAsyncEventHandler">The <see cref="ICancelableAsyncEventHandler{TEvent, TTarget}">cancelable async event handler</see> to register.</param>
+        /// <returns><c>true</c> if the <paramref name="cancelableAsyncEventHandler"/> was newly registered; otherwise, <c>false</c>.</returns>
+        public bool RegisterEventHandler<TEvent, TTarget>(ICancelableAsyncEventHandler<TEvent, TTarget> cancelableAsyncEventHandler)
+            where TEvent : class, ICancelableAsyncEvent<TTarget>
+            => Loader.EventManager.RegisterEventHandler(this, cancelableAsyncEventHandler);
+
+        /// <summary>
         /// Registers the given <see cref="IEventSource{TEvent, TTarget}">event source</see> for this mod.
         /// </summary>
         /// <remarks>
@@ -376,6 +404,34 @@ namespace MonkeyLoader.Meta
         public bool RegisterEventSource<TEvent, TTarget>(ICancelableEventSource<TEvent, TTarget> cancelableEventSource)
             where TEvent : class, ICancelableEvent<TTarget>
             => Loader.EventManager.RegisterEventSource(this, cancelableEventSource);
+
+        /// <summary>
+        /// Registers the given <see cref="IAsyncEventSource{TEvent, TTarget}">event source</see> for this mod.
+        /// </summary>
+        /// <remarks>
+        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
+        /// </remarks>
+        /// <typeparam name="TEvent">The type of async events handled.</typeparam>
+        /// <typeparam name="TTarget">The type of the target objects that are the focus of the async events.</typeparam>
+        /// <param name="eventSource">The <see cref="IAsyncEventSource{TEvent, TTarget}">event source</see> to register.</param>
+        /// <returns><c>true</c> if the <paramref name="eventSource"/> was newly registered; otherwise, <c>false</c>.</returns>
+        public bool RegisterEventSource<TEvent, TTarget>(IAsyncEventSource<TEvent, TTarget> eventSource)
+            where TEvent : class, IAsyncEvent<TTarget>
+            => Loader.EventManager.RegisterEventSource(this, eventSource);
+
+        /// <summary>
+        /// Registers the given <see cref="ICancelableAsyncEventSource{TEvent, TTarget}">cancelable event source</see> for this mod.
+        /// </summary>
+        /// <remarks>
+        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
+        /// </remarks>
+        /// <typeparam name="TEvent">The type of async events handled.</typeparam>
+        /// <typeparam name="TTarget">The type of the target objects that are the focus of the async events.</typeparam>
+        /// <param name="cancelableAsyncEventSource">The <see cref="ICancelableAsyncEventSource{TEvent, TTarget}">cancelable event source</see> to register.</param>
+        /// <returns><c>true</c> if the <paramref name="cancelableAsyncEventSource"/> was newly registered; otherwise, <c>false</c>.</returns>
+        public bool RegisterEventSource<TEvent, TTarget>(ICancelableAsyncEventSource<TEvent, TTarget> cancelableAsyncEventSource)
+            where TEvent : class, ICancelableAsyncEvent<TTarget>
+            => Loader.EventManager.RegisterEventSource(this, cancelableAsyncEventSource);
 
         /// <summary>
         /// Lets this mod cleanup and shutdown.<br/>
