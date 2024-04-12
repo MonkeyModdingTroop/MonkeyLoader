@@ -21,153 +21,153 @@ namespace MonkeyLoader.Events
             Logger = new(loader.Logger, "EventManager");
         }
 
-        internal bool RegisterEventHandler<TEvent, TTarget>(Mod mod, IEventHandler<TEvent, TTarget> eventHandler)
-            where TEvent : class, IEvent<TTarget>
+        internal bool RegisterEventHandler<TEvent>(Mod mod, IEventHandler<TEvent> eventHandler)
+            where TEvent : class
         {
             ValidateLoader(mod);
 
-            return _eventDispatchers.GetOrCreateValue(CreateDispatcher<TEvent, TTarget>).AddHandler(mod, eventHandler);
+            return _eventDispatchers.GetOrCreateValue(CreateDispatcher<TEvent>).AddHandler(mod, eventHandler);
         }
 
-        internal bool RegisterEventHandler<TEvent, TTarget>(Mod mod, ICancelableEventHandler<TEvent, TTarget> cancelableEventHandler)
-            where TEvent : class, ICancelableEvent<TTarget>
+        internal bool RegisterEventHandler<TEvent>(Mod mod, ICancelableEventHandler<TEvent> cancelableEventHandler)
+            where TEvent : class, ICancelableEvent
         {
             ValidateLoader(mod);
 
-            return _eventDispatchers.GetOrCreateValue(CreateCancelableDispatcher<TEvent, TTarget>).AddHandler(mod, cancelableEventHandler);
+            return _eventDispatchers.GetOrCreateValue(CreateCancelableDispatcher<TEvent>).AddHandler(mod, cancelableEventHandler);
         }
 
-        internal bool RegisterEventHandler<TEvent, TTarget>(Mod mod, IAsyncEventHandler<TEvent, TTarget> asyncEventHandler)
-            where TEvent : class, IAsyncEvent<TTarget>
+        internal bool RegisterEventHandler<TEvent>(Mod mod, IAsyncEventHandler<TEvent> asyncEventHandler)
+            where TEvent : class
         {
             ValidateLoader(mod);
 
-            return _eventDispatchers.GetOrCreateValue(CreateAsyncDispatcher<TEvent, TTarget>).AddHandler(mod, asyncEventHandler);
+            return _eventDispatchers.GetOrCreateValue(CreateAsyncDispatcher<TEvent>).AddHandler(mod, asyncEventHandler);
         }
 
-        internal bool RegisterEventHandler<TEvent, TTarget>(Mod mod, ICancelableAsyncEventHandler<TEvent, TTarget> cancelableAsyncEventHandler)
-            where TEvent : class, ICancelableAsyncEvent<TTarget>
+        internal bool RegisterEventHandler<TEvent>(Mod mod, ICancelableAsyncEventHandler<TEvent> cancelableAsyncEventHandler)
+            where TEvent : class, ICancelableEvent
         {
             ValidateLoader(mod);
 
-            return _eventDispatchers.GetOrCreateValue(CreateCancelableAsyncDispatcher<TEvent, TTarget>).AddHandler(mod, cancelableAsyncEventHandler);
+            return _eventDispatchers.GetOrCreateValue(CreateCancelableAsyncDispatcher<TEvent>).AddHandler(mod, cancelableAsyncEventHandler);
         }
 
-        internal bool RegisterEventSource<TEvent, TTarget>(Mod mod, IEventSource<TEvent, TTarget> eventSource)
-            where TEvent : class, IEvent<TTarget>
+        internal bool RegisterEventSource<TEvent>(Mod mod, IEventSource<TEvent> eventSource)
+            where TEvent : class
         {
             ValidateLoader(mod);
 
-            return _eventDispatchers.GetOrCreateValue(CreateDispatcher<TEvent, TTarget>).AddSource(mod, eventSource);
+            return _eventDispatchers.GetOrCreateValue(CreateDispatcher<TEvent>).AddSource(mod, eventSource);
         }
 
-        internal bool RegisterEventSource<TEvent, TTarget>(Mod mod, ICancelableEventSource<TEvent, TTarget> cancelableEventSource)
-            where TEvent : class, ICancelableEvent<TTarget>
+        internal bool RegisterEventSource<TEvent>(Mod mod, ICancelableEventSource<TEvent> cancelableEventSource)
+            where TEvent : class, ICancelableEvent
         {
             ValidateLoader(mod);
 
-            return _eventDispatchers.GetOrCreateValue(CreateCancelableDispatcher<TEvent, TTarget>).AddSource(mod, cancelableEventSource);
+            return _eventDispatchers.GetOrCreateValue(CreateCancelableDispatcher<TEvent>).AddSource(mod, cancelableEventSource);
         }
 
-        internal bool RegisterEventSource<TEvent, TTarget>(Mod mod, IAsyncEventSource<TEvent, TTarget> eventSource)
-            where TEvent : class, IAsyncEvent<TTarget>
+        internal bool RegisterEventSource<TEvent>(Mod mod, IAsyncEventSource<TEvent> eventSource)
+            where TEvent : class
         {
             ValidateLoader(mod);
 
-            return _eventDispatchers.GetOrCreateValue(CreateAsyncDispatcher<TEvent, TTarget>).AddSource(mod, eventSource);
+            return _eventDispatchers.GetOrCreateValue(CreateAsyncDispatcher<TEvent>).AddSource(mod, eventSource);
         }
 
-        internal bool RegisterEventSource<TEvent, TTarget>(Mod mod, ICancelableAsyncEventSource<TEvent, TTarget> cancelableEventSource)
-            where TEvent : class, ICancelableAsyncEvent<TTarget>
+        internal bool RegisterEventSource<TEvent>(Mod mod, ICancelableAsyncEventSource<TEvent> cancelableEventSource)
+            where TEvent : class, ICancelableEvent
         {
             ValidateLoader(mod);
 
-            return _eventDispatchers.GetOrCreateValue(CreateCancelableAsyncDispatcher<TEvent, TTarget>).AddSource(mod, cancelableEventSource);
+            return _eventDispatchers.GetOrCreateValue(CreateCancelableAsyncDispatcher<TEvent>).AddSource(mod, cancelableEventSource);
         }
 
-        internal bool UnregisterEventHandler<TEvent, TTarget>(Mod mod, ICancelableEventHandler<TEvent, TTarget> cancelableEventHandler)
-            where TEvent : class, ICancelableEvent<TTarget>
+        internal bool UnregisterEventHandler<TEvent>(Mod mod, ICancelableEventHandler<TEvent> cancelableEventHandler)
+            where TEvent : class, ICancelableEvent
         {
             ValidateLoader(mod);
 
-            if (_eventDispatchers.TryGetValue<CancelableEventDispatcher<TEvent, TTarget>>(out var cancelableEventDispatcher))
+            if (_eventDispatchers.TryGetValue<CancelableEventDispatcher<TEvent>>(out var cancelableEventDispatcher))
                 return cancelableEventDispatcher!.RemoveHandler(mod, cancelableEventHandler);
 
             return false;
         }
 
-        internal bool UnregisterEventHandler<TEvent, TTarget>(Mod mod, IEventHandler<TEvent, TTarget> eventHandler)
-            where TEvent : class, IEvent<TTarget>
+        internal bool UnregisterEventHandler<TEvent>(Mod mod, IEventHandler<TEvent> eventHandler)
+            where TEvent : class
         {
             ValidateLoader(mod);
 
-            if (_eventDispatchers.TryGetValue<EventDispatchers<TEvent, TTarget>>(out var eventDispatcher))
+            if (_eventDispatchers.TryGetValue<EventDispatchers<TEvent>>(out var eventDispatcher))
                 return eventDispatcher!.RemoveHandler(mod, eventHandler);
 
             return false;
         }
 
-        internal bool UnregisterEventHandler<TEvent, TTarget>(Mod mod, ICancelableAsyncEventHandler<TEvent, TTarget> cancelableAsyncEventHandler)
-            where TEvent : class, ICancelableAsyncEvent<TTarget>
+        internal bool UnregisterEventHandler<TEvent>(Mod mod, ICancelableAsyncEventHandler<TEvent> cancelableAsyncEventHandler)
+            where TEvent : class, ICancelableEvent
         {
             ValidateLoader(mod);
 
-            if (_eventDispatchers.TryGetValue<CancelableAsyncEventDispatcher<TEvent, TTarget>>(out var cancelableEventDispatcher))
+            if (_eventDispatchers.TryGetValue<CancelableAsyncEventDispatcher<TEvent>>(out var cancelableEventDispatcher))
                 return cancelableEventDispatcher!.RemoveHandler(mod, cancelableAsyncEventHandler);
 
             return false;
         }
 
-        internal bool UnregisterEventHandler<TEvent, TTarget>(Mod mod, IAsyncEventHandler<TEvent, TTarget> asyncEventHandler)
-            where TEvent : class, IAsyncEvent<TTarget>
+        internal bool UnregisterEventHandler<TEvent>(Mod mod, IAsyncEventHandler<TEvent> asyncEventHandler)
+            where TEvent : class
         {
             ValidateLoader(mod);
 
-            if (_eventDispatchers.TryGetValue<AsyncEventDispatcher<TEvent, TTarget>>(out var eventDispatcher))
+            if (_eventDispatchers.TryGetValue<AsyncEventDispatcher<TEvent>>(out var eventDispatcher))
                 return eventDispatcher!.RemoveHandler(mod, asyncEventHandler);
 
             return false;
         }
 
-        internal bool UnregisterEventSource<TEvent, TTarget>(Mod mod, ICancelableEventSource<TEvent, TTarget> cancelableEventSource)
-            where TEvent : class, ICancelableEvent<TTarget>
+        internal bool UnregisterEventSource<TEvent>(Mod mod, ICancelableEventSource<TEvent> cancelableEventSource)
+            where TEvent : class, ICancelableEvent
         {
             ValidateLoader(mod);
 
-            if (_eventDispatchers.TryGetValue<CancelableEventDispatcher<TEvent, TTarget>>(out var cancelableEventDispatcher))
+            if (_eventDispatchers.TryGetValue<CancelableEventDispatcher<TEvent>>(out var cancelableEventDispatcher))
                 return cancelableEventDispatcher!.RemoveSource(mod, cancelableEventSource);
 
             return false;
         }
 
-        internal bool UnregisterEventSource<TEvent, TTarget>(Mod mod, IEventSource<TEvent, TTarget> eventSource)
-            where TEvent : class, IEvent<TTarget>
+        internal bool UnregisterEventSource<TEvent>(Mod mod, IEventSource<TEvent> eventSource)
+            where TEvent : class
         {
             ValidateLoader(mod);
 
-            if (_eventDispatchers.TryGetValue<EventDispatchers<TEvent, TTarget>>(out var eventDispatcher))
+            if (_eventDispatchers.TryGetValue<EventDispatchers<TEvent>>(out var eventDispatcher))
                 return eventDispatcher!.RemoveSource(mod, eventSource);
 
             return false;
         }
 
-        internal bool UnregisterEventSource<TEvent, TTarget>(Mod mod, ICancelableAsyncEventSource<TEvent, TTarget> cancelableEventSource)
-            where TEvent : class, ICancelableAsyncEvent<TTarget>
+        internal bool UnregisterEventSource<TEvent>(Mod mod, ICancelableAsyncEventSource<TEvent> cancelableEventSource)
+            where TEvent : class, ICancelableEvent
         {
             ValidateLoader(mod);
 
-            if (_eventDispatchers.TryGetValue<CancelableAsyncEventDispatcher<TEvent, TTarget>>(out var cancelableEventDispatcher))
+            if (_eventDispatchers.TryGetValue<CancelableAsyncEventDispatcher<TEvent>>(out var cancelableEventDispatcher))
                 return cancelableEventDispatcher!.RemoveSource(mod, cancelableEventSource);
 
             return false;
         }
 
-        internal bool UnregisterEventSource<TEvent, TTarget>(Mod mod, IAsyncEventSource<TEvent, TTarget> eventSource)
-            where TEvent : class, IAsyncEvent<TTarget>
+        internal bool UnregisterEventSource<TEvent>(Mod mod, IAsyncEventSource<TEvent> eventSource)
+            where TEvent : class
         {
             ValidateLoader(mod);
 
-            if (_eventDispatchers.TryGetValue<AsyncEventDispatcher<TEvent, TTarget>>(out var eventDispatcher))
+            if (_eventDispatchers.TryGetValue<AsyncEventDispatcher<TEvent>>(out var eventDispatcher))
                 return eventDispatcher!.RemoveSource(mod, eventSource);
 
             return false;
@@ -181,17 +181,17 @@ namespace MonkeyLoader.Events
                 eventDispatcher.UnregisterMod(mod);
         }
 
-        private AsyncEventDispatcher<TEvent, TTarget> CreateAsyncDispatcher<TEvent, TTarget>()
-            where TEvent : class, IAsyncEvent<TTarget> => new(this);
+        private AsyncEventDispatcher<TEvent> CreateAsyncDispatcher<TEvent>()
+            where TEvent : class => new(this);
 
-        private CancelableAsyncEventDispatcher<TEvent, TTarget> CreateCancelableAsyncDispatcher<TEvent, TTarget>()
-            where TEvent : class, ICancelableAsyncEvent<TTarget> => new(this);
+        private CancelableAsyncEventDispatcher<TEvent> CreateCancelableAsyncDispatcher<TEvent>()
+            where TEvent : class, ICancelableEvent => new(this);
 
-        private CancelableEventDispatcher<TEvent, TTarget> CreateCancelableDispatcher<TEvent, TTarget>()
-                            where TEvent : class, ICancelableEvent<TTarget> => new(this);
+        private CancelableEventDispatcher<TEvent> CreateCancelableDispatcher<TEvent>()
+            where TEvent : class, ICancelableEvent => new(this);
 
-        private EventDispatchers<TEvent, TTarget> CreateDispatcher<TEvent, TTarget>()
-            where TEvent : class, IEvent<TTarget> => new(this);
+        private EventDispatchers<TEvent> CreateDispatcher<TEvent>()
+            where TEvent : class => new(this);
 
         private void ValidateLoader(Mod mod)
         {

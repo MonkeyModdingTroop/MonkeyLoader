@@ -6,17 +6,17 @@ using System.Threading.Tasks;
 
 namespace MonkeyLoader.Events
 {
-    internal sealed class AsyncEventDispatcher<TEvent, TTarget>
-            : EventDispatcherBase<IAsyncEventSource<TEvent, TTarget>, IAsyncEventHandler<TEvent, TTarget>>
-        where TEvent : class, IAsyncEvent<TTarget>
+    internal sealed class AsyncEventDispatcher<TEvent>
+            : EventDispatcherBase<IAsyncEventSource<TEvent>, IAsyncEventHandler<TEvent>>
+        where TEvent : class
     {
         public AsyncEventDispatcher(EventManager manager) : base(manager)
         { }
 
-        protected override void AddSource(IAsyncEventSource<TEvent, TTarget> eventSource)
+        protected override void AddSource(IAsyncEventSource<TEvent> eventSource)
             => eventSource.Dispatching += DispatchEventsAsync;
 
-        protected override void RemoveSource(IAsyncEventSource<TEvent, TTarget> eventSource)
+        protected override void RemoveSource(IAsyncEventSource<TEvent> eventSource)
             => eventSource.Dispatching -= DispatchEventsAsync;
 
         private async Task DispatchEventsAsync(TEvent eventArgs)
@@ -35,17 +35,17 @@ namespace MonkeyLoader.Events
         }
     }
 
-    internal sealed class CancelableAsyncEventDispatcher<TEvent, TTarget>
-            : EventDispatcherBase<ICancelableAsyncEventSource<TEvent, TTarget>, ICancelableAsyncEventHandler<TEvent, TTarget>>
-        where TEvent : class, ICancelableAsyncEvent<TTarget>
+    internal sealed class CancelableAsyncEventDispatcher<TEvent>
+            : EventDispatcherBase<ICancelableAsyncEventSource<TEvent>, ICancelableAsyncEventHandler<TEvent>>
+        where TEvent : class, ICancelableEvent
     {
         public CancelableAsyncEventDispatcher(EventManager manager) : base(manager)
         { }
 
-        protected override void AddSource(ICancelableAsyncEventSource<TEvent, TTarget> eventSource)
+        protected override void AddSource(ICancelableAsyncEventSource<TEvent> eventSource)
             => eventSource.Dispatching += DispatchEventsAsync;
 
-        protected override void RemoveSource(ICancelableAsyncEventSource<TEvent, TTarget> eventSource)
+        protected override void RemoveSource(ICancelableAsyncEventSource<TEvent> eventSource)
             => eventSource.Dispatching -= DispatchEventsAsync;
 
         private async Task DispatchEventsAsync(TEvent eventArgs)

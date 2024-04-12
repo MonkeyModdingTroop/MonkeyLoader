@@ -7,17 +7,17 @@ using System.Threading.Tasks;
 
 namespace MonkeyLoader.Events
 {
-    internal sealed class CancelableEventDispatcher<TEvent, TTarget>
-            : EventDispatcherBase<ICancelableEventSource<TEvent, TTarget>, ICancelableEventHandler<TEvent, TTarget>>
-        where TEvent : class, ICancelableEvent<TTarget>
+    internal sealed class CancelableEventDispatcher<TEvent>
+            : EventDispatcherBase<ICancelableEventSource<TEvent>, ICancelableEventHandler<TEvent>>
+        where TEvent : class, ICancelableEvent
     {
         public CancelableEventDispatcher(EventManager manager) : base(manager)
         { }
 
-        protected override void AddSource(ICancelableEventSource<TEvent, TTarget> eventSource)
+        protected override void AddSource(ICancelableEventSource<TEvent> eventSource)
             => eventSource.Dispatching += DispatchEvents;
 
-        protected override void RemoveSource(ICancelableEventSource<TEvent, TTarget> eventSource)
+        protected override void RemoveSource(ICancelableEventSource<TEvent> eventSource)
             => eventSource.Dispatching -= DispatchEvents;
 
         private void DispatchEvents(TEvent eventArgs)
@@ -42,17 +42,17 @@ namespace MonkeyLoader.Events
         }
     }
 
-    internal sealed class EventDispatchers<TEvent, TTarget>
-            : EventDispatcherBase<IEventSource<TEvent, TTarget>, IEventHandler<TEvent, TTarget>>
-        where TEvent : class, IEvent<TTarget>
+    internal sealed class EventDispatchers<TEvent>
+            : EventDispatcherBase<IEventSource<TEvent>, IEventHandler<TEvent>>
+        where TEvent : class
     {
         public EventDispatchers(EventManager manager) : base(manager)
         { }
 
-        protected override void AddSource(IEventSource<TEvent, TTarget> eventSource)
+        protected override void AddSource(IEventSource<TEvent> eventSource)
             => eventSource.Dispatching += DispatchEvents;
 
-        protected override void RemoveSource(IEventSource<TEvent, TTarget> eventSource)
+        protected override void RemoveSource(IEventSource<TEvent> eventSource)
             => eventSource.Dispatching -= DispatchEvents;
 
         private void DispatchEvents(TEvent eventArgs)

@@ -10,9 +10,8 @@ namespace MonkeyLoader.Events
     /// Defines the interface for async event handlers.
     /// </summary>
     /// <typeparam name="TEvent">The type of cancelable async events handled.</typeparam>
-    /// <typeparam name="TTarget">The type of the target objects that are the focus of the async events.</typeparam>
-    public interface IAsyncEventHandler<in TEvent, out TTarget> : IPrioritizable
-        where TEvent : IAsyncEvent<TTarget>
+    public interface IAsyncEventHandler<in TEvent> : IPrioritizable
+        where TEvent : class
     {
         /// <summary>
         /// Handles the given async event based on its data.
@@ -25,13 +24,12 @@ namespace MonkeyLoader.Events
     /// Defines the interface for async event handlers that support cancelation.
     /// </summary>
     /// <typeparam name="TEvent">The type of cancelable async events handled.</typeparam>
-    /// <typeparam name="TTarget">The type of the target objects that are the focus of the async events.</typeparam>
-    public interface ICancelableAsyncEventHandler<in TEvent, out TTarget> : IPrioritizable
-        where TEvent : ICancelableAsyncEvent<TTarget>
+    public interface ICancelableAsyncEventHandler<in TEvent> : IPrioritizable
+        where TEvent : class, ICancelableEvent
     {
         /// <summary>
         /// Gets whether this handler should be skipped for async events that have been
-        /// canceled by a previous <see cref="ICancelableAsyncEventHandler{TEvent, TTarget}">async event handler</see>.
+        /// canceled by a previous <see cref="ICancelableAsyncEventHandler{TEvent}">async event handler</see>.
         /// </summary>
         public bool SkipCanceled { get; }
 
@@ -39,9 +37,9 @@ namespace MonkeyLoader.Events
         /// Handles the given cancelable async event based on its data.
         /// </summary>
         /// <remarks>
-        /// When this method sets <c><paramref name="eventData"/>.<see cref="ICancelableAsyncEvent{TTarget}.Canceled">Canceled</see>
+        /// When this method sets <c><paramref name="eventData"/>.<see cref="ICancelableEvent.Canceled">Canceled</see>
         /// = true</c>, the default action should be prevented from happening and further
-        /// <see cref="ICancelableAsyncEventHandler{TEvent, TTarget}">async event handlers</see> may be skipped.
+        /// <see cref="ICancelableAsyncEventHandler{TEvent}">async event handlers</see> may be skipped.
         /// </remarks>
         /// <param name="eventData">An object containing all the relevant information for the async event.</param>
         public Task Handle(TEvent eventData);
