@@ -9,8 +9,8 @@ namespace MonkeyLoader.Events
     /// <summary>
     /// Delegate for the <see cref="ICancelableEventSource{TEvent, TTarget}.Dispatching"/> event.
     /// </summary>
-    /// <typeparam name="TEvent">The type representing the event arguments.</typeparam>
-    /// <typeparam name="TTarget">The type of the target objects that are the focus of the events.</typeparam>
+    /// <typeparam name="TEvent">The type representing the cancelable event arguments.</typeparam>
+    /// <typeparam name="TTarget">The type of the target objects that are the focus of the cancelable event.</typeparam>
     /// <param name="eventData">An object containing all the relevant information for the events, including canceling the action.</param>
     public delegate void CancelableEventDispatching<in TEvent, in TTarget>(TEvent eventData)
         where TEvent : class, ICancelableEvent<TTarget>;
@@ -19,8 +19,8 @@ namespace MonkeyLoader.Events
     /// Delegate for the <see cref="IEventSource{TEvent, TTarget}.Dispatching"/> event.
     /// </summary>
     /// <typeparam name="TEvent">The type representing the event arguments.</typeparam>
-    /// <typeparam name="TTarget">The type of the target objects that are the focus of the events.</typeparam>
-    /// <param name="eventData">An object containing all the relevant information for the events.</param>
+    /// <typeparam name="TTarget">The type of the target objects that are the focus of the event.</typeparam>
+    /// <param name="eventData">An object containing all the relevant information for the event.</param>
     public delegate void EventDispatching<in TEvent, in TTarget>(TEvent eventData)
         where TEvent : class, IEvent<TTarget>;
 
@@ -38,7 +38,7 @@ namespace MonkeyLoader.Events
         /// When the event's <see cref="ICancelableEvent{TTarget}.Canceled">Canceled</see>
         /// property is <c>true</c>, the default action should be prevented from happening.
         /// </remarks>
-        public event CancelableEventDispatching<TEvent, TTarget> Dispatching;
+        public event CancelableEventDispatching<TEvent, TTarget>? Dispatching;
     }
 
     /// <summary>
@@ -51,6 +51,6 @@ namespace MonkeyLoader.Events
         /// <summary>
         /// Needs to be invoked when an event is generated with a new instance of <typeparamref href="TEvent"/>.
         /// </summary>
-        public event EventDispatching<TEvent, TTarget> Dispatching;
+        public event EventDispatching<TEvent, TTarget>? Dispatching;
     }
 }

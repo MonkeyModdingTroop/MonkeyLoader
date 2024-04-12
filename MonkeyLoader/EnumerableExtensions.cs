@@ -268,7 +268,7 @@ namespace MonkeyLoader
             where TNode : notnull => nodes.TopologicalSort(node => node, connected);
 
         /// <summary>
-        /// Individually calls every method from a <see cref="Delegate"/>'s invocation list in a try-catch-block,
+        /// Individually calls every method from the given <see cref="Delegate"/>'s invocation list in a try-catch-block,
         /// collecting any <see cref="Exception"/>s into an <see cref="AggregateException"/>.
         /// </summary>
         /// <param name="del">The delegate to safely invoke.</param>
@@ -278,7 +278,7 @@ namespace MonkeyLoader
             => del.GetInvocationList().TryInvokeAll(args);
 
         /// <summary>
-        /// Individually calls all <paramref name="delegates"/> in a try-catch-block,
+        /// Individually calls all given <paramref name="delegates"/> in a try-catch-block,
         /// collecting any <see cref="Exception"/>s into an <see cref="AggregateException"/>.
         /// </summary>
         /// <param name="delegates">The delegates to safely invoke.</param>
@@ -286,6 +286,9 @@ namespace MonkeyLoader
         /// <exception cref="AggregateException">Thrown when any invoked methods threw. Contains all nested Exceptions.</exception>
         public static void TryInvokeAll(this IEnumerable<Delegate> delegates, params object[] args)
         {
+            if (!delegates.Any())
+                return;
+
             var exceptions = new List<Exception>();
 
             foreach (var handler in delegates)
@@ -293,6 +296,50 @@ namespace MonkeyLoader
                 try
                 {
                     handler.Method.Invoke(handler.Target, args);
+                }
+                catch (Exception ex)
+                {
+                    exceptions.Add(ex);
+                }
+            }
+
+            if (exceptions.Any())
+            {
+                throw new AggregateException(exceptions);
+            }
+        }
+
+        /// <summary>
+        /// Sequentially calls and awaits every async method from the given <see cref="Delegate"/>'s invocation list
+        /// in a try-catch-block, collecting any <see cref="Exception"/>s into an <see cref="AggregateException"/>.<br/>
+        /// The delegate must return a <see cref="Task"/>.
+        /// </summary>
+        /// <param name="del">The <see cref="Task"/>-returning delegate to safely invoke.</param>
+        /// <param name="args">The arguments for the invocation.</param>
+        /// <exception cref="AggregateException">Thrown when any invoked methods threw. Contains all nested Exceptions.</exception>
+        public static Task TryInvokeAllAsync(this Delegate del, params object[] args)
+            => del.GetInvocationList().TryInvokeAllAsync(args);
+
+        /// <summary>
+        /// Sequentially calls and awaits all given <paramref name="delegates"/>
+        /// in a try-catch-block, collecting any <see cref="Exception"/>s into an <see cref="AggregateException"/>.<br/>
+        /// The delegates must return a <see cref="Task"/>.
+        /// </summary>
+        /// <param name="delegates">The <see cref="Task"/>-returning delegates to safely invoke.</param>
+        /// <param name="args">The arguments for the invocation.</param>
+        /// <exception cref="AggregateException">Thrown when any invoked methods threw. Contains all nested Exceptions.</exception>
+        public static async Task TryInvokeAllAsync(this IEnumerable<Delegate> delegates, params object[] args)
+        {
+            if (!delegates.Any())
+                return;
+
+            var exceptions = new List<Exception>();
+
+            foreach (var handler in delegates)
+            {
+                try
+                {
+                    await (Task)handler.Method.Invoke(handler.Target, args);
                 }
                 catch (Exception ex)
                 {

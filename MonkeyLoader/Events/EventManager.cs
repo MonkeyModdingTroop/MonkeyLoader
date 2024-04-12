@@ -37,6 +37,22 @@ namespace MonkeyLoader.Events
             return _eventDispatchers.GetOrCreateValue(CreateCancelableDispatcher<TEvent, TTarget>).AddHandler(mod, cancelableEventHandler);
         }
 
+        internal bool RegisterEventHandler<TEvent, TTarget>(Mod mod, IAsyncEventHandler<TEvent, TTarget> asyncEventHandler)
+            where TEvent : class, IAsyncEvent<TTarget>
+        {
+            ValidateLoader(mod);
+
+            return _eventDispatchers.GetOrCreateValue(CreateAsyncDispatcher<TEvent, TTarget>).AddHandler(mod, asyncEventHandler);
+        }
+
+        internal bool RegisterEventHandler<TEvent, TTarget>(Mod mod, ICancelableAsyncEventHandler<TEvent, TTarget> cancelableAsyncEventHandler)
+            where TEvent : class, ICancelableAsyncEvent<TTarget>
+        {
+            ValidateLoader(mod);
+
+            return _eventDispatchers.GetOrCreateValue(CreateCancelableAsyncDispatcher<TEvent, TTarget>).AddHandler(mod, cancelableAsyncEventHandler);
+        }
+
         internal bool RegisterEventSource<TEvent, TTarget>(Mod mod, IEventSource<TEvent, TTarget> eventSource)
             where TEvent : class, IEvent<TTarget>
         {
@@ -51,6 +67,22 @@ namespace MonkeyLoader.Events
             ValidateLoader(mod);
 
             return _eventDispatchers.GetOrCreateValue(CreateCancelableDispatcher<TEvent, TTarget>).AddSource(mod, cancelableEventSource);
+        }
+
+        internal bool RegisterEventSource<TEvent, TTarget>(Mod mod, IAsyncEventSource<TEvent, TTarget> eventSource)
+            where TEvent : class, IAsyncEvent<TTarget>
+        {
+            ValidateLoader(mod);
+
+            return _eventDispatchers.GetOrCreateValue(CreateAsyncDispatcher<TEvent, TTarget>).AddSource(mod, eventSource);
+        }
+
+        internal bool RegisterEventSource<TEvent, TTarget>(Mod mod, ICancelableAsyncEventSource<TEvent, TTarget> cancelableEventSource)
+            where TEvent : class, ICancelableAsyncEvent<TTarget>
+        {
+            ValidateLoader(mod);
+
+            return _eventDispatchers.GetOrCreateValue(CreateCancelableAsyncDispatcher<TEvent, TTarget>).AddSource(mod, cancelableEventSource);
         }
 
         internal bool UnregisterEventHandler<TEvent, TTarget>(Mod mod, ICancelableEventHandler<TEvent, TTarget> cancelableEventHandler)
@@ -69,8 +101,30 @@ namespace MonkeyLoader.Events
         {
             ValidateLoader(mod);
 
-            if (_eventDispatchers.TryGetValue<EventDispatcher<TEvent, TTarget>>(out var eventDispatcher))
+            if (_eventDispatchers.TryGetValue<EventDispatchers<TEvent, TTarget>>(out var eventDispatcher))
                 return eventDispatcher!.RemoveHandler(mod, eventHandler);
+
+            return false;
+        }
+
+        internal bool UnregisterEventHandler<TEvent, TTarget>(Mod mod, ICancelableAsyncEventHandler<TEvent, TTarget> cancelableAsyncEventHandler)
+            where TEvent : class, ICancelableAsyncEvent<TTarget>
+        {
+            ValidateLoader(mod);
+
+            if (_eventDispatchers.TryGetValue<CancelableAsyncEventDispatcher<TEvent, TTarget>>(out var cancelableEventDispatcher))
+                return cancelableEventDispatcher!.RemoveHandler(mod, cancelableAsyncEventHandler);
+
+            return false;
+        }
+
+        internal bool UnregisterEventHandler<TEvent, TTarget>(Mod mod, IAsyncEventHandler<TEvent, TTarget> asyncEventHandler)
+            where TEvent : class, IAsyncEvent<TTarget>
+        {
+            ValidateLoader(mod);
+
+            if (_eventDispatchers.TryGetValue<AsyncEventDispatcher<TEvent, TTarget>>(out var eventDispatcher))
+                return eventDispatcher!.RemoveHandler(mod, asyncEventHandler);
 
             return false;
         }
@@ -91,7 +145,29 @@ namespace MonkeyLoader.Events
         {
             ValidateLoader(mod);
 
-            if (_eventDispatchers.TryGetValue<EventDispatcher<TEvent, TTarget>>(out var eventDispatcher))
+            if (_eventDispatchers.TryGetValue<EventDispatchers<TEvent, TTarget>>(out var eventDispatcher))
+                return eventDispatcher!.RemoveSource(mod, eventSource);
+
+            return false;
+        }
+
+        internal bool UnregisterEventSource<TEvent, TTarget>(Mod mod, ICancelableAsyncEventSource<TEvent, TTarget> cancelableEventSource)
+            where TEvent : class, ICancelableAsyncEvent<TTarget>
+        {
+            ValidateLoader(mod);
+
+            if (_eventDispatchers.TryGetValue<CancelableAsyncEventDispatcher<TEvent, TTarget>>(out var cancelableEventDispatcher))
+                return cancelableEventDispatcher!.RemoveSource(mod, cancelableEventSource);
+
+            return false;
+        }
+
+        internal bool UnregisterEventSource<TEvent, TTarget>(Mod mod, IAsyncEventSource<TEvent, TTarget> eventSource)
+            where TEvent : class, IAsyncEvent<TTarget>
+        {
+            ValidateLoader(mod);
+
+            if (_eventDispatchers.TryGetValue<AsyncEventDispatcher<TEvent, TTarget>>(out var eventDispatcher))
                 return eventDispatcher!.RemoveSource(mod, eventSource);
 
             return false;
@@ -105,10 +181,16 @@ namespace MonkeyLoader.Events
                 eventDispatcher.UnregisterMod(mod);
         }
 
-        private CancelableEventDispatcher<TEvent, TTarget> CreateCancelableDispatcher<TEvent, TTarget>()
-            where TEvent : class, ICancelableEvent<TTarget> => new(this);
+        private AsyncEventDispatcher<TEvent, TTarget> CreateAsyncDispatcher<TEvent, TTarget>()
+            where TEvent : class, IAsyncEvent<TTarget> => new(this);
 
-        private EventDispatcher<TEvent, TTarget> CreateDispatcher<TEvent, TTarget>()
+        private CancelableAsyncEventDispatcher<TEvent, TTarget> CreateCancelableAsyncDispatcher<TEvent, TTarget>()
+            where TEvent : class, ICancelableAsyncEvent<TTarget> => new(this);
+
+        private CancelableEventDispatcher<TEvent, TTarget> CreateCancelableDispatcher<TEvent, TTarget>()
+                            where TEvent : class, ICancelableEvent<TTarget> => new(this);
+
+        private EventDispatchers<TEvent, TTarget> CreateDispatcher<TEvent, TTarget>()
             where TEvent : class, IEvent<TTarget> => new(this);
 
         private void ValidateLoader(Mod mod)
