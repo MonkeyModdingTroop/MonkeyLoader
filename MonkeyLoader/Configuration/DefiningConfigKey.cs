@@ -241,7 +241,7 @@ namespace MonkeyLoader.Configuration
         }
 
         /// <inheritdoc/>
-        public bool Validate(T value) => _isValueValid?.Invoke(value) ?? true;
+        public virtual bool Validate(T value) => _isValueValid?.Invoke(value) ?? true;
 
         /// <inheritdoc/>
         bool IDefiningConfigKey.Validate(object? value) => Validate(value);

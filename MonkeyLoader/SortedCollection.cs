@@ -36,7 +36,7 @@ namespace MonkeyLoader
         /// Constructs an empty sorted collection with the
         /// <see cref="Comparer{T}.Default">default comparer</see> for <typeparamref name="T"/>.
         /// </summary>
-        /// <exception cref="NotSupportedException">If <typeparamref name="T"/> is not <see cref="IComparable{T}"/>.</exception>
+        /// <exception cref="NotSupportedException">When <typeparamref name="T"/> is not <see cref="IComparable{T}"/>.</exception>
         public SortedCollection() : this(null, null)
         { }
 
@@ -44,7 +44,7 @@ namespace MonkeyLoader
         /// Constructs an empty sorted collection with the given comparer to keep it sorted.
         /// </summary>
         /// <param name="comparer">The comparer to use to keep the collection sorted.</param>
-        /// <exception cref="NotSupportedException">If <paramref name="comparer"/> is null and <typeparamref name="T"/> is not <see cref="IComparable{T}"/>.</exception>
+        /// <exception cref="NotSupportedException">When <paramref name="comparer"/> is <c>null</c> and <typeparamref name="T"/> is not <see cref="IComparable{T}"/>.</exception>
         public SortedCollection(IComparer<T>? comparer) : this(null, comparer)
         { }
 
@@ -53,7 +53,7 @@ namespace MonkeyLoader
         /// </summary>
         /// <param name="collection">The elements to add to the collection.</param>
         /// <param name="comparer">The comparer to use to keep the collection sorted.</param>
-        /// <exception cref="NotSupportedException">If <paramref name="comparer"/> is null and <typeparamref name="T"/> is not <see cref="IComparable{T}"/>.</exception>
+        /// <exception cref="NotSupportedException">When <paramref name="comparer"/> is <c>null</c> and <typeparamref name="T"/> is not <see cref="IComparable{T}"/>.</exception>
         public SortedCollection(IEnumerable<T>? collection, IComparer<T>? comparer)
         {
             if (comparer is null && !typeof(IComparable<T>).IsAssignableFrom(typeof(T)))
