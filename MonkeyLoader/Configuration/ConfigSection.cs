@@ -8,6 +8,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Collections.Specialized.BitVector32;
 
 namespace MonkeyLoader.Configuration
 {
@@ -24,6 +25,8 @@ namespace MonkeyLoader.Configuration
         /// </summary>
         protected readonly HashSet<IDefiningConfigKey> keys;
 
+        private readonly Lazy<string> _fullId;
+
         /// <summary>
         /// Gets the <see cref="Configuration.Config"/> that this section is a part of.
         /// </summary>
@@ -34,6 +37,15 @@ namespace MonkeyLoader.Configuration
         /// Gets a description of the config items found in this section.
         /// </summary>
         public abstract string Description { get; }
+
+        /// <summary>
+        /// Gets the fully unique identifier for this section.
+        /// </summary>
+        /// <remarks>
+        /// Format:
+        /// <c>$"{<see cref="Config">Config</see>.<see cref="Config.Owner">Owner</see>.<see cref="IConfigOwner.Id">Id</see>}.{<see cref="IConfigKey.Id">Id</see>}"</c>
+        /// </remarks>
+        public string FullId => _fullId.Value;
 
         /// <summary>
         /// Gets whether there are any config keys with unsaved changes in this section.
@@ -82,6 +94,8 @@ namespace MonkeyLoader.Configuration
 
             foreach (var key in keys)
                 key.Section = this;
+
+            _fullId = new(() => $"{Config.Owner.Id}.{Id}");
         }
 
         /// <summary>

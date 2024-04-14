@@ -99,7 +99,7 @@ namespace MonkeyLoader.Configuration
             InternalAccessOnly = internalAccessOnly;
             _isValueValid = valueValidator;
 
-            _fullId = new(() => $"{Config.Owner.Id}.{Section.Id}.{Id}");
+            _fullId = new(() => $"{Section.FullId}.{Id}");
 
             // Make the Compiler shut up about Section not being set - it gets set by the ConfigSection loading the keys.
             Section = default!;
@@ -319,7 +319,7 @@ namespace MonkeyLoader.Configuration
         /// </summary>
         /// <remarks>
         /// Format:
-        /// <c>$"{<see cref="Config">Config</see>.<see cref="Config.Owner">Owner</see>.<see cref="IConfigOwner.Id">Id</see>}.{<see cref="Section">Section</see>.<see cref="ConfigSection.Id">Id</see>}.{<see cref="IConfigKey.Id">Id</see>}"</c>
+        /// <c>$"{<see cref="Section">Section</see>.<see cref="ConfigSection.FullId">FullId</see>}.{<see cref="IConfigKey.Id">Id</see>}"</c>
         /// </remarks>
         public string FullId { get; }
 
