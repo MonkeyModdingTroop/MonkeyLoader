@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace MonkeyLoader.Events
+﻿namespace MonkeyLoader.Events
 {
     /// <summary>
     /// Defines the interface for the data of a cancelable event.

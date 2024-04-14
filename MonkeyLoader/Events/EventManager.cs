@@ -38,7 +38,7 @@ namespace MonkeyLoader.Events
         }
 
         internal bool RegisterEventHandler<TEvent>(Mod mod, IAsyncEventHandler<TEvent> asyncEventHandler)
-            where TEvent : class
+            where TEvent : class, IAsyncEvent
         {
             ValidateLoader(mod);
 
@@ -46,7 +46,7 @@ namespace MonkeyLoader.Events
         }
 
         internal bool RegisterEventHandler<TEvent>(Mod mod, ICancelableAsyncEventHandler<TEvent> cancelableAsyncEventHandler)
-            where TEvent : class, ICancelableEvent
+            where TEvent : class, ICancelableEvent, IAsyncEvent
         {
             ValidateLoader(mod);
 
@@ -70,7 +70,7 @@ namespace MonkeyLoader.Events
         }
 
         internal bool RegisterEventSource<TEvent>(Mod mod, IAsyncEventSource<TEvent> eventSource)
-            where TEvent : class
+            where TEvent : class, IAsyncEvent
         {
             ValidateLoader(mod);
 
@@ -78,7 +78,7 @@ namespace MonkeyLoader.Events
         }
 
         internal bool RegisterEventSource<TEvent>(Mod mod, ICancelableAsyncEventSource<TEvent> cancelableEventSource)
-            where TEvent : class, ICancelableEvent
+            where TEvent : class, ICancelableEvent, IAsyncEvent
         {
             ValidateLoader(mod);
 
@@ -108,7 +108,7 @@ namespace MonkeyLoader.Events
         }
 
         internal bool UnregisterEventHandler<TEvent>(Mod mod, ICancelableAsyncEventHandler<TEvent> cancelableAsyncEventHandler)
-            where TEvent : class, ICancelableEvent
+            where TEvent : class, ICancelableEvent, IAsyncEvent
         {
             ValidateLoader(mod);
 
@@ -119,7 +119,7 @@ namespace MonkeyLoader.Events
         }
 
         internal bool UnregisterEventHandler<TEvent>(Mod mod, IAsyncEventHandler<TEvent> asyncEventHandler)
-            where TEvent : class
+            where TEvent : class, IAsyncEvent
         {
             ValidateLoader(mod);
 
@@ -152,7 +152,7 @@ namespace MonkeyLoader.Events
         }
 
         internal bool UnregisterEventSource<TEvent>(Mod mod, ICancelableAsyncEventSource<TEvent> cancelableEventSource)
-            where TEvent : class, ICancelableEvent
+            where TEvent : class, ICancelableEvent, IAsyncEvent
         {
             ValidateLoader(mod);
 
@@ -163,7 +163,7 @@ namespace MonkeyLoader.Events
         }
 
         internal bool UnregisterEventSource<TEvent>(Mod mod, IAsyncEventSource<TEvent> eventSource)
-            where TEvent : class
+            where TEvent : class, IAsyncEvent
         {
             ValidateLoader(mod);
 
@@ -182,10 +182,10 @@ namespace MonkeyLoader.Events
         }
 
         private AsyncEventDispatcher<TEvent> CreateAsyncDispatcher<TEvent>()
-            where TEvent : class => new(this);
+            where TEvent : class, IAsyncEvent => new(this);
 
         private CancelableAsyncEventDispatcher<TEvent> CreateCancelableAsyncDispatcher<TEvent>()
-            where TEvent : class, ICancelableEvent => new(this);
+            where TEvent : class, ICancelableEvent, IAsyncEvent => new(this);
 
         private CancelableEventDispatcher<TEvent> CreateCancelableDispatcher<TEvent>()
             where TEvent : class, ICancelableEvent => new(this);

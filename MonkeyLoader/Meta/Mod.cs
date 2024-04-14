@@ -357,7 +357,7 @@ namespace MonkeyLoader.Meta
         /// <param name="asyncEventHandler">The <see cref="IAsyncEventHandler{TEvent}">async event handler</see> to register.</param>
         /// <returns><c>true</c> if the <paramref name="asyncEventHandler"/> was newly registered; otherwise, <c>false</c>.</returns>
         public bool RegisterEventHandler<TEvent>(IAsyncEventHandler<TEvent> asyncEventHandler)
-            where TEvent : class
+            where TEvent : class, IAsyncEvent
             => Loader.EventManager.RegisterEventHandler(this, asyncEventHandler);
 
         /// <summary>
@@ -370,7 +370,7 @@ namespace MonkeyLoader.Meta
         /// <param name="cancelableAsyncEventHandler">The <see cref="ICancelableEventHandler{TEvent}">cancelable async event handler</see> to register.</param>
         /// <returns><c>true</c> if the <paramref name="cancelableAsyncEventHandler"/> was newly registered; otherwise, <c>false</c>.</returns>
         public bool RegisterEventHandler<TEvent>(ICancelableAsyncEventHandler<TEvent> cancelableAsyncEventHandler)
-            where TEvent : class, ICancelableEvent
+            where TEvent : class, ICancelableEvent, IAsyncEvent
             => Loader.EventManager.RegisterEventHandler(this, cancelableAsyncEventHandler);
 
         /// <summary>
@@ -409,7 +409,7 @@ namespace MonkeyLoader.Meta
         /// <param name="eventSource">The <see cref="IAsyncEventSource{TEvent}">event source</see> to register.</param>
         /// <returns><c>true</c> if the <paramref name="eventSource"/> was newly registered; otherwise, <c>false</c>.</returns>
         public bool RegisterEventSource<TEvent>(IAsyncEventSource<TEvent> eventSource)
-            where TEvent : class
+            where TEvent : class, IAsyncEvent
             => Loader.EventManager.RegisterEventSource(this, eventSource);
 
         /// <summary>
@@ -422,7 +422,7 @@ namespace MonkeyLoader.Meta
         /// <param name="cancelableAsyncEventSource">The <see cref="ICancelableEventSource{TEvent}">cancelable event source</see> to register.</param>
         /// <returns><c>true</c> if the <paramref name="cancelableAsyncEventSource"/> was newly registered; otherwise, <c>false</c>.</returns>
         public bool RegisterEventSource<TEvent>(ICancelableAsyncEventSource<TEvent> cancelableAsyncEventSource)
-            where TEvent : class, ICancelableEvent
+            where TEvent : class, ICancelableEvent, IAsyncEvent
             => Loader.EventManager.RegisterEventSource(this, cancelableAsyncEventSource);
 
         /// <summary>
@@ -506,7 +506,7 @@ namespace MonkeyLoader.Meta
         /// <param name="asyncEventHandler">The <see cref="IAsyncEventHandler{TEvent}">event handler</see> to unregister.</param>
         /// <returns><c>true</c> if the <paramref name="asyncEventHandler"/> was found and unregistered; otherwise, <c>false</c>.</returns>
         public bool UnregisterEventHandler<TEvent>(IAsyncEventHandler<TEvent> asyncEventHandler)
-            where TEvent : class
+            where TEvent : class, IAsyncEvent
             => Loader.EventManager.UnregisterEventHandler(this, asyncEventHandler);
 
         /// <summary>
@@ -519,7 +519,7 @@ namespace MonkeyLoader.Meta
         /// <param name="cancelableAsyncEventHandler">The <see cref="ICancelableEventHandler{TEvent}">cancelable async event handler</see> to unregister.</param>
         /// <returns><c>true</c> if the <paramref name="cancelableAsyncEventHandler"/> was found and unregistered; otherwise, <c>false</c>.</returns>
         public bool UnregisterEventHandler<TEvent>(ICancelableAsyncEventHandler<TEvent> cancelableAsyncEventHandler)
-            where TEvent : class, ICancelableEvent
+            where TEvent : class, ICancelableEvent, IAsyncEvent
             => Loader.EventManager.UnregisterEventHandler(this, cancelableAsyncEventHandler);
 
         /// <summary>
@@ -558,7 +558,7 @@ namespace MonkeyLoader.Meta
         /// <param name="asyncEventSource">The <see cref="IAsyncEventSource{TEvent}">event source</see> to unregister.</param>
         /// <returns><c>true</c> if the <paramref name="asyncEventSource"/> was found and unregistered; otherwise, <c>false</c>.</returns>
         public bool UnregisterEventSource<TEvent>(IAsyncEventSource<TEvent> asyncEventSource)
-            where TEvent : class
+            where TEvent : class, IAsyncEvent
             => Loader.EventManager.UnregisterEventSource(this, asyncEventSource);
 
         /// <summary>
@@ -571,7 +571,7 @@ namespace MonkeyLoader.Meta
         /// <param name="cancelableAsyncEventSource">The <see cref="ICancelableEventSource{TEvent}">cancelable async event source</see> to unregister.</param>
         /// <returns><c>true</c> if the <paramref name="cancelableAsyncEventSource"/> was found and unregistered; otherwise, <c>false</c>.</returns>
         public bool UnregisterEventSource<TEvent>(ICancelableAsyncEventSource<TEvent> cancelableAsyncEventSource)
-            where TEvent : class, ICancelableEvent
+            where TEvent : class, ICancelableEvent, IAsyncEvent
             => Loader.EventManager.UnregisterEventSource(this, cancelableAsyncEventSource);
 
         internal bool LoadEarlyMonkeys()
