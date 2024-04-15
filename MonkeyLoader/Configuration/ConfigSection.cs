@@ -58,6 +58,14 @@ namespace MonkeyLoader.Configuration
         public abstract string Id { get; }
 
         /// <summary>
+        /// Gets whether only the owning mod should have access to this config item.
+        /// </summary>
+        /// <remarks>
+        /// <i>By default</i>: <c>false</c>.
+        /// </remarks>
+        public virtual bool InternalAccessOnly => false;
+
+        /// <summary>
         /// Gets all the config keys of this section.
         /// </summary>
         public IEnumerable<IDefiningConfigKey> Keys => keys.AsSafeEnumerable();

@@ -41,9 +41,27 @@ namespace MonkeyLoader.Meta
         public AssemblyName AssemblyName { get; }
 
         /// <summary>
+        /// Gets whether this monkey can be disabled, that is, whether it's
+        /// permitted to set <see cref="Enabled">Enabled</see> to <c>false.</c>
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if this monkey respects the <see cref="Mod.MonkeyToggles"/> config.
+        /// </value>
+        public bool CanBeDisabled { get; }
+
+        /// <summary>
         /// Gets the <see cref="Configuration.Config"/> that this monkey can use to load <see cref="ConfigSection"/>s.
         /// </summary>
         public Config Config { get; }
+
+        /// <summary>
+        /// Gets or sets whether this monkey should currently be active.
+        /// </summary>
+        /// <remarks>
+        /// Can only be set to <c>false</c> if the monkey
+        /// supports <see cref="CanBeDisabled">being disabled</see>.
+        /// </remarks>
+        public bool Enabled { get; set; }
 
         /// <summary>
         /// Gets the impacts this (pre-)patcher has on certain features ordered by descending impact.
@@ -51,9 +69,19 @@ namespace MonkeyLoader.Meta
         public IEnumerable<IFeaturePatch> FeaturePatches { get; }
 
         /// <summary>
+        /// Gets fully unique identifier of this monkey.
+        /// </summary>
+        public string FullId { get; }
+
+        /// <summary>
         /// Gets the <see cref="HarmonyLib.Harmony">Harmony</see> instance to be used by this patcher.
         /// </summary>
         public Harmony Harmony { get; }
+
+        /// <summary>
+        /// Gets mod-unique identifier of this monkey.
+        /// </summary>
+        public string Id { get; }
 
         /// <summary>
         /// Gets the <see cref="Logging.Logger"/> that this monkey can use to log messages to game-specific channels.
@@ -66,8 +94,13 @@ namespace MonkeyLoader.Meta
         public Mod Mod { get; }
 
         /// <summary>
-        /// Gets this monkey's name.
+        /// Gets the display name of this monkey.
         /// </summary>
         public string Name { get; }
+
+        /// <summary>
+        /// Gets the runtime type of this monkey.
+        /// </summary>
+        public Type Type { get; }
     }
 }

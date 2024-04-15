@@ -9,10 +9,10 @@ using NuGet.Packaging.Core;
 using NuGet.Versioning;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Tracing;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using Zio;
 
 namespace MonkeyLoader.Meta
@@ -68,6 +68,7 @@ namespace MonkeyLoader.Meta
 
         private readonly Lazy<Logger> _logger;
 
+        private readonly Lazy<MonkeyTogglesConfigSection> _monkeyToggles;
         private bool _allDependenciesLoaded = false;
 
         /// <summary>
@@ -224,6 +225,11 @@ namespace MonkeyLoader.Meta
         public IEnumerable<IMonkey> Monkeys => monkeys.AsSafeEnumerable();
 
         /// <summary>
+        /// Gets the toggles for this mod's monkeys that support disabling.
+        /// </summary>
+        public MonkeyTogglesConfigSection MonkeyToggles => _monkeyToggles.Value;
+
+        /// <summary>
         /// Gets the Url to this mod's project website.<br/>
         /// <c>null</c> if it wasn't given or was invalid.
         /// </summary>
@@ -285,6 +291,7 @@ namespace MonkeyLoader.Meta
             _logger = new(() => new Logger(loader.Logger, Title));
             _configPath = new(() => Path.Combine(Loader.Locations.Configs, $"{Id}.json"));
             _config = new(() => new Config(this));
+            _monkeyToggles = new(() => Config.LoadSection(new MonkeyTogglesConfigSection(this)));
         }
 
         /// <summary>
@@ -306,6 +313,21 @@ namespace MonkeyLoader.Meta
 
         /// <inheritdoc/>
         public bool DependsOn(ILoadedNuGetPackage otherPackage) => DependsOn(otherPackage.Identity.Id);
+
+        /// <summary>
+        /// Searches all of this mod's loaded <see cref="Monkeys">Monkeys</see> and
+        /// <see cref="EarlyMonkeys">Early Monkeys</see> to find one with the given <see cref="IMonkey.Id">id</see>.
+        /// </summary>
+        /// <param name="id">The id to find a monkey for.</param>
+        /// <returns>The found monkey.</returns>
+        /// <exception cref="KeyNotFoundException">When no monkey with the given id was found.</exception>
+        public IMonkey FindMonkeyById(string id)
+        {
+            if (!TryFindMonkeyById(id, out var monkey))
+                throw new KeyNotFoundException(id);
+
+            return monkey;
+        }
 
         /// <summary>
         /// Efficiently checks, whether a given name is listed as an author for this mod.
@@ -465,6 +487,28 @@ namespace MonkeyLoader.Meta
 
         /// <inheritdoc/>
         public override string ToString() => $"{Title} ({(IsGamePack ? "Game Pack" : "Regular")})";
+
+        /// <summary>
+        /// Searches all of this mod's loaded <see cref="Monkeys">Monkeys</see> and
+        /// <see cref="EarlyMonkeys">Early Monkeys</see> to find one with the given <see cref="IMonkey.Id">id</see>.
+        /// </summary>
+        /// <param name="id">The id to find a monkey for.</param>
+        /// <param name="monkey">The monkey that was found or <c>null</c>.</param>
+        /// <returns><c>true</c> if a monkey was found; otherwise, <c>false</c>.</returns>
+        public bool TryFindMonkeyById(string id, [NotNullWhen(true)] out IMonkey? monkey)
+        {
+            monkey = null;
+
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                Logger.Warn(() => $"Attempted to get a monkey using an invalid id!");
+                return false;
+            }
+
+            monkey = monkeys.Concat(earlyMonkeys).FirstOrDefault(monkey => monkey.Id == id);
+
+            return monkey is not null;
+        }
 
         /// <inheritdoc/>
         public bool TryResolveDependencies()

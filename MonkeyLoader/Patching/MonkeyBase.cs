@@ -12,23 +12,47 @@ namespace MonkeyLoader.Patching
     /// <summary>
     /// Abstract base for regular <see cref="Monkey{TMonkey}"/>s and <see cref="EarlyMonkey{TMonkey}"/>s.
     /// </summary>
-    public abstract partial class MonkeyBase : IMonkey
+    public abstract class MonkeyBase : IMonkey
     {
-        /// <summary>
-        /// The monkey's runtime type.
-        /// </summary>
-        protected readonly Type type;
-
         private readonly Lazy<IFeaturePatch[]> _featurePatches;
+
+        private readonly Lazy<string> _fullId;
+
         private readonly Lazy<Harmony> _harmony;
+
         private Mod _mod = null!;
-        /// <inheritdoc/>
+        private IDefiningConfigKey<bool>? _shouldBeEnabledKey;
 
         /// <inheritdoc/>
         public AssemblyName AssemblyName { get; }
 
         /// <inheritdoc/>
+        /// <remarks>
+        /// <i>By default</i>: <c>false</c>.
+        /// </remarks>
+        [MemberNotNullWhen(true, nameof(_shouldBeEnabledKey))]
+        public virtual bool CanBeDisabled => false;
+
+        /// <inheritdoc/>
         public Config Config => Mod.Config;
+
+        /// <inheritdoc/>
+        public bool Enabled
+        {
+            get => !CanBeDisabled || _shouldBeEnabledKey.GetValue();
+            set
+            {
+                if (!CanBeDisabled)
+                {
+                    if (!value)
+                        throw new NotSupportedException("This monkey can't be disabled!");
+                    else
+                        return;
+                }
+
+                _shouldBeEnabledKey.SetValue(value, "SetMonkeyEnabled");
+            }
+        }
 
         /// <summary>
         /// Gets whether this monkey's <see cref="Run">Run</see>() method failed when it was called.
@@ -39,7 +63,16 @@ namespace MonkeyLoader.Patching
         public IEnumerable<IFeaturePatch> FeaturePatches => _featurePatches.Value.AsSafeEnumerable();
 
         /// <inheritdoc/>
+        public string FullId => _fullId.Value;
+
+        /// <inheritdoc/>
         public Harmony Harmony => _harmony.Value;
+
+        /// <remarks>
+        /// <i>By Default</i>: The monkey's <see cref="Type">Type</see>'s Name.
+        /// </remarks>
+        /// <inheritdoc/>
+        public virtual string Id => Type.Name;
 
         /// <inheritdoc/>
         public Logger Logger { get; private set; } = null!;
@@ -63,14 +96,17 @@ namespace MonkeyLoader.Patching
 
                 _mod = value;
                 Logger = new Logger(_mod.Logger, Name);
+
+                if (CanBeDisabled)
+                    _shouldBeEnabledKey = Mod.MonkeyToggles.GetToggle(this);
             }
         }
 
         /// <remarks>
-        /// <i>By Default</i>: The monkey's <see cref="type">type</see>'s Name.
+        /// <i>By Default</i>: The monkey's <see cref="Id">Id</see>.
         /// </remarks>
         /// <inheritdoc/>
-        public virtual string Name => type.Name;
+        public virtual string Name => Id;
 
         /// <summary>
         /// Gets whether this monkey's <see cref="Run">Run</see>() method has been called.
@@ -87,10 +123,13 @@ namespace MonkeyLoader.Patching
         /// </summary>
         public bool ShutdownRan { get; private set; } = false;
 
+        /// <inheritdoc/>
+        public Type Type { get; }
+
         internal MonkeyBase()
         {
-            type = GetType();
-            AssemblyName = new(type.Assembly.GetName().Name);
+            Type = GetType();
+            AssemblyName = new(Type.Assembly.GetName().Name);
 
             _featurePatches = new Lazy<IFeaturePatch[]>(() =>
             {
@@ -100,7 +139,8 @@ namespace MonkeyLoader.Patching
                 return featurePatches;
             });
 
-            _harmony = new(() => new Harmony($"{Mod.Title}/{Name}"));
+            _fullId = new(() => $"{Mod.Id}.{Id}");
+            _harmony = new(() => new Harmony(FullId));
         }
 
         /// <inheritdoc/>
@@ -224,6 +264,7 @@ namespace MonkeyLoader.Patching
             }
         }
 
+        /// <inheritdoc/>
         public event ShutdownHandler? ShutdownDone;
 
         /// <inheritdoc/>
@@ -235,9 +276,31 @@ namespace MonkeyLoader.Patching
     public abstract class MonkeyBase<TMonkey> : MonkeyBase where TMonkey : MonkeyBase<TMonkey>, new()
     {
         /// <summary>
+        /// Gets whether this monkey can be disabled, that is, whether it's
+        /// permitted to set <see cref="Enabled">Enabled</see> to <c>false.</c>
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if this monkey respects the <see cref="Mod.MonkeyToggles"/> config.
+        /// </value>
+        public new static bool CanBeDisabled => Instance.CanBeDisabled;
+
+        /// <summary>
         /// Gets the <see cref="Configuration.Config"/> that this patcher can use to load <see cref="ConfigSection"/>s.
         /// </summary>
         public new static Config Config => Instance.Config;
+
+        /// <summary>
+        /// Gets or sets whether this monkey should currently be active.
+        /// </summary>
+        /// <remarks>
+        /// Can only be set to <c>false</c> if the monkey
+        /// supports <see cref="CanBeDisabled">being disabled</see>.
+        /// </remarks>
+        public new static bool Enabled
+        {
+            get => Instance.Enabled;
+            set => Instance.Enabled = value;
+        }
 
         /// <summary>
         /// Gets the <see cref="HarmonyLib.Harmony">Harmony</see> instance to be used by this patcher.
