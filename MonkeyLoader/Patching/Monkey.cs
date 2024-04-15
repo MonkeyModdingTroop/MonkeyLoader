@@ -129,7 +129,7 @@ namespace MonkeyLoader.Patching
         /// <returns><c>true</c> if it ran successfully; otherwise, <c>false</c>.</returns>
         protected virtual bool OnLoaded()
         {
-            Harmony.PatchCategory(type.Assembly, type.Name);
+            Harmony.PatchCategory(Type.Assembly, Type.Name);
 
             return true;
         }

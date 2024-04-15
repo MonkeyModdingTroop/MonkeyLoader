@@ -7,7 +7,7 @@ namespace MonkeyLoader.Events
     internal abstract class EventDispatcherBase<TSource, THandler> : IEventDispatcher
         where THandler : IPrioritizable
     {
-        protected readonly SortedCollection<THandler> handlers = new((IComparer<THandler>)PriorityHelper.Comparer);
+        protected readonly SortedCollection<THandler> handlers = new((IComparer<THandler>)Prioritizable.Comparer);
 
         private readonly Dictionary<Mod, HashSet<THandler>> _handlersByMod = new();
         private readonly EventManager _manager;

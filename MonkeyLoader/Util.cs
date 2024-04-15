@@ -56,25 +56,6 @@ namespace MonkeyLoader
             };
         }
 
-        /// <summary>
-        /// Get the executing mod by stack trace analysis.
-        /// You may skip extra frames if you know your callers are guaranteed to be NML code.
-        /// </summary>
-        /// <param name="stackTrace">A stack trace captured by the callee</param>
-        /// <returns>The executing mod, or null if none found</returns>
-        //internal static ResoniteMod? ExecutingMod(StackTrace stackTrace)
-        //{
-        //    for (int i = 0; i < stackTrace.FrameCount; i++)
-        //    {
-        //        Assembly? assembly = stackTrace.GetFrame(i)?.GetMethod()?.DeclaringType?.Assembly;
-        //        if (assembly != null && ModLoader.AssemblyLookupMap.TryGetValue(assembly, out ResoniteMod mod))
-        //        {
-        //            return mod;
-        //        }
-        //    }
-        //    return null;
-        //}
-
         //credit to delta for this method https://github.com/XDelta/
         internal static string GenerateSHA256(string filepath)
         {
@@ -84,52 +65,10 @@ namespace MonkeyLoader
             return BitConverter.ToString(hash).Replace("-", "");
         }
 
-        internal static IEnumerable<Type> GetLoadableTypes(this Assembly assembly, Predicate<Type> predicate)
-        {
-            try
-            {
-                return assembly.GetTypes().Where(type => CheckType(type, predicate));
-            }
-            catch (ReflectionTypeLoadException e)
-            {
-                return e.Types.Where(type => CheckType(type, predicate));
-            }
-        }
-
         internal static HashSet<T> ToHashSet<T>(this IEnumerable<T> source, IEqualityComparer<T>? comparer = null) => new(source, comparer);
 
-        // check a potentially unloadable type to see if it is (A) loadable and (B) satsifies a predicate without throwing an exception
-        // this does a series of increasingly aggressive checks to see if the type is unsafe to touch
-        private static bool CheckType(Type type, Predicate<Type> predicate)
-        {
-            if (type == null)
-            {
-                return false;
-            }
-
-            try
-            {
-                var name = type.Name;
-            }
-            catch (Exception e)
-            {
-                //Logger.DebugFuncInternal(() => $"Could not read the name for a type: {e}");
-                return false;
-            }
-
-            try
-            {
-                return predicate(type);
-            }
-            catch (Exception e)
-            {
-                //Logger.DebugFuncInternal(() => $"Could not load type \"{type}\": {e}");
-                return false;
-            }
-        }
-
         // shim because this doesn't exist in .NET 4.6
-        private static bool IsCompletedSuccessfully(this Task t)
-            => t.IsCompleted && !t.IsFaulted && !t.IsCanceled;
+        private static bool IsCompletedSuccessfully(this Task task)
+            => task.IsCompleted && !task.IsFaulted && !task.IsCanceled;
     }
 }

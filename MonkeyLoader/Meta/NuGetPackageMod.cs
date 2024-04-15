@@ -35,7 +35,6 @@ namespace MonkeyLoader.Meta
         private const string PrePatchersFolderName = "pre-patchers";
         private const char TagsSeparator = ' ';
 
-        private static int _assemblyCounter = 0;
         private readonly string? _title;
 
         /// <inheritdoc/>
