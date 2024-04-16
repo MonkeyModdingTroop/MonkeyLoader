@@ -39,9 +39,19 @@
     ],
     "globalMetadata": {
       "_appName": "MonkeyLoader",
-      "_appTitle": "MonkeyLoader",
+      "_appTitle": "Monkey Loader",
       "_enableSearch": true,
-      "pdf": false
+      "pdf": false,
+      "sitemap": {
+        "baseUrl": "https://monkeymoddingtroop.github.io/MonkeyLoader",
+        "priority": 0.1,
+        "changefreq": "daily",
+        "fileOptions":{
+          "**/api/**.yml": {
+          "priority": 0.3
+          }
+        }
+      }
     }
   }
 }
