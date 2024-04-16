@@ -98,7 +98,7 @@ namespace MonkeyLoader.Patching
                 Logger = new Logger(_mod.Logger, Name);
 
                 if (CanBeDisabled)
-                    _shouldBeEnabledKey = Mod.MonkeyToggles.GetToggle(this);
+                    _shouldBeEnabledKey = _mod.MonkeyToggles.GetToggle(this);
             }
         }
 
@@ -215,8 +215,8 @@ namespace MonkeyLoader.Patching
         /// Lets this monkey cleanup and shutdown.
         /// </summary>
         /// <remarks>
-        /// <i>By default:</i> Removes all <see cref="Harmony"/> patches done
-        /// using this Monkey's <see cref="MonkeyBase.Harmony">Harmony</see> instance,
+        /// <i>By default:</i> Removes all <see cref="HarmonyLib.Harmony"/> patches done
+        /// using this Monkey's <see cref="Harmony">Harmony</see> instance,
         /// if not exiting, and returns <c>true</c>.
         /// </remarks>
         /// <param name="applicationExiting">Whether the shutdown was caused by the application exiting.</param>

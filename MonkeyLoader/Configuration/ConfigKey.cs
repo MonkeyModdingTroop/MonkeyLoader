@@ -112,6 +112,8 @@ namespace MonkeyLoader.Configuration
         /// <inheritdoc/>
         public IConfigKey AsUntyped { get; }
 
+        IConfigKey IConfigKey.AsUntyped => AsUntyped;
+
         /// <inheritdoc/>
         public Type ValueType { get; } = typeof(T);
 

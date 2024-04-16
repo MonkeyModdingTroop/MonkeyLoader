@@ -145,12 +145,26 @@ namespace MonkeyLoader.Configuration
             _sections.Add(section);
 
             foreach (var key in section.Keys)
-                _configurationItemDefinitionsSelfMap.Add(key, key);
+            {
+                if (_configurationItemDefinitionsSelfMap.ContainsKey(key.AsUntyped))
+                {
+                    Logger.Error(() => $"Tried to load duplicate key id [{key.Id}] from section [{section.FullId}]!");
+                    section.Saveable = false;
+                    continue;
+                }
+                else
+                {
+                    _configurationItemDefinitionsSelfMap.Add(key, key);
+                }
+            }
 
-            if (_loadedConfig[SectionsKey]![section.Id] is not JObject sectionObject)
+            if (_loadedConfig[SectionsKey]![section.Id] is not JObject)
+            {
+                _loadedConfig[SectionsKey]![section.Id] = new JObject();
                 Logger.Warn(() => $"Section [{section.Id}] didn't appear in the loaded config - using defaults!");
-            else
-                section.Load(sectionObject, Owner.Loader.JsonSerializer);
+            }
+
+            section.Load((JObject)_loadedConfig[SectionsKey]![section.Id]!, Owner.Loader.JsonSerializer);
 
             return section;
         }

@@ -29,7 +29,7 @@ namespace MonkeyLoader.Configuration
         /// Gets the source <see cref="JObject"/> that added <see cref="DefiningConfigKey{T}"/>s will be attempted to be deserialized from.
         /// </summary>
         protected JObject Source => _source ??
-            throw new InvalidOperationException($"Tried to access {Source} before the section was loaded!");
+            throw new InvalidOperationException($"Tried to access {nameof(Source)} before the section was loaded!");
 
         /// <summary>
         /// Creates a new <see cref="DefiningConfigKey{T}"/> in this config section.

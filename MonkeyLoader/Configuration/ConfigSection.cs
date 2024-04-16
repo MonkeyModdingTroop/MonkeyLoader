@@ -187,20 +187,23 @@ namespace MonkeyLoader.Configuration
 
         internal void Load(JObject source, JsonSerializer jsonSerializer)
         {
-            Version serializedVersion;
-
-            try
+            if (source.Count > 0)
             {
-                serializedVersion = new Version((string)source[nameof(Version)]!);
-            }
-            catch (Exception ex)
-            {
-                // I know not what exceptions the JSON library will throw, but they must be contained
-                Saveable = false;
-                throw new ConfigLoadException($"Error loading version for section [{Id}]!", ex);
-            }
+                Version serializedVersion;
 
-            ValidateCompatibility(serializedVersion);
+                try
+                {
+                    serializedVersion = new Version((string)source[nameof(Version)]!);
+                }
+                catch (Exception ex)
+                {
+                    // I know not what exceptions the JSON library will throw, but they must be contained
+                    Saveable = false;
+                    throw new ConfigLoadException($"Error loading version for section [{Id}]!", ex);
+                }
+
+                ValidateCompatibility(serializedVersion);
+            }
 
             OnLoad(source, jsonSerializer);
         }
@@ -274,7 +277,7 @@ namespace MonkeyLoader.Configuration
         /// <remarks>
         /// <i>By default</i>: Deserializes all <see cref="Keys">keys</see> from the <paramref name="source"/> with the <paramref name="jsonSerializer"/>.
         /// </remarks>
-        /// <param name="source">The <see cref="JObject"/> being deserialized from.</param>
+        /// <param name="source">The <see cref="JObject"/> being deserialized from. May be empty for when file didn't have it yet.</param>
         /// <param name="jsonSerializer">The <see cref="JsonSerializer"/> to deserialize objects with.</param>
         /// <exception cref="ConfigLoadException">When the value for a key fails to deserialize.</exception>
         protected virtual void OnLoad(JObject source, JsonSerializer jsonSerializer)
