@@ -276,15 +276,6 @@ namespace MonkeyLoader.Patching
     public abstract class MonkeyBase<TMonkey> : MonkeyBase where TMonkey : MonkeyBase<TMonkey>, new()
     {
         /// <summary>
-        /// Gets whether this monkey can be disabled, that is, whether it's
-        /// permitted to set <see cref="Enabled">Enabled</see> to <c>false.</c>
-        /// </summary>
-        /// <value>
-        /// <c>true</c> if this monkey respects the <see cref="Mod.MonkeyToggles"/> config.
-        /// </value>
-        public new static bool CanBeDisabled => Instance.CanBeDisabled;
-
-        /// <summary>
         /// Gets the <see cref="Configuration.Config"/> that this patcher can use to load <see cref="ConfigSection"/>s.
         /// </summary>
         public new static Config Config => Instance.Config;
@@ -294,7 +285,7 @@ namespace MonkeyLoader.Patching
         /// </summary>
         /// <remarks>
         /// Can only be set to <c>false</c> if the monkey
-        /// supports <see cref="CanBeDisabled">being disabled</see>.
+        /// supports <see cref="MonkeyBase.CanBeDisabled">being disabled</see>.
         /// </remarks>
         public new static bool Enabled
         {
