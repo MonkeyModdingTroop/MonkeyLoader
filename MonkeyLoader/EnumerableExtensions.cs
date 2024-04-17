@@ -295,8 +295,8 @@ namespace MonkeyLoader
         /// <param name="del">The delegate to safely invoke.</param>
         /// <param name="args">The arguments for the invocation.</param>
         /// <exception cref="AggregateException">Thrown when any invoked methods threw. Contains all nested Exceptions.</exception>
-        public static void TryInvokeAll(this Delegate del, params object[] args)
-            => del.GetInvocationList().TryInvokeAll(args);
+        public static void TryInvokeAll(this Delegate? del, params object[] args)
+            => del?.GetInvocationList().TryInvokeAll(args);
 
         /// <summary>
         /// Individually calls all given <paramref name="delegates"/> in a try-catch-block,
@@ -305,14 +305,14 @@ namespace MonkeyLoader
         /// <param name="delegates">The delegates to safely invoke.</param>
         /// <param name="args">The arguments for the invocation.</param>
         /// <exception cref="AggregateException">Thrown when any invoked methods threw. Contains all nested Exceptions.</exception>
-        public static void TryInvokeAll(this IEnumerable<Delegate> delegates, params object[] args)
+        public static void TryInvokeAll(this IEnumerable<Delegate>? delegates, params object[] args)
         {
-            if (!delegates.Any())
+            if (!delegates?.Any() ?? true)
                 return;
 
             var exceptions = new List<Exception>();
 
-            foreach (var handler in delegates)
+            foreach (var handler in delegates!)
             {
                 try
                 {
@@ -338,8 +338,8 @@ namespace MonkeyLoader
         /// <param name="del">The <see cref="Task"/>-returning delegate to safely invoke.</param>
         /// <param name="args">The arguments for the invocation.</param>
         /// <exception cref="AggregateException">Thrown when any invoked methods threw. Contains all nested Exceptions.</exception>
-        public static Task TryInvokeAllAsync(this Delegate del, params object[] args)
-            => del.GetInvocationList().TryInvokeAllAsync(args);
+        public static Task TryInvokeAllAsync(this Delegate? del, params object[] args)
+            => del?.GetInvocationList().TryInvokeAllAsync(args) ?? Task.CompletedTask;
 
         /// <summary>
         /// Sequentially calls and awaits all given <paramref name="delegates"/>
@@ -349,14 +349,14 @@ namespace MonkeyLoader
         /// <param name="delegates">The <see cref="Task"/>-returning delegates to safely invoke.</param>
         /// <param name="args">The arguments for the invocation.</param>
         /// <exception cref="AggregateException">Thrown when any invoked methods threw. Contains all nested Exceptions.</exception>
-        public static async Task TryInvokeAllAsync(this IEnumerable<Delegate> delegates, params object[] args)
+        public static async Task TryInvokeAllAsync(this IEnumerable<Delegate>? delegates, params object[] args)
         {
-            if (!delegates.Any())
+            if (!delegates?.Any() ?? true)
                 return;
 
             var exceptions = new List<Exception>();
 
-            foreach (var handler in delegates)
+            foreach (var handler in delegates!)
             {
                 try
                 {

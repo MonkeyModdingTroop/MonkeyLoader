@@ -15,6 +15,20 @@ namespace Doorstop
         {
             var log = new FileLoggingHandler("MonkeyLoader/MonkeyLog.log");
 
+            foreach (var file in Directory.EnumerateFiles("./"))
+            {
+                try
+                {
+                    if (Path.GetFileName(file).StartsWith("doorstop", StringComparison.OrdinalIgnoreCase)
+                        && Path.GetExtension(file).Equals(".log", StringComparison.OrdinalIgnoreCase))
+                        File.Delete(file);
+                }
+                catch
+                {
+                    log.Warn(() => $"Failed to delete doorstop logfile - probably the active one: {file}");
+                }
+            }
+
             try
             {
                 AppDomain.CurrentDomain.UnhandledException += (sender, e) => log.Fatal(() => (e.ExceptionObject as Exception)?.Format("Unhandled Exception!") ?? "Unhandled Exception!");
