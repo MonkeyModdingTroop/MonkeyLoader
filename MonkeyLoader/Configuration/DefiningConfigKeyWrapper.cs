@@ -128,7 +128,9 @@ namespace MonkeyLoader.Configuration
             var eventArgs = new ConfigKeyChangedEventArgs<TValue>(Config, this,
                 configKeyChangedEventArgs.HadValue, configKeyChangedEventArgs.OldValue,
                 configKeyChangedEventArgs.HasValue, configKeyChangedEventArgs.NewValue,
-                configKeyChangedEventArgs.Label);
+                configKeyChangedEventArgs.Label,
+                configKeyChangedEventArgs.ChangedProperty,
+                configKeyChangedEventArgs.ChangedCollection);
 
             try
             {

@@ -6,6 +6,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Diagnostics.CodeAnalysis;
 using MonkeyLoader.Meta;
+using System.ComponentModel;
+using System.Collections.Specialized;
 
 namespace MonkeyLoader.Configuration
 {
@@ -15,12 +17,13 @@ namespace MonkeyLoader.Configuration
     /// <typeparam name="T">The type of the config item's value.</typeparam>
     public class DefiningConfigKey<T> : IDefiningConfigKey<T>
     {
+        private readonly bool _canAlwaysHaveChanges;
         private readonly Func<T>? _computeDefault;
 
         private readonly Lazy<string> _fullId;
         private readonly Predicate<T?>? _isValueValid;
-
         private ConfigSection? _configSection;
+        private bool _hasChanges;
         private ConfigKeyChangedEventHandler? _untypedChanged;
         private T? _value;
 
@@ -37,7 +40,11 @@ namespace MonkeyLoader.Configuration
         public string FullId => _fullId.Value;
 
         /// <inheritdoc/>
-        public bool HasChanges { get; set; }
+        public bool HasChanges
+        {
+            get => _canAlwaysHaveChanges || _hasChanges;
+            set => _hasChanges = value;
+        }
 
         /// <inheritdoc/>
         [MemberNotNullWhen(true, nameof(Description))]
@@ -79,6 +86,11 @@ namespace MonkeyLoader.Configuration
         /// <summary>
         /// Creates a new instance of the <see cref="DefiningConfigKey{T}"/> class with the given parameters.
         /// </summary>
+        /// <remarks>
+        /// The <see cref="Changed">Changed</see> event will be fired whenever the equality comparison of the value of this key changes.<br/>
+        /// If the value type implements <see cref="INotifyPropertyChanged"/> or <see cref="INotifyCollectionChanged"/>,
+        /// those events will be passed through as well.
+        /// </remarks>
         /// <param name="id">The mod-unique identifier of this config item. Must not be null or whitespace.</param>
         /// <param name="description">The human-readable description of this config item.</param>
         /// <param name="computeDefault">The function that computes a default value for this key. Otherwise <c>default(<typeparamref name="T"/>)</c> will be used.</param>
@@ -97,7 +109,10 @@ namespace MonkeyLoader.Configuration
 
             _computeDefault = computeDefault;
             InternalAccessOnly = internalAccessOnly;
+
             _isValueValid = valueValidator;
+            _canAlwaysHaveChanges = !ValueType.IsValueType
+                && !(typeof(INotifyPropertyChanged).IsAssignableFrom(ValueType) || typeof(INotifyCollectionChanged).IsAssignableFrom(ValueType));
 
             _fullId = new(() => $"{Section.FullId}.{Id}");
 
@@ -256,14 +271,35 @@ namespace MonkeyLoader.Configuration
         /// <param name="hadValue">Whether the old value existed.</param>
         /// <param name="oldValue">The old value.</param>
         /// <param name="eventLabel">The custom label that may be set by whoever changed the config.</param>
-        protected virtual void OnChanged(bool hadValue, T? oldValue, string? eventLabel)
+        /// <param name="changedProperty">The name of the changed property on the value.</param>
+        /// <param name="changedCollection">The collection change arguments for the value.</param>
+        protected virtual void OnChanged(bool hadValue, T? oldValue, string? eventLabel, string? changedProperty = null, NotifyCollectionChangedEventArgs? changedCollection = null)
         {
+            // Add notify changed integration
+            if (hadValue)
+            {
+                if (oldValue is INotifyPropertyChanged oldPropertyChanged)
+                    oldPropertyChanged.PropertyChanged -= ValuePropertyChanged;
+
+                if (oldValue is INotifyCollectionChanged oldCollectionChanged)
+                    oldCollectionChanged.CollectionChanged -= ValueCollectionChanged;
+            }
+
+            if (HasValue)
+            {
+                if (_value is INotifyPropertyChanged newPropertyChanged)
+                    newPropertyChanged.PropertyChanged += ValuePropertyChanged;
+
+                if (_value is INotifyCollectionChanged newCollectionChanged)
+                    newCollectionChanged.CollectionChanged += ValueCollectionChanged;
+            }
+
             // Don't fire event if value didn't change
             if (ReferenceEquals(oldValue, _value) || (oldValue is not null && _value is not null && _value.Equals(oldValue)))
                 return;
 
             HasChanges = true;
-            var eventArgs = new ConfigKeyChangedEventArgs<T>(Config, this, hadValue, oldValue, HasValue, _value, eventLabel);
+            var eventArgs = new ConfigKeyChangedEventArgs<T>(Config, this, hadValue, oldValue, HasValue, _value, eventLabel, changedProperty, changedCollection);
 
             try
             {
@@ -288,6 +324,12 @@ namespace MonkeyLoader.Configuration
 
         private bool Validate(object? value)
             => (value is T || (value is null && Util.CanBeNull(ValueType))) && Validate((T)value!);
+
+        private void ValueCollectionChanged(object sender, NotifyCollectionChangedEventArgs eventArgs)
+            => OnChanged(true, _value, ConfigKey.CollectionChangedEventLabel, null, eventArgs);
+
+        private void ValuePropertyChanged(object sender, PropertyChangedEventArgs eventArgs)
+            => OnChanged(true, _value, ConfigKey.PropertyChangedEventLabel, eventArgs.PropertyName);
 
         /// <inheritdoc/>
         public event ConfigKeyChangedEventHandler<T>? Changed;

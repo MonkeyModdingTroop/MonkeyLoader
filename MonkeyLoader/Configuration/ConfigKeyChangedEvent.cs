@@ -1,5 +1,6 @@
-// Adapted from the NeosModLoader project.
-
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System;
 using System.Diagnostics.CodeAnalysis;
 
 namespace MonkeyLoader.Configuration
@@ -26,6 +27,12 @@ namespace MonkeyLoader.Configuration
     public sealed class ConfigKeyChangedEventArgs<T> : IConfigKeyChangedEventArgs
     {
         /// <inheritdoc/>
+        public NotifyCollectionChangedEventArgs? ChangedCollection { get; }
+
+        /// <inheritdoc/>
+        public string? ChangedProperty { get; }
+
+        /// <inheritdoc/>
         public Config Config { get; }
 
         /// <inheritdoc/>
@@ -37,6 +44,12 @@ namespace MonkeyLoader.Configuration
 
         /// <inheritdoc/>
         public bool HasValue { get; }
+
+        /// <inheritdoc/>
+        public bool IsChangedCollection => ChangedCollection is not null;
+
+        /// <inheritdoc/>
+        public bool IsChangedProperty => ChangedProperty is not null;
 
         /// <summary>
         /// Gets the configuration item who's value changed.
@@ -74,15 +87,24 @@ namespace MonkeyLoader.Configuration
         /// <param name="hasValue">Whether the config item has a value now.</param>
         /// <param name="newValue">The optional new value.</param>
         /// <param name="label">A custom label assigned to the change.</param>
-        public ConfigKeyChangedEventArgs(Config config, IDefiningConfigKey<T> key, bool hadValue, T? oldValue, bool hasValue, T? newValue, string? label)
+        /// <param name="changedProperty">The name of the changed property on the value.</param>
+        /// <param name="changedCollection">The collection change arguments for the value.</param>
+        public ConfigKeyChangedEventArgs(Config config, IDefiningConfigKey<T> key,
+            bool hadValue, T? oldValue, bool hasValue, T? newValue, string? label,
+            string? changedProperty, NotifyCollectionChangedEventArgs? changedCollection)
         {
             Config = config;
             Key = key;
+
             OldValue = oldValue;
             HadValue = hadValue;
             NewValue = newValue;
             HasValue = hasValue;
+
             Label = label;
+
+            ChangedProperty = changedProperty;
+            ChangedCollection = changedCollection;
         }
     }
 
@@ -91,6 +113,20 @@ namespace MonkeyLoader.Configuration
     /// </summary>
     public interface IConfigKeyChangedEventArgs
     {
+        /// <summary>
+        /// Gets the changed collection event arguments,
+        /// if this configuration item's changed value originated
+        /// from an <see cref="INotifyCollectionChanged.CollectionChanged"/> event.
+        /// </summary>
+        public NotifyCollectionChangedEventArgs? ChangedCollection { get; }
+
+        /// <summary>
+        /// Gets the name of the property that changed,
+        /// if this configuration item's changed value originated
+        /// from an <see cref="INotifyPropertyChanged.PropertyChanged"/> event.
+        /// </summary>
+        public string? ChangedProperty { get; }
+
         /// <summary>
         /// Gets the <see cref="Configuration.Config"/> in which the change occured.
         /// </summary>
@@ -103,8 +139,10 @@ namespace MonkeyLoader.Configuration
 
         /// <summary>
         /// Gets whether a custom label was set by whoever changed the configuration.
-        /// <see cref="Label">Label</see> won't be <c>null</c>, if this is <c>true</c>.
         /// </summary>
+        /// <value>
+        /// <c>true</c> if <see cref="Label">Label</see> is not <c>null</c>; otherwise, <c>false</c>.
+        /// </value>
         [MemberNotNullWhen(true, nameof(Label))]
         public bool HasLabel { get; }
 
@@ -112,6 +150,26 @@ namespace MonkeyLoader.Configuration
         /// Gets whether the new value exists.
         /// </summary>
         public bool HasValue { get; }
+
+        /// <summary>
+        /// Gets whether this configuration item's changed value originated
+        /// from an <see cref="INotifyCollectionChanged.CollectionChanged"/> event.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if <see cref="ChangedCollection">ChangedCollection</see> is not <c>null</c>; otherwise, <c>false</c>.
+        /// </value>
+        [MemberNotNullWhen(true, nameof(ChangedCollection))]
+        public bool IsChangedCollection { get; }
+
+        /// <summary>
+        /// Gets whether this configuration item's changed value originated
+        /// from an <see cref="INotifyPropertyChanged.PropertyChanged"/> event.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if <see cref="ChangedProperty">ChangedProperty</see> is not <c>null</c>; otherwise, <c>false</c>.
+        /// </value>
+        [MemberNotNullWhen(true, nameof(ChangedProperty))]
+        public bool IsChangedProperty { get; }
 
         /// <summary>
         /// Gets the configuration item who's value changed.

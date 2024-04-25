@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.ComponentModel;
 
 namespace MonkeyLoader.Configuration
 {
@@ -9,6 +11,18 @@ namespace MonkeyLoader.Configuration
     /// </summary>
     public class ConfigKey : IConfigKey
     {
+        /// <summary>
+        /// The event label used when a config item's value triggered
+        /// an <see cref="INotifyCollectionChanged.CollectionChanged"/> event.
+        /// </summary>
+        public const string CollectionChangedEventLabel = "CollectionChanged";
+
+        /// <summary>
+        /// The event label used when a config item's value triggered
+        /// an <see cref="INotifyPropertyChanged.PropertyChanged"/> event.
+        /// </summary>
+        public const string PropertyChangedEventLabel = "PropertyChanged";
+
         /// <summary>
         /// The event label used when a config item's value is set from getting the computed default.
         /// </summary>
