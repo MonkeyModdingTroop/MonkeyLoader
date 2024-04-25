@@ -46,9 +46,11 @@ namespace MonkeyLoader.Configuration
         public bool HasValue { get; }
 
         /// <inheritdoc/>
+        [MemberNotNullWhen(true, nameof(ChangedCollection))]
         public bool IsChangedCollection => ChangedCollection is not null;
 
         /// <inheritdoc/>
+        [MemberNotNullWhen(true, nameof(ChangedProperty))]
         public bool IsChangedProperty => ChangedProperty is not null;
 
         /// <summary>
