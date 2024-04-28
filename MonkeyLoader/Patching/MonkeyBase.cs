@@ -126,6 +126,9 @@ namespace MonkeyLoader.Patching
         /// <inheritdoc/>
         public Type Type { get; }
 
+        /// <summary>
+        /// Initializes the monkey base.
+        /// </summary>
         internal MonkeyBase()
         {
             Type = GetType();

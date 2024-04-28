@@ -10,7 +10,6 @@ using NuGet.Versioning;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Tracing;
 using System.IO;
 using System.Linq;
 using Zio;
