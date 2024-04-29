@@ -27,7 +27,8 @@
   
   <Target Name="AddSymbolsToPackage">
     <ItemGroup>
-      <TfmSpecificPackageFile Include="$(OutDir)$(AssemblyName).pdb" PackagePath="lib/$(TargetFramework)/" />
+      <TfmSpecificPackageFile Include="$(OutDir)$(AssemblyName).pdb"
+        PackagePath="lib/$(TargetFramework)/" />
     </ItemGroup>
   </Target>
   
@@ -58,23 +59,49 @@
   </Target>
 
   <ItemGroup>
-    <PackageReference Include="Lib.Harmony.Thin" Version="2.3.3" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="NuGet.Packaging" Version="6.9.1" />
-    <PackageReference Include="NuGet.Protocol" Version="6.9.1" />
+    <PackageReference Include="Lib.Harmony.Thin" Version="2.3.3">
+      <Private>True</Private>
+    </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3">
+      <Private>False</Private>
+    </PackageReference>
+    <PackageReference Include="NuGet.Packaging" Version="6.9.1">
+      <Private>True</Private>
+    </PackageReference>
+    <PackageReference Include="NuGet.Protocol" Version="6.9.1">
+      <Private>True</Private>
+    </PackageReference>
     <PackageReference Include="PolySharp" Version="1.14.1">
+      <Private>False</Private>
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-    <PackageReference Include="Zio" Version="0.17.0" ExcludeAssets="compile; build; runtime; native" GeneratePathProperty="true" />
+    <PackageReference Include="System.ValueTuple" Version="4.5.0">
+      <Private>True</Private>
+    </PackageReference>
+    <PackageReference Include="Zio" Version="0.17.0" ExcludeAssets="compile; build; runtime; native"
+      GeneratePathProperty="true">
+      <Private>True</Private>
+    </PackageReference>
     <!--<ProjectReference Include="..\MonkeyLoader.CodeGenerators\MonkeyLoader.CodeGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />-->
   </ItemGroup>
 
   <ItemGroup>
     <Reference Include="Zio">
       <HintPath>$(PkgZio)\lib\netstandard2.0\Zio.dll</HintPath>
+      <Private>True</Private>
     </Reference>
   </ItemGroup>
+
+  <!-- Remove `System.*` DLLs from the output folder -->
+  <Target Name="ClearReferenceCopyLocalPaths" AfterTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <RemoveRefCopy Include="@(ReferenceCopyLocalPaths)"
+        Condition="$([System.String]::Copy(&quot;%(ReferenceCopyLocalPaths.Filename)&quot;).StartsWith('System'))"
+      />
+      <ReferenceCopyLocalPaths Remove="@(RemoveRefCopy)" />
+    </ItemGroup>
+  </Target>
+
 
 </Project>
