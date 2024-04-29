@@ -40,6 +40,7 @@
     "globalMetadata": {
       "_appName": "MonkeyLoader",
       "_appTitle": "MonkeyLoader",
+      "_appFaviconPath": "monkey.png",
       "_enableSearch": true,
       "pdf": false
     },
