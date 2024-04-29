@@ -58,6 +58,28 @@
       Importance="high" />
   </Target>
 
+  <Target Name="CreateZip" AfterTargets="Build">
+    <PropertyGroup>
+      <ZipCreationFolder>$(BaseOutputPath)zip-creation</ZipCreationFolder>
+    </PropertyGroup>
+    <ItemGroup>
+      <ZipSourceFiles Include="$(OutputPath)\**\*.*" />
+      <ZipVendorFiles Include="$(MSBuildProjectDirectory)/vendor/**/*.*" />
+    </ItemGroup>
+
+    <RemoveDir Directories="$(ZipCreationFolder)" />
+    <MakeDir
+      Directories="$(ZipCreationFolder);$(ZipCreationFolder)/MonkeyLoader;$(ZipCreationFolder)/MonkeyLoader/Configs;$(ZipCreationFolder)/MonkeyLoader/GamePacks;$(ZipCreationFolder)/MonkeyLoader/Libs;$(ZipCreationFolder)/MonkeyLoader/Mods;$(ZipCreationFolder)/MonkeyLoader/PatchedAssemblies" />
+    <Copy SourceFiles="@(ZipSourceFiles)"
+      DestinationFolder="$(ZipCreationFolder)/MonkeyLoader/" />
+    <Copy SourceFiles="@(ZipVendorFiles)"
+      DestinationFolder="$(ZipCreationFolder)/%(RecursiveDir)" />
+    <ZipDirectory
+      SourceDirectory="$(ZipCreationFolder)"
+      Overwrite="true"
+      DestinationFile="$(BaseOutputPath)\MonkeyLoader-v$(Version)-$(Configuration).zip" />
+  </Target>
+
   <ItemGroup>
     <PackageReference Include="Lib.Harmony.Thin" Version="2.3.3">
       <Private>True</Private>
