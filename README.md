@@ -1,5 +1,7 @@
 # MonkeyLoader
 
+<img align="right" width="128" height="128" src="./Docs/monkey.png"/>
+
 *A convenience and extendability focused mod loader using NuGet packages.*
 
 Online Documentation is [here](https://monkeymoddingtroop.github.io/MonkeyLoader/).
