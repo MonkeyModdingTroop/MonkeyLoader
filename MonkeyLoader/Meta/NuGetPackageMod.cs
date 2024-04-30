@@ -108,11 +108,15 @@ namespace MonkeyLoader.Meta
             tags.AddRange(nuspecReader.GetTags().Split(new[] { TagsSeparator }, StringSplitOptions.RemoveEmptyEntries));
             authors.AddRange(nuspecReader.GetAuthors().Split(new[] { AuthorsSeparator }, StringSplitOptions.RemoveEmptyEntries).Select(name => name.Trim()));
 
-            var iconPath = nuspecReader.GetIcon();
-            if (FileSystem.FileExists(iconPath))
-                IconPath = new UPath(iconPath).ToAbsolute();
-            else if (!string.IsNullOrWhiteSpace(iconPath))
-                Logger.Warn(() => $"Icon Path [{iconPath}] is set but the file doesn't exist for mod: {location}");
+            if (!string.IsNullOrWhiteSpace(nuspecReader.GetIcon()))
+            {
+                var iconPath = new UPath(nuspecReader.GetIcon()).ToAbsolute();
+
+                if (FileSystem.FileExists(iconPath))
+                    IconPath = iconPath;
+                else
+                    Logger.Warn(() => $"Icon Path [{iconPath}] is set but the file doesn't exist for mod: {location}");
+            }
 
             var iconUrl = nuspecReader.GetIconUrl();
             if (Uri.TryCreate(iconUrl, UriKind.Absolute, out var iconUri))
