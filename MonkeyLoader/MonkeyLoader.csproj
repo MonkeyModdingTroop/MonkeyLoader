@@ -17,6 +17,8 @@
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/MonkeyModdingTroop/MonkeyLoader</PackageProjectUrl>
     <RepositoryUrl>https://github.com/MonkeyModdingTroop/MonkeyLoader.git</RepositoryUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/MonkeyModdingTroop/MonkeyLoader/master/Icon.png</PackageIconUrl>
+    <PackageIconUrl>/Icon.png</PackageIconUrl>
     <RepositoryType>git</RepositoryType>
     <PackageTags>mod; mods; modding; loader; harmony; unity; game; games; mono; config; configuration; nuget; logging; monkeyloader</PackageTags>
     <IncludeSymbols>False</IncludeSymbols>
@@ -43,6 +45,7 @@
 
   <ItemGroup>
     <None Include="..\README.md" Pack="True" PackagePath="" />
+    <None Include="..\Icon.png" Pack="true" PackagePath="" />
     <None Include="Configuration\ModLoaderConfiguration.cs" />
   </ItemGroup>
 

@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using static System.Collections.Specialized.BitVector32;
 
 namespace MonkeyLoader.Configuration
 {
@@ -144,19 +145,7 @@ namespace MonkeyLoader.Configuration
             section.Config = this;
             _sections.Add(section);
 
-            foreach (var key in section.Keys)
-            {
-                if (_configurationItemDefinitionsSelfMap.ContainsKey(key.AsUntyped))
-                {
-                    Logger.Error(() => $"Tried to load duplicate key id [{key.Id}] from section [{section.FullId}]!");
-                    section.Saveable = false;
-                    continue;
-                }
-                else
-                {
-                    _configurationItemDefinitionsSelfMap.Add(key, key);
-                }
-            }
+            section.InitializeKeys();
 
             if (_loadedConfig[SectionsKey]![section.Id] is not JObject)
             {
@@ -361,7 +350,17 @@ namespace MonkeyLoader.Configuration
         }
 
         internal void RegisterConfigKey(IDefiningConfigKey definingKey)
-            => _configurationItemDefinitionsSelfMap.Add(definingKey, definingKey);
+        {
+            if (_configurationItemDefinitionsSelfMap.ContainsKey(definingKey.AsUntyped))
+            {
+                Logger.Error(() => $"Tried to load duplicate key id [{definingKey.Id}] from section [{definingKey.FullId}]!");
+                definingKey.Section.Saveable = false;
+            }
+            else
+            {
+                _configurationItemDefinitionsSelfMap.Add(definingKey, definingKey);
+            }
+        }
 
         private JObject LoadConfig()
         {

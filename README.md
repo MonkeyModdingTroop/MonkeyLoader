@@ -1,6 +1,6 @@
 # MonkeyLoader
 
-<img align="right" width="128" height="128" src="./Docs/monkey.png"/>
+<img align="right" width="128" height="128" src="./Icon.png"/>
 
 *A convenience and extendability focused mod loader using NuGet packages.*
 

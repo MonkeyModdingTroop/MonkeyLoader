@@ -30,6 +30,13 @@
         "files": [
           "images/**"
         ]
+      },
+      {
+        "src": "./Docs/favicon",
+        "dest": "./",
+        "files": [
+          "**"
+        ]
       }
     ],
     "output": "./Docs/_site",
