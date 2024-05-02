@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using NuGet.Packaging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -23,7 +24,7 @@ namespace MonkeyLoader.Configuration
         /// <summary>
         /// Stores the <see cref="IDefiningConfigKey"/>s tracked by this section.
         /// </summary>
-        protected readonly HashSet<IDefiningConfigKey> keys;
+        protected readonly HashSet<IDefiningConfigKey> keys = new();
 
         private readonly Lazy<string> _fullId;
 
@@ -98,11 +99,6 @@ namespace MonkeyLoader.Configuration
         /// </summary>
         protected ConfigSection()
         {
-            keys = new(GetConfigKeys());
-
-            foreach (var key in keys)
-                key.Section = this;
-
             _fullId = new(() => $"{Config.Owner.Id}.{Id}");
         }
 
@@ -184,6 +180,18 @@ namespace MonkeyLoader.Configuration
         /// <returns><c>true</c> if this config section contains the matching item; otherwise, <c>false</c>.</returns>
         public bool TryGetDefinedKey(IConfigKey templateKey, [NotNullWhen(true)] out IDefiningConfigKey? definingKey)
             => Config.TryGetDefiningKey(templateKey.AsUntyped, out definingKey) && keys.Contains(definingKey);
+
+        internal void InitializeKeys()
+        {
+            var keysToAdd = GetConfigKeys().ToArray();
+            keys.AddRange(keysToAdd);
+
+            foreach (var key in keysToAdd)
+                key.Section = this;
+
+            foreach (var key in keysToAdd)
+                Config.RegisterConfigKey(key);
+        }
 
         internal void Load(JObject source, JsonSerializer jsonSerializer)
         {
