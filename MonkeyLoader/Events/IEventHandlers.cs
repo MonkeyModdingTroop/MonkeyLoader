@@ -11,7 +11,7 @@ namespace MonkeyLoader.Events
     /// </summary>
     /// <typeparam name="TEvent">The type of cancelable events handled.</typeparam>
     public interface ICancelableEventHandler<in TEvent> : IPrioritizable
-        where TEvent : SyncEvent, ICancelableEvent
+        where TEvent : CancelableSyncEvent
     {
         /// <summary>
         /// Gets whether this handler should be skipped for events
@@ -23,7 +23,7 @@ namespace MonkeyLoader.Events
         /// Handles the given cancelable synchronous event based on its data.
         /// </summary>
         /// <remarks>
-        /// When this method sets <c><paramref name="eventData"/>.<see cref="ICancelableEvent.Canceled">Canceled</see>
+        /// When this method sets <c><paramref name="eventData"/>.<see cref="CancelableSyncEvent.Canceled">Canceled</see>
         /// = true</c>, the default action should be prevented from happening and further event handlers may be skipped.
         /// </remarks>
         /// <param name="eventData">An object containing all the relevant information for the cancelable event.</param>

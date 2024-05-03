@@ -8,7 +8,7 @@ namespace MonkeyLoader.Events
 {
     internal sealed class CancelableEventDispatcher<TEvent>
             : EventDispatcherBase<ICancelableEventSource<TEvent>, ICancelableEventHandler<TEvent>>
-        where TEvent : SyncEvent, ICancelableEvent
+        where TEvent : CancelableSyncEvent
     {
         public CancelableEventDispatcher(EventManager manager) : base(manager)
         { }

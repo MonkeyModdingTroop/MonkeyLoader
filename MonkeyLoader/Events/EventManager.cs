@@ -41,7 +41,7 @@ namespace MonkeyLoader.Events
         }
 
         internal bool RegisterCancelableAsyncEventHandler<TEvent>(Mod mod, ICancelableAsyncEventHandler<TEvent> cancelableAsyncEventHandler)
-            where TEvent : AsyncEvent, ICancelableEvent
+            where TEvent : CancelableAsyncEvent
         {
             ValidateLoader(mod);
 
@@ -49,7 +49,7 @@ namespace MonkeyLoader.Events
         }
 
         internal bool RegisterCancelableSyncEventHandler<TEvent>(Mod mod, ICancelableEventHandler<TEvent> cancelableEventHandler)
-            where TEvent : SyncEvent, ICancelableEvent
+            where TEvent : CancelableSyncEvent
         {
             ValidateLoader(mod);
 
@@ -65,7 +65,7 @@ namespace MonkeyLoader.Events
         }
 
         internal bool RegisterEventSource<TEvent>(Mod mod, ICancelableAsyncEventSource<TEvent> cancelableEventSource)
-            where TEvent : AsyncEvent, ICancelableEvent
+            where TEvent : CancelableAsyncEvent
         {
             ValidateLoader(mod);
 
@@ -73,7 +73,7 @@ namespace MonkeyLoader.Events
         }
 
         internal bool RegisterEventSource<TEvent>(Mod mod, ICancelableEventSource<TEvent> cancelableEventSource)
-            where TEvent : SyncEvent, ICancelableEvent
+            where TEvent : CancelableSyncEvent
         {
             ValidateLoader(mod);
 
@@ -108,7 +108,7 @@ namespace MonkeyLoader.Events
         }
 
         internal bool UnregisterCancelableAsyncEventHandler<TEvent>(Mod mod, ICancelableAsyncEventHandler<TEvent> cancelableAsyncEventHandler)
-            where TEvent : AsyncEvent, ICancelableEvent
+            where TEvent : CancelableAsyncEvent
         {
             ValidateLoader(mod);
 
@@ -119,7 +119,7 @@ namespace MonkeyLoader.Events
         }
 
         internal bool UnregisterCancelableSyncEventHandler<TEvent>(Mod mod, ICancelableEventHandler<TEvent> cancelableEventHandler)
-            where TEvent : SyncEvent, ICancelableEvent
+            where TEvent : CancelableSyncEvent
         {
             ValidateLoader(mod);
 
@@ -138,7 +138,7 @@ namespace MonkeyLoader.Events
         }
 
         internal bool UnregisterEventSource<TEvent>(Mod mod, ICancelableAsyncEventSource<TEvent> cancelableEventSource)
-            where TEvent : AsyncEvent, ICancelableEvent
+            where TEvent : CancelableAsyncEvent
         {
             ValidateLoader(mod);
 
@@ -146,7 +146,7 @@ namespace MonkeyLoader.Events
         }
 
         internal bool UnregisterEventSource<TEvent>(Mod mod, ICancelableEventSource<TEvent> cancelableEventSource)
-            where TEvent : SyncEvent, ICancelableEvent
+            where TEvent : CancelableSyncEvent
         {
             ValidateLoader(mod);
 
@@ -184,10 +184,10 @@ namespace MonkeyLoader.Events
             where TEvent : AsyncEvent => new(this);
 
         private CancelableAsyncEventDispatcher<TEvent> CreateCancelableAsyncDispatcher<TEvent>()
-            where TEvent : AsyncEvent, ICancelableEvent => new(this);
+            where TEvent : CancelableAsyncEvent => new(this);
 
         private CancelableEventDispatcher<TEvent> CreateCancelableDispatcher<TEvent>()
-            where TEvent : SyncEvent, ICancelableEvent => new(this);
+            where TEvent : CancelableSyncEvent => new(this);
 
         private EventDispatchers<TEvent> CreateDispatcher<TEvent>()
             where TEvent : SyncEvent => new(this);
@@ -211,13 +211,13 @@ namespace MonkeyLoader.Events
         }
 
         private bool RegisterCancelableAsyncEventSource<TEvent>(Mod mod, ICancelableAsyncEventSource<TEvent> cancelableEventSource)
-            where TEvent : AsyncEvent, ICancelableEvent
+            where TEvent : CancelableAsyncEvent
         {
             return _eventDispatchers.GetOrCreateValue(CreateCancelableAsyncDispatcher<TEvent>).AddSource(mod, cancelableEventSource);
         }
 
         private bool RegisterCancelableSyncEventSource<TEvent>(Mod mod, ICancelableEventSource<TEvent> cancelableEventSource)
-            where TEvent : SyncEvent, ICancelableEvent
+            where TEvent : CancelableSyncEvent
         {
             return _eventDispatchers.GetOrCreateValue(CreateCancelableDispatcher<TEvent>).AddSource(mod, cancelableEventSource);
         }
@@ -238,7 +238,7 @@ namespace MonkeyLoader.Events
         }
 
         private bool UnregisterCancelableAsyncEventSource<TEvent>(Mod mod, ICancelableAsyncEventSource<TEvent> cancelableEventSource)
-            where TEvent : AsyncEvent, ICancelableEvent
+            where TEvent : CancelableAsyncEvent
         {
             if (_eventDispatchers.TryGetValue<CancelableAsyncEventDispatcher<TEvent>>(out var cancelableEventDispatcher))
                 return cancelableEventDispatcher!.RemoveSource(mod, cancelableEventSource);
@@ -247,7 +247,7 @@ namespace MonkeyLoader.Events
         }
 
         private bool UnregisterCancelableSyncEventSource<TEvent>(Mod mod, ICancelableEventSource<TEvent> cancelableEventSource)
-            where TEvent : SyncEvent, ICancelableEvent
+            where TEvent : CancelableSyncEvent
         {
             if (_eventDispatchers.TryGetValue<CancelableEventDispatcher<TEvent>>(out var cancelableEventDispatcher))
                 return cancelableEventDispatcher!.RemoveSource(mod, cancelableEventSource);

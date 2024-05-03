@@ -37,7 +37,7 @@ namespace MonkeyLoader.Events
 
     internal sealed class CancelableAsyncEventDispatcher<TEvent>
             : EventDispatcherBase<ICancelableAsyncEventSource<TEvent>, ICancelableAsyncEventHandler<TEvent>>
-        where TEvent : AsyncEvent, ICancelableEvent
+        where TEvent : CancelableAsyncEvent
     {
         public CancelableAsyncEventDispatcher(EventManager manager) : base(manager)
         { }

@@ -14,27 +14,40 @@ namespace MonkeyLoader.Events
     public abstract class Event
     {
         private static readonly Type _asyncEventType = typeof(AsyncEvent);
-        private static readonly Type _cancelableType = typeof(ICancelableEvent);
+
+        private static readonly HashSet<Type> _baseTypes;
+
+        private static readonly Type _cancelableAsyncEventType = typeof(CancelableAsyncEvent);
+        private static readonly Type _cancelableEventType = typeof(ICancelableEvent);
+        private static readonly Type _cancelableSyncEventType = typeof(CancelableSyncEvent);
         private static readonly Type _eventType = typeof(Event);
-        private static readonly Type _objectType = typeof(object);
         private static readonly Type _syncEventType = typeof(SyncEvent);
+
+        static Event()
+        {
+            _baseTypes = new()
+            {
+                typeof(object), _eventType,
+                _syncEventType, _cancelableSyncEventType,
+                _asyncEventType, _cancelableAsyncEventType
+            };
+        }
 
         internal Event()
         { }
 
         public static IEnumerable<Type> GetDispatchableEventTypes(Type eventType)
         {
-            if (!IsEvent(eventType) || eventType.BaseType == _eventType || eventType == _eventType || eventType == _objectType)
+            if (!IsEvent(eventType) || _baseTypes.Contains(eventType))
                 yield break;
 
             yield return eventType;
 
-            var isCancelable = IsCancelable(eventType);
             eventType = eventType.BaseType;
 
-            while (eventType.BaseType != _eventType)
+            while (!_baseTypes.Contains(eventType))
             {
-                if (eventType.GetCustomAttribute<DispatchableBaseEventAttribute>() is not null && IsCancelable(eventType) == isCancelable)
+                if (eventType.GetCustomAttribute<DispatchableBaseEventAttribute>() is not null)
                     yield return eventType;
 
                 eventType = eventType.BaseType;
@@ -45,7 +58,13 @@ namespace MonkeyLoader.Events
             => _asyncEventType.IsAssignableFrom(eventType);
 
         public static bool IsCancelable(Type eventType)
-            => _cancelableType.IsAssignableFrom(eventType);
+            => _cancelableEventType.IsAssignableFrom(eventType);
+
+        public static bool IsCancelableAsyncEvent(Type eventType)
+            => _cancelableAsyncEventType.IsAssignableFrom(eventType);
+
+        public static bool IsCancelableSyncEvent(Type eventType)
+            => _cancelableSyncEventType.IsAssignableFrom(eventType);
 
         public static bool IsEvent(Type eventType)
             => _eventType.IsAssignableFrom(eventType);
