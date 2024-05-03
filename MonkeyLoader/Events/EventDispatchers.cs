@@ -1,5 +1,4 @@
 ﻿using MonkeyLoader.Logging;
-using MonkeyLoader.Meta;
 using System;
 using System.Linq;
 using System.Text;
@@ -9,7 +8,7 @@ namespace MonkeyLoader.Events
 {
     internal sealed class CancelableEventDispatcher<TEvent>
             : EventDispatcherBase<ICancelableEventSource<TEvent>, ICancelableEventHandler<TEvent>>
-        where TEvent : class, ICancelableEvent
+        where TEvent : SyncEvent, ICancelableEvent
     {
         public CancelableEventDispatcher(EventManager manager) : base(manager)
         { }
@@ -44,7 +43,7 @@ namespace MonkeyLoader.Events
 
     internal sealed class EventDispatchers<TEvent>
             : EventDispatcherBase<IEventSource<TEvent>, IEventHandler<TEvent>>
-        where TEvent : class
+        where TEvent : SyncEvent
     {
         public EventDispatchers(EventManager manager) : base(manager)
         { }

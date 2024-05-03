@@ -8,7 +8,7 @@ namespace MonkeyLoader.Events
 {
     internal sealed class AsyncEventDispatcher<TEvent>
             : EventDispatcherBase<IAsyncEventSource<TEvent>, IAsyncEventHandler<TEvent>>
-        where TEvent : class, IAsyncEvent
+        where TEvent : AsyncEvent
     {
         public AsyncEventDispatcher(EventManager manager) : base(manager)
         { }
@@ -37,7 +37,7 @@ namespace MonkeyLoader.Events
 
     internal sealed class CancelableAsyncEventDispatcher<TEvent>
             : EventDispatcherBase<ICancelableAsyncEventSource<TEvent>, ICancelableAsyncEventHandler<TEvent>>
-        where TEvent : class, ICancelableEvent, IAsyncEvent
+        where TEvent : AsyncEvent, ICancelableEvent
     {
         public CancelableAsyncEventDispatcher(EventManager manager) : base(manager)
         { }
