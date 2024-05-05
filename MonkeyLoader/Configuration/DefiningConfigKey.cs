@@ -8,6 +8,7 @@ using System.Diagnostics.CodeAnalysis;
 using MonkeyLoader.Meta;
 using System.ComponentModel;
 using System.Collections.Specialized;
+using System.Collections;
 
 namespace MonkeyLoader.Configuration
 {
@@ -15,13 +16,11 @@ namespace MonkeyLoader.Configuration
     /// Represents the typed definition for a config item.
     /// </summary>
     /// <typeparam name="T">The type of the config item's value.</typeparam>
-    public class DefiningConfigKey<T> : IDefiningConfigKey<T>
+    public sealed class DefiningConfigKey<T> : IDefiningConfigKey<T>, IEnumerable<IConfigKeyComponent<DefiningConfigKey<T>>>
     {
         private readonly bool _canAlwaysHaveChanges;
-        private readonly Func<T>? _computeDefault;
-
+        private readonly List<IConfigKeyComponent<DefiningConfigKey<T>>> _components = new();
         private readonly Lazy<string> _fullId;
-        private readonly Predicate<T?>? _isValueValid;
         private ConfigSection? _configSection;
         private bool _hasChanges;
         private ConfigKeyChangedEventHandler? _untypedChanged;
@@ -81,7 +80,7 @@ namespace MonkeyLoader.Configuration
         /// <summary>
         /// Gets the logger of the config this item belongs to if it's a <see cref="IsDefiningKey">defining key</see>.
         /// </summary>
-        protected Logger Logger => Section.Config.Logger;
+        private Logger Logger => Section.Config.Logger;
 
         /// <summary>
         /// Creates a new instance of the <see cref="DefiningConfigKey{T}"/> class with the given parameters.
@@ -104,13 +103,18 @@ namespace MonkeyLoader.Configuration
 
             AsUntyped = new ConfigKey(id);
 
+            if (description is not null)
+                Add(new ConfigKeyDescription(description));
+            if (computeDefault is not null)
+                Add(new ConfigKeyDefault<T>(computeDefault));
+            if (valueValidator is not null)
+                Add(new ConfigKeyValidator<T>(valueValidator));
+
             Description = description;
             HasDescription = !string.IsNullOrWhiteSpace(description);
 
-            _computeDefault = computeDefault;
             InternalAccessOnly = internalAccessOnly;
 
-            _isValueValid = valueValidator;
             _canAlwaysHaveChanges = !ValueType.IsValueType
                 && !(typeof(INotifyPropertyChanged).IsAssignableFrom(ValueType) || typeof(INotifyCollectionChanged).IsAssignableFrom(ValueType));
 
@@ -121,10 +125,44 @@ namespace MonkeyLoader.Configuration
         }
 
         /// <inheritdoc/>
+        public void Add(IConfigKeyComponent<IDefiningConfigKey<T>> component)
+        {
+            component.Initialize(this);
+            _components.Add(component);
+        }
+
+        /// <inheritdoc/>
         public bool Equals(IConfigKey other) => ConfigKey.EqualityComparer.Equals(this, other);
 
         /// <inheritdoc/>
         public override bool Equals(object obj) => obj is IConfigKey otherKey && Equals(otherKey);
+
+        /// <summary>
+        /// Gets an enumarable over all components in order of insertion.
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerable<IConfigKeyComponent<DefiningConfigKey<T>>> GetAllComponents() => _components.AsSafeEnumerable();
+
+        /// <inheritdoc/>
+        public TComponent? GetComponent<TComponent>() where TComponent : IConfigKeyComponent<IDefiningConfigKey<T>>
+        {
+            foreach (var component in _components)
+            {
+                if (component is TComponent comp)
+                    return comp;
+            }
+
+            return default;
+        }
+
+        /// <inheritdoc/>
+        public IEnumerable<TComponent> GetComponents<TComponent>() where TComponent : IConfigKeyComponent<IDefiningConfigKey<T>>
+            => _components.SelectCastable<IConfigKeyComponent<DefiningConfigKey<T>>, TComponent>();
+
+        IEnumerator<IConfigKeyComponent<DefiningConfigKey<T>>> IEnumerable<IConfigKeyComponent<DefiningConfigKey<T>>>.GetEnumerator()
+            => ((IEnumerable<IConfigKeyComponent<DefiningConfigKey<T>>>)_components).GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_components).GetEnumerator();
 
         /// <inheritdoc/>
         public override int GetHashCode() => ConfigKey.EqualityComparer.GetHashCode(this);
@@ -163,8 +201,9 @@ namespace MonkeyLoader.Configuration
         /// <inheritdoc/>
         public bool TryComputeDefault(out T? defaultValue)
         {
+            var defaultComponent = GetComponent<IConfigKeyDefault<T>>();
             bool success;
-            if (_computeDefault is null)
+            if (defaultComponent is null)
             {
                 success = false;
                 defaultValue = default;
@@ -172,7 +211,7 @@ namespace MonkeyLoader.Configuration
             else
             {
                 success = true;
-                defaultValue = _computeDefault();
+                defaultValue = defaultComponent.GetDefault();
             }
 
             if (!Validate((object?)defaultValue))
@@ -247,8 +286,8 @@ namespace MonkeyLoader.Configuration
             var hadValue = HasValue;
             var oldValue = _value;
 
-            _value = default;
             HasValue = false;
+            _value = default;
 
             OnChanged(hadValue, oldValue, nameof(IDefiningConfigKey.Unset));
 
@@ -256,7 +295,9 @@ namespace MonkeyLoader.Configuration
         }
 
         /// <inheritdoc/>
-        public virtual bool Validate(T value) => _isValueValid?.Invoke(value) ?? true;
+        public bool Validate(T value)
+            => GetComponents<IConfigKeyValidator<T>>()
+                .All(validator => validator.IsValid(value));
 
         /// <inheritdoc/>
         bool IDefiningConfigKey.Validate(object? value) => Validate(value);
@@ -273,7 +314,7 @@ namespace MonkeyLoader.Configuration
         /// <param name="eventLabel">The custom label that may be set by whoever changed the config.</param>
         /// <param name="changedProperty">The name of the changed property on the value.</param>
         /// <param name="changedCollection">The collection change arguments for the value.</param>
-        protected virtual void OnChanged(bool hadValue, T? oldValue, string? eventLabel, string? changedProperty = null, NotifyCollectionChangedEventArgs? changedCollection = null)
+        private void OnChanged(bool hadValue, T? oldValue, string? eventLabel, string? changedProperty = null, NotifyCollectionChangedEventArgs? changedCollection = null)
         {
             // Add notify changed integration
             if (hadValue)
@@ -458,6 +499,26 @@ namespace MonkeyLoader.Configuration
     /// <typeparam name="T">The type of the config item's value.</typeparam>
     public interface IDefiningConfigKey<T> : IDefiningConfigKey, ITypedConfigKey<T>
     {
+        /// <summary>
+        /// Adds a component to this config key.
+        /// </summary>
+        /// <param name="component">The component to add.</param>
+        public void Add(IConfigKeyComponent<IDefiningConfigKey<T>> component);
+
+        /// <summary>
+        /// Gets the first component (in order of insertion) assignable to <typeparamref name="TComponent"/>.
+        /// </summary>
+        /// <typeparam name="TComponent">The type of the component, should be an interface.</typeparam>
+        /// <returns>The component if found or <c>null</c> otherwise.</returns>
+        public TComponent? GetComponent<TComponent>() where TComponent : IConfigKeyComponent<IDefiningConfigKey<T>>;
+
+        /// <summary>
+        /// Gets an enumerable over all components assignable to <typeparamref name="TComponent"/> in order of insertion.
+        /// </summary>
+        /// <typeparam name="TComponent">The type of the component, should be an interface.</typeparam>
+        /// <returns>An enumerable over all matching components.</returns>
+        public IEnumerable<TComponent> GetComponents<TComponent>() where TComponent : IConfigKeyComponent<IDefiningConfigKey<T>>;
+
         /// <summary>
         /// Gets this config item's set value, falling back to the <see cref="TryComputeDefault">computed default</see>.
         /// </summary>
