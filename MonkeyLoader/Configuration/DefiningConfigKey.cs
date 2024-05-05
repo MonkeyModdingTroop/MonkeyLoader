@@ -140,7 +140,7 @@ namespace MonkeyLoader.Configuration
         /// <summary>
         /// Gets an enumarable over all components in order of insertion.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>Enumerable over all components.</returns>
         public IEnumerable<IConfigKeyComponent<DefiningConfigKey<T>>> GetAllComponents() => _components.AsSafeEnumerable();
 
         /// <inheritdoc/>

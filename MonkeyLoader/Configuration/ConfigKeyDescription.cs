@@ -11,7 +11,7 @@
         /// <summary>
         /// Creates a new description component.
         /// </summary>
-        /// <param name="description"></param>
+        /// <param name="description">Description of the config key.</param>
         public ConfigKeyDescription(string description)
         {
             Description = description;

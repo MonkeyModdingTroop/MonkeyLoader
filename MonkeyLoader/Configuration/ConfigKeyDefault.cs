@@ -24,7 +24,7 @@ namespace MonkeyLoader.Configuration
         /// </summary>
         /// <typeparam name="TUnmanaged">Inner value type of the config key.</typeparam>
         /// <param name="value">Value to use as a default.</param>
-        /// <returns></returns>
+        /// <returns>A new default component.</returns>
         public static ConfigKeyDefault<TUnmanaged> Const<TUnmanaged>(TUnmanaged value)
             where TUnmanaged : unmanaged
             => new(() => value);
