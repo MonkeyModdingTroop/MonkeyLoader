@@ -33,7 +33,7 @@ namespace MonkeyLoader.Configuration
         public Config Config => Section.Config;
 
         /// <inheritdoc/>
-        public string? Description { get; }
+        public string? Description => GetComponent<IConfigKeyDescription>()?.Description;
 
         /// <inheritdoc/>
         public string FullId => _fullId.Value;
@@ -44,10 +44,6 @@ namespace MonkeyLoader.Configuration
             get => _canAlwaysHaveChanges || _hasChanges;
             set => _hasChanges = value;
         }
-
-        /// <inheritdoc/>
-        [MemberNotNullWhen(true, nameof(Description))]
-        public bool HasDescription { get; }
 
         /// <inheritdoc/>
         public bool HasValue { get; private set; }
@@ -109,9 +105,6 @@ namespace MonkeyLoader.Configuration
                 Add(new ConfigKeyDefault<T>(computeDefault));
             if (valueValidator is not null)
                 Add(new ConfigKeyValidator<T>(valueValidator));
-
-            Description = description;
-            HasDescription = !string.IsNullOrWhiteSpace(description);
 
             InternalAccessOnly = internalAccessOnly;
 
@@ -410,12 +403,6 @@ namespace MonkeyLoader.Configuration
         /// Gets or sets whether this config item has unsaved changes.
         /// </summary>
         public bool HasChanges { get; set; }
-
-        /// <summary>
-        /// Gets whether this config item has a useable <see cref="Description">description</see>.
-        /// </summary>
-        [MemberNotNullWhen(true, nameof(Description))]
-        public bool HasDescription { get; }
 
         /// <summary>
         /// Gets whether this config item has a set value.

@@ -1,4 +1,6 @@
-﻿namespace MonkeyLoader.Configuration
+﻿using System;
+
+namespace MonkeyLoader.Configuration
 {
     /// <summary>
     /// Description of a <see cref="IDefiningConfigKey"/>.
@@ -11,9 +13,13 @@
         /// <summary>
         /// Creates a new description component.
         /// </summary>
-        /// <param name="description">Description of the config key.</param>
+        /// <param name="description">Description of the config key. Must not be just whitespace.</param>
+        /// <exception cref="ArgumentException">When the <paramref name="description"/> is just whitespace.</exception>
         public ConfigKeyDescription(string description)
         {
+            if (string.IsNullOrWhiteSpace(description))
+                throw new ArgumentException("Description must not be just whitespace.");
+
             Description = description;
         }
 
