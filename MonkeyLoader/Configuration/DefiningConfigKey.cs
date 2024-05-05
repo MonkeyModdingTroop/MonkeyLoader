@@ -19,6 +19,12 @@ namespace MonkeyLoader.Configuration
     public sealed class DefiningConfigKey<T> : IDefiningConfigKey<T>, IEnumerable<IConfigKeyComponent<DefiningConfigKey<T>>>
     {
         private readonly bool _canAlwaysHaveChanges;
+
+        /// <summary>
+        /// Caches components retrieved using <see cref="GetComponent{TComponent}"/>
+        /// </summary>
+        private readonly AnyMap _componentCache = new();
+
         private readonly List<IConfigKeyComponent<DefiningConfigKey<T>>> _components = new();
         private readonly Lazy<string> _fullId;
         private ConfigSection? _configSection;
@@ -139,10 +145,18 @@ namespace MonkeyLoader.Configuration
         /// <inheritdoc/>
         public TComponent? GetComponent<TComponent>() where TComponent : IConfigKeyComponent<IDefiningConfigKey<T>>
         {
+            if (_componentCache.TryGetValue<TComponent>(out var value))
+                return value;
+
             foreach (var component in _components)
             {
                 if (component is TComponent comp)
+                {
+                    // Cache never needs to be invalidated because we can only add
+                    // components and we only care about the first one matching.
+                    _componentCache.Add(comp);
                     return comp;
+                }
             }
 
             return default;
