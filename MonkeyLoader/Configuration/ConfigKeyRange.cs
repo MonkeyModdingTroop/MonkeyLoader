@@ -177,12 +177,12 @@ namespace MonkeyLoader.Configuration
         /// <summary>
         /// Gets the typed upper bound of this config item's value range.
         /// </summary>
-        public new T Max { get; }
+        public T Max { get; }
 
         /// <summary>
         /// Gets the typed lower bound of this config item's value range.
         /// </summary>
-        public new T Min { get; }
+        public T Min { get; }
 
         /// <summary>
         /// Determines whether the given value falls into this config item's range.
