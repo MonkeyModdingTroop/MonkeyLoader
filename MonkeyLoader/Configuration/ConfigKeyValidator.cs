@@ -10,9 +10,19 @@ namespace MonkeyLoader.Configuration
     /// <typeparam name="T">Inner value type of the config key.</typeparam>
     public sealed class ConfigKeyValidator<T> : IConfigKeyValidator<T>
     {
-        private static readonly ConfigKeyValidator<string> _notNullOrWhitespace = new((it) => !string.IsNullOrWhiteSpace(it));
-
         private readonly Predicate<T?> _validator;
+
+        /// <summary>
+        /// Creates a new validator component that only accepts non-null values.
+        /// </summary>
+        /// <returns>The validator component.</returns>
+        public static ConfigKeyValidator<T> NotNull => new(value => value is not null);
+
+        /// <summary>
+        /// Creates a new validator component that only accepts non-null non-whitespace strings.
+        /// </summary>
+        /// <returns>The validator component.</returns>
+        public static ConfigKeyValidator<string> NotNullOrWhitespace { get; } = new(value => !string.IsNullOrWhiteSpace(value));
 
         /// <summary>
         /// Creates a new validator component using a predicate for validation.
@@ -29,18 +39,6 @@ namespace MonkeyLoader.Configuration
         /// <param name="regex">The regular expression that must be matched.</param>
         /// <returns>The validator component.</returns>
         public static ConfigKeyValidator<string> Matching(Regex regex) => new(regex.IsMatch);
-
-        /// <summary>
-        /// Creates a new validator component that only accepts non-null values.
-        /// </summary>
-        /// <returns>The validator component.</returns>
-        public static ConfigKeyValidator<T> NotNull() => new((it) => it is not null);
-
-        /// <summary>
-        /// Creates a new validator component that only accepts non-null non-whitespace strings.
-        /// </summary>
-        /// <returns>The validator component.</returns>
-        public static ConfigKeyValidator<string> NotNullOrWhitespace() => _notNullOrWhitespace;
 
         /// <inheritdoc/>
         public void Initialize(IDefiningConfigKey<T> config)

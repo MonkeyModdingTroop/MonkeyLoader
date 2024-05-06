@@ -15,7 +15,7 @@ namespace MonkeyLoader.Configuration
     /// Represents the typed definition for a config item.
     /// </summary>
     /// <typeparam name="T">The type of the config item's value.</typeparam>
-    public sealed class DefiningConfigKey<T> : IDefiningConfigKey<T>
+    public sealed class DefiningConfigKey<T> : Entity<DefiningConfigKey<T>>, IDefiningConfigKey<T>
     {
         private readonly bool _canAlwaysHaveChanges;
 
@@ -28,10 +28,9 @@ namespace MonkeyLoader.Configuration
         /// <inheritdoc/>
         public IConfigKey AsUntyped { get; }
 
-        /// <inheritdoc/>
-        public IComponentList<IDefiningConfigKey<T>> Components { get; }
-
         IComponentList<IDefiningConfigKey> IEntity<IDefiningConfigKey>.Components => Components;
+
+        IComponentList<IDefiningConfigKey<T>> IEntity<IDefiningConfigKey<T>>.Components => Components;
 
         /// <inheritdoc/>
         public Config Config => Section.Config;
@@ -102,7 +101,6 @@ namespace MonkeyLoader.Configuration
                 throw new ArgumentNullException(nameof(id), "Config key identifier must not be null or whitespace!");
 
             AsUntyped = new ConfigKey(id);
-            Components = new ComponentList<IDefiningConfigKey<T>>(this);
 
             if (description is not null)
                 Components.Add(new ConfigKeyDescription(description));
@@ -129,6 +127,13 @@ namespace MonkeyLoader.Configuration
 
         /// <inheritdoc/>
         public override bool Equals(object obj) => obj is IConfigKey otherKey && Equals(otherKey);
+
+        /// <inheritdoc/>
+        public IEnumerator<IComponent<IDefiningConfigKey>> GetEnumerator()
+            => Components.GetAll<IConfigKeyComponent<IDefiningConfigKey>>().GetEnumerator();
+
+        IEnumerator<IComponent<IDefiningConfigKey<T>>> IEnumerable<IComponent<IDefiningConfigKey<T>>>.GetEnumerator()
+            => Components.GetAll<IComponent<IDefiningConfigKey<T>>>().GetEnumerator();
 
         /// <inheritdoc/>
         public override int GetHashCode() => ConfigKey.EqualityComparer.GetHashCode(this);
