@@ -179,7 +179,7 @@ namespace MonkeyLoader.Configuration
         /// <param name="definingKey">The optional match for the searched item. Will also contain a match not from this config section.</param>
         /// <returns><c>true</c> if this config section contains the matching item; otherwise, <c>false</c>.</returns>
         public bool TryGetDefinedKey(IConfigKey templateKey, [NotNullWhen(true)] out IDefiningConfigKey? definingKey)
-            => Config.TryGetDefiningKey(templateKey.AsUntyped, out definingKey) && keys.Contains(definingKey);
+            => Config.TryGetDefiningKey(templateKey, out definingKey) && keys.Contains(definingKey);
 
         internal void InitializeKeys()
         {
