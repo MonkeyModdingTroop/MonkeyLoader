@@ -3,31 +3,36 @@
 namespace MonkeyLoader.Configuration
 {
     /// <summary>
-    /// Default value for a <see cref="IDefiningConfigKey"/>.
+    /// Contains some <see cref="IConfigKeyDefault{T}"/> presets.
     /// </summary>
-    /// <typeparam name="T">Inner value type of the config key.</typeparam>
+    public static class ConfigKeyDefault
+    {
+        /// <summary>
+        /// Uses the provided <see langword="unmanaged"/> value as a default.
+        /// </summary>
+        /// <typeparam name="T">The type of the config item's value.</typeparam>
+        /// <param name="value">The constant value to use as a default.</param>
+        /// <returns>A new default component.</returns>
+        public static IConfigKeyDefault<T> Constant<T>(T value) where T : unmanaged
+            => new ConfigKeyDefault<T>(() => value);
+    }
+
+    /// <summary>
+    /// Represents a default value for an <see cref="IDefiningConfigKey{T}"/> using a factory function.
+    /// </summary>
+    /// <typeparam name="T">The type of the config item's value.</typeparam>
     public sealed class ConfigKeyDefault<T> : IConfigKeyDefault<T>
     {
         private readonly Func<T> _getDefault;
 
         /// <summary>
-        /// Creates a new default value on demand using the provided factory.
+        /// Creates a new default value on demand using the provided factory function.
         /// </summary>
-        /// <param name="getDefault">Factory function which creates a new default value.</param>
+        /// <param name="getDefault">The factory function that creates a new default value.</param>
         public ConfigKeyDefault(Func<T> getDefault)
         {
             _getDefault = getDefault;
         }
-
-        /// <summary>
-        /// Uses the provided <see langword="unmanaged"/> value as a default.
-        /// </summary>
-        /// <typeparam name="TUnmanaged">Inner value type of the config key.</typeparam>
-        /// <param name="value">Value to use as a default.</param>
-        /// <returns>A new default component.</returns>
-        public static ConfigKeyDefault<TUnmanaged> Const<TUnmanaged>(TUnmanaged value)
-            where TUnmanaged : unmanaged
-            => new(() => value);
 
         /// <inheritdoc/>
         public T GetDefault() => _getDefault();
@@ -40,7 +45,7 @@ namespace MonkeyLoader.Configuration
     /// <summary>
     /// Default value for a <see cref="IDefiningConfigKey"/>.
     /// </summary>
-    /// <typeparam name="T">Inner value type of the config key.</typeparam>
+    /// <typeparam name="T">The type of the config item's value.</typeparam>
     public interface IConfigKeyDefault<T> : IConfigKeyComponent<IDefiningConfigKey<T>>
     {
         /// <summary>

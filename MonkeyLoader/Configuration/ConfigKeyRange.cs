@@ -4,10 +4,114 @@ using System.Collections.Generic;
 namespace MonkeyLoader.Configuration
 {
     /// <summary>
+    /// Contains some <see cref="IConfigKeyRange{T}"/> presets.
+    /// </summary>
+    public static class ConfigKeyRange
+    {
+        /// <summary>
+        /// Creates a new half-open range component with a maximum value.
+        /// </summary>
+        /// <param name="max">The maximum value (inclusive).</param>
+        /// <returns>A new half-open range component.</returns>
+        public static IConfigKeyRange<byte> WithMax(byte max) => new ConfigKeyRange<byte>(byte.MinValue, max);
+
+        /// <summary>
+        /// Creates a new half-open range component with a maximum value.
+        /// </summary>
+        /// <param name="max">The maximum value (inclusive).</param>
+        /// <returns>A new half-open range component.</returns>
+        public static IConfigKeyRange<short> WithMax(short max) => new ConfigKeyRange<short>(short.MinValue, max);
+
+        /// <summary>
+        /// Creates a new half-open range component with a maximum value.
+        /// </summary>
+        /// <param name="max">The maximum value (inclusive).</param>
+        /// <returns>A new half-open range component.</returns>
+        public static IConfigKeyRange<int> WithMax(int max) => new ConfigKeyRange<int>(int.MinValue, max);
+
+        /// <summary>
+        /// Creates a new half-open range component with a maximum value.
+        /// </summary>
+        /// <param name="max">The maximum value (inclusive).</param>
+        /// <returns>A new half-open range component.</returns>
+        public static IConfigKeyRange<long> WithMax(long max) => new ConfigKeyRange<long>(long.MinValue, max);
+
+        /// <summary>
+        /// Creates a new half-open range component with a maximum value.
+        /// </summary>
+        /// <param name="max">The maximum value (inclusive).</param>
+        /// <returns>A new half-open range component.</returns>
+        public static IConfigKeyRange<float> WithMax(float max) => new ConfigKeyRange<float>(float.MinValue, max);
+
+        /// <summary>
+        /// Creates a new half-open range component with a maximum value.
+        /// </summary>
+        /// <param name="max">The maximum value (inclusive).</param>
+        /// <returns>A new half-open range component.</returns>
+        public static IConfigKeyRange<double> WithMax(double max) => new ConfigKeyRange<double>(double.MinValue, max);
+
+        /// <summary>
+        /// Creates a new half-open range component with a maximum value.
+        /// </summary>
+        /// <param name="max">The maximum value (inclusive).</param>
+        /// <returns>A new half-open range component.</returns>
+        public static IConfigKeyRange<decimal> WithMax(decimal max) => new ConfigKeyRange<decimal>(decimal.MinValue, max);
+
+        /// <summary>
+        /// Creates a new half-open range component with a minimum value.
+        /// </summary>
+        /// <param name="min">The minimum value (inclusive).</param>
+        /// <returns>A new half-open range component.</returns>
+        public static IConfigKeyRange<byte> WithMin(byte min) => new ConfigKeyRange<byte>(min, byte.MaxValue);
+
+        /// <summary>
+        /// Creates a new half-open range component with a minimum value.
+        /// </summary>
+        /// <param name="min">The minimum value (inclusive).</param>
+        /// <returns>A new half-open range component.</returns>
+        public static IConfigKeyRange<short> WithMin(short min) => new ConfigKeyRange<short>(min, short.MaxValue);
+
+        /// <summary>
+        /// Creates a new half-open range component with a minimum value.
+        /// </summary>
+        /// <param name="min">The minimum value (inclusive).</param>
+        /// <returns>A new half-open range component.</returns>
+        public static IConfigKeyRange<int> WithMin(int min) => new ConfigKeyRange<int>(min, int.MaxValue);
+
+        /// <summary>
+        /// Creates a new half-open range component with a minimum value.
+        /// </summary>
+        /// <param name="min">The minimum value (inclusive).</param>
+        /// <returns>A new half-open range component.</returns>
+        public static IConfigKeyRange<long> WithMin(long min) => new ConfigKeyRange<long>(min, long.MaxValue);
+
+        /// <summary>
+        /// Creates a new half-open range component with a minimum value.
+        /// </summary>
+        /// <param name="min">The minimum value (inclusive).</param>
+        /// <returns>A new half-open range component.</returns>
+        public static IConfigKeyRange<float> WithMin(float min) => new ConfigKeyRange<float>(min, float.MaxValue);
+
+        /// <summary>
+        /// Creates a new half-open range component with a minimum value.
+        /// </summary>
+        /// <param name="min">The minimum value (inclusive).</param>
+        /// <returns>A new half-open range component.</returns>
+        public static IConfigKeyRange<double> WithMin(double min) => new ConfigKeyRange<double>(min, double.MaxValue);
+
+        /// <summary>
+        /// Creates a new half-open range component with a minimum value.
+        /// </summary>
+        /// <param name="min">The minimum value (inclusive).</param>
+        /// <returns>A new half-open range component.</returns>
+        public static IConfigKeyRange<decimal> WithMin(decimal min) => new ConfigKeyRange<decimal>(min, decimal.MaxValue);
+    }
+
+    /// <summary>
     /// Represents the typed definition for a ranged config item.
     /// </summary>
     /// <remarks>
-    /// This class also implements <see cref="IConfigKeyValidator{T}"/> and therefore is two components in one.
+    /// This class also implements <see cref="IConfigKeyValidator{T}"/> and is therefore two components in one.
     /// </remarks>
     /// <inheritdoc/>
     public sealed class ConfigKeyRange<T> : IConfigKeyRange<T>, IConfigKeyValidator<T>
@@ -44,104 +148,6 @@ namespace MonkeyLoader.Configuration
             Max = max;
             Comparer = comparer ?? Comparer<T>.Default!;
         }
-
-        /// <summary>
-        /// Creates a new half-open range component with a maximum value.
-        /// </summary>
-        /// <param name="max">Maximum value (inclusive).</param>
-        /// <returns>A new half-open range component.</returns>
-        public static ConfigKeyRange<byte> WithMax(byte max) => new(byte.MinValue, max);
-
-        /// <summary>
-        /// Creates a new half-open range component with a maximum value.
-        /// </summary>
-        /// <param name="max">Maximum value (inclusive).</param>
-        /// <returns>A new half-open range component.</returns>
-        public static ConfigKeyRange<short> WithMax(short max) => new(short.MinValue, max);
-
-        /// <summary>
-        /// Creates a new half-open range component with a maximum value.
-        /// </summary>
-        /// <param name="max">Maximum value (inclusive).</param>
-        /// <returns>A new half-open range component.</returns>
-        public static ConfigKeyRange<int> WithMax(int max) => new(int.MinValue, max);
-
-        /// <summary>
-        /// Creates a new half-open range component with a maximum value.
-        /// </summary>
-        /// <param name="max">Maximum value (inclusive).</param>
-        /// <returns>A new half-open range component.</returns>
-        public static ConfigKeyRange<long> WithMax(long max) => new(long.MinValue, max);
-
-        /// <summary>
-        /// Creates a new half-open range component with a maximum value.
-        /// </summary>
-        /// <param name="max">Maximum value (inclusive).</param>
-        /// <returns>A new half-open range component.</returns>
-        public static ConfigKeyRange<float> WithMax(float max) => new(float.MinValue, max);
-
-        /// <summary>
-        /// Creates a new half-open range component with a maximum value.
-        /// </summary>
-        /// <param name="max">Maximum value (inclusive).</param>
-        /// <returns>A new half-open range component.</returns>
-        public static ConfigKeyRange<double> WithMax(double max) => new(double.MinValue, max);
-
-        /// <summary>
-        /// Creates a new half-open range component with a maximum value.
-        /// </summary>
-        /// <param name="max">Maximum value (inclusive).</param>
-        /// <returns>A new half-open range component.</returns>
-        public static ConfigKeyRange<decimal> WithMax(decimal max) => new(decimal.MinValue, max);
-
-        /// <summary>
-        /// Creates a new half-open range component with a minimum value.
-        /// </summary>
-        /// <param name="min">Minimum value (inclusive).</param>
-        /// <returns>A new half-open range component.</returns>
-        public static ConfigKeyRange<byte> WithMin(byte min) => new(min, byte.MaxValue);
-
-        /// <summary>
-        /// Creates a new half-open range component with a minimum value.
-        /// </summary>
-        /// <param name="min">Minimum value (inclusive).</param>
-        /// <returns>A new half-open range component.</returns>
-        public static ConfigKeyRange<short> WithMin(short min) => new(min, short.MaxValue);
-
-        /// <summary>
-        /// Creates a new half-open range component with a minimum value.
-        /// </summary>
-        /// <param name="min">Minimum value (inclusive).</param>
-        /// <returns>A new half-open range component.</returns>
-        public static ConfigKeyRange<int> WithMin(int min) => new(min, int.MaxValue);
-
-        /// <summary>
-        /// Creates a new half-open range component with a minimum value.
-        /// </summary>
-        /// <param name="min">Minimum value (inclusive).</param>
-        /// <returns>A new half-open range component.</returns>
-        public static ConfigKeyRange<long> WithMin(long min) => new(min, long.MaxValue);
-
-        /// <summary>
-        /// Creates a new half-open range component with a minimum value.
-        /// </summary>
-        /// <param name="min">Minimum value (inclusive).</param>
-        /// <returns>A new half-open range component.</returns>
-        public static ConfigKeyRange<float> WithMin(float min) => new(min, float.MaxValue);
-
-        /// <summary>
-        /// Creates a new half-open range component with a minimum value.
-        /// </summary>
-        /// <param name="min">Minimum value (inclusive).</param>
-        /// <returns>A new half-open range component.</returns>
-        public static ConfigKeyRange<double> WithMin(double min) => new(min, double.MaxValue);
-
-        /// <summary>
-        /// Creates a new half-open range component with a minimum value.
-        /// </summary>
-        /// <param name="min">Minimum value (inclusive).</param>
-        /// <returns>A new half-open range component.</returns>
-        public static ConfigKeyRange<decimal> WithMin(decimal min) => new(min, decimal.MaxValue);
 
         /// <inheritdoc/>
         public void Initialize(IDefiningConfigKey<T> config)

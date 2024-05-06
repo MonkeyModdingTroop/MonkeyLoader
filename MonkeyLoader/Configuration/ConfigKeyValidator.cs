@@ -11,7 +11,7 @@ namespace MonkeyLoader.Configuration
         /// <summary>
         /// Gets a validator component that only accepts non-null non-whitespace strings.
         /// </summary>
-        public static ConfigKeyValidator<string> NotNullOrWhitespace { get; } = new(value => !string.IsNullOrWhiteSpace(value));
+        public static IConfigKeyValidator<string> NotNullOrWhitespace { get; } = new ConfigKeyValidator<string>(value => !string.IsNullOrWhiteSpace(value));
 
         /// <summary>
         /// Creates a new validator component that only accepts strings,
@@ -19,7 +19,7 @@ namespace MonkeyLoader.Configuration
         /// </summary>
         /// <param name="regex">The regular expression that must have a match.</param>
         /// <returns>The validator component.</returns>
-        public static ConfigKeyValidator<string> Matching(Regex regex) => new(regex.IsMatch);
+        public static IConfigKeyValidator<string> Matching(Regex regex) => new ConfigKeyValidator<string>(regex.IsMatch);
     }
 
     /// <summary>
@@ -34,7 +34,7 @@ namespace MonkeyLoader.Configuration
         /// <summary>
         /// Gets a validator component that only accepts non-null values.
         /// </summary>
-        public static ConfigKeyValidator<T> NotNull { get; } = new(value => value is not null);
+        public static IConfigKeyValidator<T> NotNull { get; } = new ConfigKeyValidator<T>(value => value is not null);
 
         /// <summary>
         /// Creates a new validator component using a predicate for validation.
