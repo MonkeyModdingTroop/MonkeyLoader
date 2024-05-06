@@ -4,11 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Diagnostics.CodeAnalysis;
-using MonkeyLoader.Meta;
 using System.ComponentModel;
 using System.Collections.Specialized;
 using System.Collections;
+using MonkeyLoader.Components;
 
 namespace MonkeyLoader.Configuration
 {
@@ -16,16 +15,10 @@ namespace MonkeyLoader.Configuration
     /// Represents the typed definition for a config item.
     /// </summary>
     /// <typeparam name="T">The type of the config item's value.</typeparam>
-    public sealed class DefiningConfigKey<T> : IDefiningConfigKey<T>, IEnumerable<IConfigKeyComponent<DefiningConfigKey<T>>>
+    public sealed class DefiningConfigKey<T> : IDefiningConfigKey<T>
     {
         private readonly bool _canAlwaysHaveChanges;
 
-        /// <summary>
-        /// Caches components retrieved using <see cref="GetComponent{TComponent}"/>
-        /// </summary>
-        private readonly AnyMap _componentCache = new();
-
-        private readonly List<IConfigKeyComponent<DefiningConfigKey<T>>> _components = new();
         private readonly Lazy<string> _fullId;
         private ConfigSection? _configSection;
         private bool _hasChanges;
@@ -36,10 +29,15 @@ namespace MonkeyLoader.Configuration
         public IConfigKey AsUntyped { get; }
 
         /// <inheritdoc/>
+        public IComponentList<IDefiningConfigKey<T>> Components { get; }
+
+        IComponentList<IDefiningConfigKey> IEntity<IDefiningConfigKey>.Components => Components;
+
+        /// <inheritdoc/>
         public Config Config => Section.Config;
 
         /// <inheritdoc/>
-        public string? Description => GetComponent<IConfigKeyDescription>()?.Description;
+        public string? Description => Components.Get<IConfigKeyDescription>()?.Description;
 
         /// <inheritdoc/>
         public string FullId => _fullId.Value;
@@ -104,13 +102,16 @@ namespace MonkeyLoader.Configuration
                 throw new ArgumentNullException(nameof(id), "Config key identifier must not be null or whitespace!");
 
             AsUntyped = new ConfigKey(id);
+            Components = new ComponentList<IDefiningConfigKey<T>>(this);
 
             if (description is not null)
-                Add(new ConfigKeyDescription(description));
+                Components.Add(new ConfigKeyDescription(description));
+
             if (computeDefault is not null)
-                Add(new ConfigKeyDefault<T>(computeDefault));
+                Components.Add(new ConfigKeyDefault<T>(computeDefault));
+
             if (valueValidator is not null)
-                Add(new ConfigKeyValidator<T>(valueValidator));
+                Components.Add(new ConfigKeyValidator<T>(valueValidator));
 
             InternalAccessOnly = internalAccessOnly;
 
@@ -124,52 +125,10 @@ namespace MonkeyLoader.Configuration
         }
 
         /// <inheritdoc/>
-        public void Add(IConfigKeyComponent<IDefiningConfigKey<T>> component)
-        {
-            component.Initialize(this);
-            _components.Add(component);
-        }
-
-        /// <inheritdoc/>
         public bool Equals(IConfigKey other) => ConfigKey.EqualityComparer.Equals(this, other);
 
         /// <inheritdoc/>
         public override bool Equals(object obj) => obj is IConfigKey otherKey && Equals(otherKey);
-
-        /// <summary>
-        /// Gets an enumarable over all components in order of insertion.
-        /// </summary>
-        /// <returns>Enumerable over all components.</returns>
-        public IEnumerable<IConfigKeyComponent<DefiningConfigKey<T>>> GetAllComponents() => _components.AsSafeEnumerable();
-
-        /// <inheritdoc/>
-        public TComponent? GetComponent<TComponent>() where TComponent : IConfigKeyComponent<IDefiningConfigKey<T>>
-        {
-            if (_componentCache.TryGetValue<TComponent>(out var value))
-                return value;
-
-            foreach (var component in _components)
-            {
-                if (component is TComponent comp)
-                {
-                    // Cache never needs to be invalidated because we can only add
-                    // components and we only care about the first one matching.
-                    _componentCache.Add(comp);
-                    return comp;
-                }
-            }
-
-            return default;
-        }
-
-        /// <inheritdoc/>
-        public IEnumerable<TComponent> GetComponents<TComponent>() where TComponent : IConfigKeyComponent<IDefiningConfigKey<T>>
-            => _components.SelectCastable<IConfigKeyComponent<DefiningConfigKey<T>>, TComponent>();
-
-        IEnumerator<IConfigKeyComponent<DefiningConfigKey<T>>> IEnumerable<IConfigKeyComponent<DefiningConfigKey<T>>>.GetEnumerator()
-            => ((IEnumerable<IConfigKeyComponent<DefiningConfigKey<T>>>)_components).GetEnumerator();
-
-        IEnumerator IEnumerable.GetEnumerator() => ((IEnumerable)_components).GetEnumerator();
 
         /// <inheritdoc/>
         public override int GetHashCode() => ConfigKey.EqualityComparer.GetHashCode(this);
@@ -208,17 +167,16 @@ namespace MonkeyLoader.Configuration
         /// <inheritdoc/>
         public bool TryComputeDefault(out T? defaultValue)
         {
-            var defaultComponent = GetComponent<IConfigKeyDefault<T>>();
             bool success;
-            if (defaultComponent is null)
-            {
-                success = false;
-                defaultValue = default;
-            }
-            else
+            if (Components.TryGet<ConfigKeyDefault<T>>(out var defaultComponent))
             {
                 success = true;
                 defaultValue = defaultComponent.GetDefault();
+            }
+            else
+            {
+                success = false;
+                defaultValue = default;
             }
 
             if (!Validate((object?)defaultValue))
@@ -303,7 +261,7 @@ namespace MonkeyLoader.Configuration
 
         /// <inheritdoc/>
         public bool Validate(T value)
-            => GetComponents<IConfigKeyValidator<T>>()
+            => Components.GetAll<IConfigKeyValidator<T>>()
                 .All(validator => validator.IsValid(value));
 
         /// <inheritdoc/>
@@ -392,7 +350,7 @@ namespace MonkeyLoader.Configuration
     /// <summary>
     /// Defines the definition for a config item.
     /// </summary>
-    public interface IDefiningConfigKey : ITypedConfigKey
+    public interface IDefiningConfigKey : ITypedConfigKey, IEntity<IDefiningConfigKey>
     {
         /// <summary>
         /// Gets the config this item belongs to.
@@ -498,28 +456,8 @@ namespace MonkeyLoader.Configuration
     /// Defines the typed definition for a config item.
     /// </summary>
     /// <typeparam name="T">The type of the config item's value.</typeparam>
-    public interface IDefiningConfigKey<T> : IDefiningConfigKey, ITypedConfigKey<T>
+    public interface IDefiningConfigKey<T> : IDefiningConfigKey, ITypedConfigKey<T>, IEntity<IDefiningConfigKey<T>>
     {
-        /// <summary>
-        /// Adds a component to this config key.
-        /// </summary>
-        /// <param name="component">The component to add.</param>
-        public void Add(IConfigKeyComponent<IDefiningConfigKey<T>> component);
-
-        /// <summary>
-        /// Gets the first component (in order of insertion) assignable to <typeparamref name="TComponent"/>.
-        /// </summary>
-        /// <typeparam name="TComponent">The type of the component, should be an interface.</typeparam>
-        /// <returns>The component if found or <c>null</c> otherwise.</returns>
-        public TComponent? GetComponent<TComponent>() where TComponent : IConfigKeyComponent<IDefiningConfigKey<T>>;
-
-        /// <summary>
-        /// Gets an enumerable over all components assignable to <typeparamref name="TComponent"/> in order of insertion.
-        /// </summary>
-        /// <typeparam name="TComponent">The type of the component, should be an interface.</typeparam>
-        /// <returns>An enumerable over all matching components.</returns>
-        public IEnumerable<TComponent> GetComponents<TComponent>() where TComponent : IConfigKeyComponent<IDefiningConfigKey<T>>;
-
         /// <summary>
         /// Gets this config item's set value, falling back to the <see cref="TryComputeDefault">computed default</see>.
         /// </summary>
