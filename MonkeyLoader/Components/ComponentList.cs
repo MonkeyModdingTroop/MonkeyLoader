@@ -10,7 +10,8 @@ namespace MonkeyLoader.Components
     /// Implements a component list for <see cref="IEntity{TEntity}">entities</see>.
     /// </summary>
     /// <typeparam name="TEntity">The type of the entity.</typeparam>
-    public sealed class ComponentList<TEntity> : IComponentList<TEntity> where TEntity : IEntity<TEntity>
+    public sealed class ComponentList<TEntity> : IComponentList<TEntity>
+        where TEntity : class, IEntity<TEntity>
     {
         /// <summary>
         /// Caches components retrieved using <see cref="Get()"/> and <see cref="TryGet{TComponent}(out TComponent)"/>.
@@ -36,10 +37,23 @@ namespace MonkeyLoader.Components
         {
             component.Initialize(Entity);
             _components.Add(component);
+
+            // Replace all 'tombstones' in the component cache with the added component
+            // This can be done, because it will always return the first in the _components list,
+            // which this will always be when there's only been 'tombstones' so far.
+
+            var componentType = component.GetType();
+            var tombstonesToReplace = _componentCache.Keys
+                .Where(cachedType => cachedType.IsAssignableFrom(componentType) && _componentCache.GetValue(cachedType) is null)
+                .ToArray();
+
+            foreach (var cachedType in tombstonesToReplace)
+                _componentCache.SetValue(cachedType, component);
         }
 
         /// <inheritdoc/>
-        public TComponent Get<TComponent>() where TComponent : IComponent<TEntity>
+        public TComponent Get<TComponent>()
+            where TComponent : class, IComponent<TEntity>
         {
             if (!TryGet<TComponent>(out var component))
                 throw new ComponentNotFoundException();
@@ -48,7 +62,8 @@ namespace MonkeyLoader.Components
         }
 
         /// <inheritdoc/>
-        public TComponent Get<TComponent>(Predicate<TComponent> predicate) where TComponent : IComponent<TEntity>
+        public TComponent Get<TComponent>(Predicate<TComponent> predicate)
+            where TComponent : class, IComponent<TEntity>
         {
             if (!TryGet(predicate, out var component))
                 throw new ComponentNotFoundException();
@@ -57,24 +72,28 @@ namespace MonkeyLoader.Components
         }
 
         /// <inheritdoc/>
-        public IEnumerable<TComponent> GetAll<TComponent>() where TComponent : IComponent<TEntity>
+        public IEnumerable<TComponent> GetAll<TComponent>()
+            where TComponent : class, IComponent<TEntity>
             => _components.SelectCastable<IComponent<TEntity>, TComponent>();
 
         /// <inheritdoc/>
         public IEnumerable<TComponent> GetAll<TComponent>(Predicate<TComponent> predicate)
-            where TComponent : IComponent<TEntity>
+            where TComponent : class, IComponent<TEntity>
             => GetAll<TComponent>().Where(component => predicate(component));
 
         /// <inheritdoc/>
         public bool TryGet<TComponent>([NotNullWhen(true)] out TComponent? component)
-            where TComponent : IComponent<TEntity>
+            where TComponent : class, IComponent<TEntity>
         {
-            if (_componentCache.TryGetValue(out component!))
-                return true;
+            if (_componentCache.TryGetValue(out component))
+                return component is not null;
 
             var all = GetAll<TComponent>();
             if (!all.Any())
+            {
+                _componentCache.Add<TComponent>(null!);
                 return false;
+            }
 
             // Cache never needs to be invalidated because we can only add
             // components and we only care about the first one matching.
@@ -86,7 +105,7 @@ namespace MonkeyLoader.Components
 
         /// <inheritdoc/>
         public bool TryGet<TComponent>(Predicate<TComponent> predicate, [NotNullWhen(true)] out TComponent? component)
-            where TComponent : IComponent<TEntity>
+            where TComponent : class, IComponent<TEntity>
         {
             component = default;
 
@@ -107,7 +126,8 @@ namespace MonkeyLoader.Components
     /// Defines the interface for the component list of <see cref="IEntity{TEntity}">entities</see>.
     /// </summary>
     /// <typeparam name="TEntity">The type of the entity.</typeparam>
-    public interface IComponentList<out TEntity> where TEntity : IEntity<TEntity>
+    public interface IComponentList<out TEntity>
+        where TEntity : class, IEntity<TEntity>
     {
         /// <summary>
         /// Gets the entity that this component list is for.
@@ -126,7 +146,8 @@ namespace MonkeyLoader.Components
         /// <typeparam name="TComponent">The type of the component. Should be an interface.</typeparam>
         /// <returns>The found <typeparamref name="TComponent"/>.</returns>
         /// <exception cref="ComponentNotFoundException">When there is no <typeparamref name="TComponent"/>.</exception>
-        public TComponent Get<TComponent>() where TComponent : IComponent<TEntity>;
+        public TComponent Get<TComponent>()
+            where TComponent : class, IComponent<TEntity>;
 
         /// <summary>
         /// Gets the first component (in order of insertion) assignable to <typeparamref name="TComponent"/>.
@@ -135,14 +156,16 @@ namespace MonkeyLoader.Components
         /// <param name="predicate">A function to test each component for a condition.</param>
         /// <returns>The found <typeparamref name="TComponent"/>.</returns>
         /// <exception cref="ComponentNotFoundException">When there is no <typeparamref name="TComponent"/> that satisfies the <paramref name="predicate"/>.</exception>
-        public TComponent Get<TComponent>(Predicate<TComponent> predicate) where TComponent : IComponent<TEntity>;
+        public TComponent Get<TComponent>(Predicate<TComponent> predicate)
+            where TComponent : class, IComponent<TEntity>;
 
         /// <summary>
         /// Gets a sequence of all components assignable to <typeparamref name="TComponent"/>, in order of insertion.
         /// </summary>
         /// <typeparam name="TComponent">The type of the component(s). Should be an interface.</typeparam>
         /// <returns>A sequence of all matching components in order of insertion.</returns>
-        public IEnumerable<TComponent> GetAll<TComponent>() where TComponent : IComponent<TEntity>;
+        public IEnumerable<TComponent> GetAll<TComponent>()
+            where TComponent : class, IComponent<TEntity>;
 
         /// <summary>
         /// Gets a sequence of all components assignable to <typeparamref name="TComponent"/>, in order of insertion.
@@ -150,7 +173,8 @@ namespace MonkeyLoader.Components
         /// <typeparam name="TComponent">The type of the component(s). Should be an interface.</typeparam>
         /// <param name="predicate">A function to test each component for a condition.</param>
         /// <returns>A sequence of all matching components in order of insertion that satisfy the <paramref name="predicate"/>.</returns>
-        public IEnumerable<TComponent> GetAll<TComponent>(Predicate<TComponent> predicate) where TComponent : IComponent<TEntity>;
+        public IEnumerable<TComponent> GetAll<TComponent>(Predicate<TComponent> predicate)
+            where TComponent : class, IComponent<TEntity>;
 
         /// <summary>
         /// Tries to get the first component (in order of insertion) assignable to <typeparamref name="TComponent"/>.
@@ -158,7 +182,8 @@ namespace MonkeyLoader.Components
         /// <typeparam name="TComponent">The type of the component. Should be an interface.</typeparam>
         /// <param name="component">The component if one was found; otherwise, <c>default(<typeparamref name="TComponent"/>)</c>.</param>
         /// <returns><c>true</c> if a <typeparamref name="TComponent"/> was found; otherwise, <c>false</c>.</returns>
-        public bool TryGet<TComponent>([NotNullWhen(true)] out TComponent? component) where TComponent : IComponent<TEntity>;
+        public bool TryGet<TComponent>([NotNullWhen(true)] out TComponent? component)
+            where TComponent : class, IComponent<TEntity>;
 
         /// <summary>
         /// Tries to get the first component (in order of insertion) assignable to
@@ -168,6 +193,7 @@ namespace MonkeyLoader.Components
         /// <param name="component">The component if one was found; otherwise, <c>default(<typeparamref name="TComponent"/>)</c>.</param>
         /// <param name="predicate">A function to test each component for a condition.</param>
         /// <returns><c>true</c> if a <typeparamref name="TComponent"/> satisfying the <paramref name="predicate"/> was found; otherwise, <c>false</c>.</returns>
-        public bool TryGet<TComponent>(Predicate<TComponent> predicate, [NotNullWhen(true)] out TComponent? component) where TComponent : IComponent<TEntity>;
+        public bool TryGet<TComponent>(Predicate<TComponent> predicate, [NotNullWhen(true)] out TComponent? component)
+            where TComponent : class, IComponent<TEntity>;
     }
 }

@@ -4,7 +4,7 @@
     /// Defines the interface for the components of entities.
     /// </summary>
     /// <typeparam name="TEntity">The type of the entity.</typeparam>
-    public interface IComponent<in TEntity> where TEntity : IEntity<TEntity>
+    public interface IComponent<in TEntity> where TEntity : class, IEntity<TEntity>
     {
         /// <summary>
         /// Initializes this component when it's added to an

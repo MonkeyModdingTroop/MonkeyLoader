@@ -89,10 +89,80 @@ namespace MonkeyLoader
         public T GetValue<T>() => (T)_dict[typeof(T)]!;
 
         /// <summary>
+        /// Gets the value associated with the given type in this AnyMap.
+        /// </summary>
+        /// <returns>The value associated with the given type.</returns>
+        /// <exception cref="KeyNotFoundException">When there is no value for the <paramref name="type"/>.</exception>
+        public object GetValue(Type type) => _dict[type]!;
+
+        /// <summary>
+        /// Gets the value associated with the given type in this AnyMap.
+        /// </summary>
+        /// <typeparam name="T">The type of the value. Only used for casting, not access.</typeparam>
+        /// <returns>The value associated with the given type.</returns>
+        /// <exception cref="KeyNotFoundException">When there is no value for the <paramref name="type"/>.</exception>
+        public T GetValue<T>(Type type) => (T)GetValue(type);
+
+        /// <summary>
         /// Removes the value associated with the type <typeparamref name="T"/> in this AnyMap.
         /// </summary>
         /// <typeparam name="T">The type of the value.</typeparam>
         public void Remove<T>() => _dict.Remove(typeof(T));
+
+        /// <summary>
+        /// Removes the value associated with the given type in this AnyMap.
+        /// </summary>
+        /// <param name="type">The type of the value.</param>
+        public void Remove(Type type) => _dict.Remove(type);
+
+        /// <summary>
+        /// Sets the given value for type <typeparamref name="T"/> in this AnyMap.
+        /// </summary>
+        /// <typeparam name="T">The type of the value.</typeparam>
+        /// <param name="value">The new value to associate with the type.</param>
+        public void SetValue<T>(T value) => _dict[typeof(T)] = value;
+
+        /// <summary>
+        /// Sets the given value for the given type in this AnyMap.
+        /// </summary>
+        /// <param name="type">The type of the value.</param>
+        /// <param name="value">The new value to associate with the type.</param>
+        /// <exception cref="InvalidCastException">When the given value is not assignable to the given type.</exception>
+        public void SetValue(Type type, object? value)
+        {
+            if (value is not null && !type.IsAssignableFrom(value.GetType()))
+                throw new InvalidCastException("The given value is not valid for given type!");
+
+            _dict[type] = value;
+        }
+
+        /// <summary>
+        /// Tries to get the value associated with the given type in this AnyMap.
+        /// </summary>
+        /// <typeparam name="T">The type of the value. Only used for casting, not access.</typeparam>
+        /// <param name="type">The type of the value.</param>
+        /// <param name="value">The value if it was found; otherwise, <c>default(<typeparamref name="T"/>)</c>.</param>
+        /// <returns><c>true</c> if the value was found; otherwise, <c>false</c>.</returns>
+        public bool TryGetValue<T>(Type type, out T? value)
+        {
+            if (_dict.TryGetValue(type, out var obj))
+            {
+                value = (T)obj!;
+                return true;
+            }
+
+            value = default;
+            return false;
+        }
+
+        /// <summary>
+        /// Tries to get the value associated with the given type in this AnyMap.
+        /// </summary>
+        /// <param name="type">The type of the value.</param>
+        /// <param name="value">The value if it was found; otherwise, <c>null</c>.</param>
+        /// <returns><c>true</c> if the value was found; otherwise, <c>false</c>.</returns>
+        public bool TryGetValue(Type type, out object? value)
+            => TryGetValue<object>(type, out value);
 
         /// <summary>
         /// Tries to get the value associated with the type <typeparamref name="T"/> in this AnyMap.

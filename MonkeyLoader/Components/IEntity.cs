@@ -7,7 +7,7 @@ namespace MonkeyLoader.Components
     /// </summary>
     /// <typeparam name="TEntity">The type of the entity.</typeparam>
     public interface IEntity<TEntity> : IEnumerable<IComponent<TEntity>>
-        where TEntity : IEntity<TEntity>
+        where TEntity : class, IEntity<TEntity>
     {
         /// <summary>
         /// Gets the entity's component list.

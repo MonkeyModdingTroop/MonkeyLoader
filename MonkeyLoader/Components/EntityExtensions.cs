@@ -9,7 +9,7 @@ namespace MonkeyLoader.Components
     public static class EntityExtensions
     {
         public static void Add<TEntity>(this TEntity entity, IComponent<TEntity> component)
-            where TEntity : IEntity<TEntity>
+            where TEntity : class, IEntity<TEntity>
             => entity.Components.Add(component);
     }
 }
