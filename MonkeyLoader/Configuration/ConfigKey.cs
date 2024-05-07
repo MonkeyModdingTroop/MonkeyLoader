@@ -109,13 +109,7 @@ namespace MonkeyLoader.Configuration
             }
 
             /// <inheritdoc/>
-            public int GetHashCode(IConfigKey? obj)
-            {
-                if (obj is ITypedConfigKey typedKey)
-                    return unchecked((31 * typedKey.ValueType.GetHashCode()) + obj.Id.GetHashCode());
-
-                return obj?.Id.GetHashCode() ?? 0;
-            }
+            public int GetHashCode(IConfigKey? obj) => obj?.Id.GetHashCode() ?? 0;
         }
     }
 
