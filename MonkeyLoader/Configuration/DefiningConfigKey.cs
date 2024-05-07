@@ -14,6 +14,15 @@ namespace MonkeyLoader.Configuration
     /// <summary>
     /// Represents the typed definition for a config item.
     /// </summary>
+    /// <remarks>
+    /// Add extra components like this:
+    /// <code>
+    /// DefiningConfigKey&lt;int&gt; testKey = new("Test", ...)
+    /// {
+    ///     new ConfigKeyRange&lt;int&gt;(0, 255)
+    /// };
+    /// </code>
+    /// </remarks>
     /// <typeparam name="T">The type of the config item's value.</typeparam>
     public sealed class DefiningConfigKey<T> : Entity<DefiningConfigKey<T>>, IDefiningConfigKey<T>
     {
@@ -85,9 +94,19 @@ namespace MonkeyLoader.Configuration
         /// Creates a new instance of the <see cref="DefiningConfigKey{T}"/> class with the given parameters.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// The <see cref="Changed">Changed</see> event will be fired whenever the equality comparison of the value of this key changes.<br/>
         /// If the value type implements <see cref="INotifyPropertyChanged"/> or <see cref="INotifyCollectionChanged"/>,
         /// those events will be passed through as well.
+        /// </para><para>
+        /// Add extra components like this:
+        /// <code>
+        /// DefiningConfigKey&lt;int&gt; testKey = new("Test", ...)
+        /// {
+        ///     new ConfigKeyRange&lt;int&gt;(0, 255)
+        /// };
+        /// </code>
+        /// </para>
         /// </remarks>
         /// <param name="id">The mod-unique identifier of this config item. Must not be null or whitespace.</param>
         /// <param name="description">The human-readable description of this config item.</param>
