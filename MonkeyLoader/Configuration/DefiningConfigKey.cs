@@ -4,24 +4,31 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Diagnostics.CodeAnalysis;
-using MonkeyLoader.Meta;
 using System.ComponentModel;
 using System.Collections.Specialized;
+using System.Collections;
+using MonkeyLoader.Components;
 
 namespace MonkeyLoader.Configuration
 {
     /// <summary>
     /// Represents the typed definition for a config item.
     /// </summary>
+    /// <remarks>
+    /// Add extra components like this:
+    /// <code>
+    /// DefiningConfigKey&lt;int&gt; testKey = new("Test", ...)
+    /// {
+    ///     new ConfigKeyRange&lt;int&gt;(0, 255)
+    /// };
+    /// </code>
+    /// </remarks>
     /// <typeparam name="T">The type of the config item's value.</typeparam>
-    public class DefiningConfigKey<T> : IDefiningConfigKey<T>
+    public sealed class DefiningConfigKey<T> : Entity<DefiningConfigKey<T>>, IDefiningConfigKey<T>
     {
         private readonly bool _canAlwaysHaveChanges;
-        private readonly Func<T>? _computeDefault;
 
         private readonly Lazy<string> _fullId;
-        private readonly Predicate<T?>? _isValueValid;
         private ConfigSection? _configSection;
         private bool _hasChanges;
         private ConfigKeyChangedEventHandler? _untypedChanged;
@@ -30,11 +37,15 @@ namespace MonkeyLoader.Configuration
         /// <inheritdoc/>
         public IConfigKey AsUntyped { get; }
 
+        IComponentList<IDefiningConfigKey> IEntity<IDefiningConfigKey>.Components => Components;
+
+        IComponentList<IDefiningConfigKey<T>> IEntity<IDefiningConfigKey<T>>.Components => Components;
+
         /// <inheritdoc/>
         public Config Config => Section.Config;
 
         /// <inheritdoc/>
-        public string? Description { get; }
+        public string? Description => Components.Get<IConfigKeyDescription>()?.Description;
 
         /// <inheritdoc/>
         public string FullId => _fullId.Value;
@@ -45,10 +56,6 @@ namespace MonkeyLoader.Configuration
             get => _canAlwaysHaveChanges || _hasChanges;
             set => _hasChanges = value;
         }
-
-        /// <inheritdoc/>
-        [MemberNotNullWhen(true, nameof(Description))]
-        public bool HasDescription { get; }
 
         /// <inheritdoc/>
         public bool HasValue { get; private set; }
@@ -81,15 +88,25 @@ namespace MonkeyLoader.Configuration
         /// <summary>
         /// Gets the logger of the config this item belongs to if it's a <see cref="IsDefiningKey">defining key</see>.
         /// </summary>
-        protected Logger Logger => Section.Config.Logger;
+        private Logger Logger => Section.Config.Logger;
 
         /// <summary>
         /// Creates a new instance of the <see cref="DefiningConfigKey{T}"/> class with the given parameters.
         /// </summary>
         /// <remarks>
+        /// <para>
         /// The <see cref="Changed">Changed</see> event will be fired whenever the equality comparison of the value of this key changes.<br/>
         /// If the value type implements <see cref="INotifyPropertyChanged"/> or <see cref="INotifyCollectionChanged"/>,
         /// those events will be passed through as well.
+        /// </para><para>
+        /// Add extra components like this:
+        /// <code>
+        /// DefiningConfigKey&lt;int&gt; testKey = new("Test", ...)
+        /// {
+        ///     new ConfigKeyRange&lt;int&gt;(0, 255)
+        /// };
+        /// </code>
+        /// </para>
         /// </remarks>
         /// <param name="id">The mod-unique identifier of this config item. Must not be null or whitespace.</param>
         /// <param name="description">The human-readable description of this config item.</param>
@@ -104,13 +121,17 @@ namespace MonkeyLoader.Configuration
 
             AsUntyped = new ConfigKey(id);
 
-            Description = description;
-            HasDescription = !string.IsNullOrWhiteSpace(description);
+            if (description is not null)
+                Components.Add(new ConfigKeyDescription(description));
 
-            _computeDefault = computeDefault;
+            if (computeDefault is not null)
+                Components.Add(new ConfigKeyDefault<T>(computeDefault));
+
+            if (valueValidator is not null)
+                Components.Add(new ConfigKeyValidator<T>(valueValidator));
+
             InternalAccessOnly = internalAccessOnly;
 
-            _isValueValid = valueValidator;
             _canAlwaysHaveChanges = !ValueType.IsValueType
                 && !(typeof(INotifyPropertyChanged).IsAssignableFrom(ValueType) || typeof(INotifyCollectionChanged).IsAssignableFrom(ValueType));
 
@@ -125,6 +146,13 @@ namespace MonkeyLoader.Configuration
 
         /// <inheritdoc/>
         public override bool Equals(object obj) => obj is IConfigKey otherKey && Equals(otherKey);
+
+        /// <inheritdoc/>
+        public IEnumerator<IComponent<IDefiningConfigKey>> GetEnumerator()
+            => Components.GetAll<IConfigKeyComponent<IDefiningConfigKey>>().GetEnumerator();
+
+        IEnumerator<IComponent<IDefiningConfigKey<T>>> IEnumerable<IComponent<IDefiningConfigKey<T>>>.GetEnumerator()
+            => Components.GetAll<IComponent<IDefiningConfigKey<T>>>().GetEnumerator();
 
         /// <inheritdoc/>
         public override int GetHashCode() => ConfigKey.EqualityComparer.GetHashCode(this);
@@ -164,15 +192,15 @@ namespace MonkeyLoader.Configuration
         public bool TryComputeDefault(out T? defaultValue)
         {
             bool success;
-            if (_computeDefault is null)
+            if (Components.TryGet<ConfigKeyDefault<T>>(out var defaultComponent))
             {
-                success = false;
-                defaultValue = default;
+                success = true;
+                defaultValue = defaultComponent.GetDefault();
             }
             else
             {
-                success = true;
-                defaultValue = _computeDefault();
+                success = false;
+                defaultValue = default;
             }
 
             if (!Validate((object?)defaultValue))
@@ -247,8 +275,8 @@ namespace MonkeyLoader.Configuration
             var hadValue = HasValue;
             var oldValue = _value;
 
-            _value = default;
             HasValue = false;
+            _value = default;
 
             OnChanged(hadValue, oldValue, nameof(IDefiningConfigKey.Unset));
 
@@ -256,7 +284,9 @@ namespace MonkeyLoader.Configuration
         }
 
         /// <inheritdoc/>
-        public virtual bool Validate(T value) => _isValueValid?.Invoke(value) ?? true;
+        public bool Validate(T value)
+            => Components.GetAll<IConfigKeyValidator<T>>()
+                .All(validator => validator.IsValid(value));
 
         /// <inheritdoc/>
         bool IDefiningConfigKey.Validate(object? value) => Validate(value);
@@ -273,7 +303,7 @@ namespace MonkeyLoader.Configuration
         /// <param name="eventLabel">The custom label that may be set by whoever changed the config.</param>
         /// <param name="changedProperty">The name of the changed property on the value.</param>
         /// <param name="changedCollection">The collection change arguments for the value.</param>
-        protected virtual void OnChanged(bool hadValue, T? oldValue, string? eventLabel, string? changedProperty = null, NotifyCollectionChangedEventArgs? changedCollection = null)
+        private void OnChanged(bool hadValue, T? oldValue, string? eventLabel, string? changedProperty = null, NotifyCollectionChangedEventArgs? changedCollection = null)
         {
             // Add notify changed integration
             if (hadValue)
@@ -344,7 +374,7 @@ namespace MonkeyLoader.Configuration
     /// <summary>
     /// Defines the definition for a config item.
     /// </summary>
-    public interface IDefiningConfigKey : ITypedConfigKey
+    public interface IDefiningConfigKey : ITypedConfigKey, IEntity<IDefiningConfigKey>
     {
         /// <summary>
         /// Gets the config this item belongs to.
@@ -369,12 +399,6 @@ namespace MonkeyLoader.Configuration
         /// Gets or sets whether this config item has unsaved changes.
         /// </summary>
         public bool HasChanges { get; set; }
-
-        /// <summary>
-        /// Gets whether this config item has a useable <see cref="Description">description</see>.
-        /// </summary>
-        [MemberNotNullWhen(true, nameof(Description))]
-        public bool HasDescription { get; }
 
         /// <summary>
         /// Gets whether this config item has a set value.
@@ -456,7 +480,7 @@ namespace MonkeyLoader.Configuration
     /// Defines the typed definition for a config item.
     /// </summary>
     /// <typeparam name="T">The type of the config item's value.</typeparam>
-    public interface IDefiningConfigKey<T> : IDefiningConfigKey, ITypedConfigKey<T>
+    public interface IDefiningConfigKey<T> : IDefiningConfigKey, ITypedConfigKey<T>, IEntity<IDefiningConfigKey<T>>
     {
         /// <summary>
         /// Gets this config item's set value, falling back to the <see cref="TryComputeDefault">computed default</see>.
