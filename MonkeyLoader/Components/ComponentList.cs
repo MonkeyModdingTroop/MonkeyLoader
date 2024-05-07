@@ -56,7 +56,7 @@ namespace MonkeyLoader.Components
             where TComponent : class, IComponent<TEntity>
         {
             if (!TryGet<TComponent>(out var component))
-                throw new ComponentNotFoundException();
+                throw new ComponentNotFoundException(typeof(TComponent));
 
             return component;
         }
@@ -66,7 +66,7 @@ namespace MonkeyLoader.Components
             where TComponent : class, IComponent<TEntity>
         {
             if (!TryGet(predicate, out var component))
-                throw new ComponentNotFoundException();
+                throw new ComponentNotFoundException(typeof(TComponent));
 
             return component;
         }

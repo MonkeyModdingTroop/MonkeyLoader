@@ -3,42 +3,57 @@
 namespace MonkeyLoader.Configuration
 {
     /// <summary>
-    /// Contains some <see cref="IConfigKeyDefault{T}"/> presets.
-    /// </summary>
-    public static class ConfigKeyDefault
-    {
-        /// <summary>
-        /// Uses the provided <see langword="unmanaged"/> value as a default.
-        /// </summary>
-        /// <typeparam name="T">The type of the config item's value.</typeparam>
-        /// <param name="value">The constant value to use as a default.</param>
-        /// <returns>A new default component.</returns>
-        public static IConfigKeyDefault<T> Constant<T>(T value) where T : unmanaged
-            => new ConfigKeyDefault<T>(() => value);
-    }
-
-    /// <summary>
-    /// Represents a default value for an <see cref="IDefiningConfigKey{T}"/> using a factory function.
+    /// Represents an <see cref="IConfigKeyDefault{T}"/> component that uses
+    /// a provided factory function to generate the default value.
     /// </summary>
     /// <typeparam name="T">The type of the config item's value.</typeparam>
     public sealed class ConfigKeyDefault<T> : IConfigKeyDefault<T>
     {
-        private readonly Func<T> _getDefault;
+        private readonly Func<T> _makeValue;
 
         /// <summary>
-        /// Creates a new default value on demand using the provided factory function.
+        /// Creates an <see cref="IConfigKeyDefault{T}"/> component that uses
+        /// the provided factory function to generate the default value.
         /// </summary>
-        /// <param name="getDefault">The factory function that creates a new default value.</param>
-        public ConfigKeyDefault(Func<T> getDefault)
+        /// <param name="makeValue">The factory function that creates a new default value.</param>
+        public ConfigKeyDefault(Func<T> makeValue)
         {
-            _getDefault = getDefault;
+            _makeValue = makeValue;
         }
 
         /// <inheritdoc/>
-        public T GetDefault() => _getDefault();
+        public T GetDefault() => _makeValue();
 
         /// <inheritdoc/>
         public void Initialize(IDefiningConfigKey<T> config)
+        { }
+    }
+
+    /// <summary>
+    /// Represents an <see cref="IConfigKeyDefault{T}"/> component that uses
+    /// a provided <see langword="unmanaged"/> value as the default value.
+    /// </summary>
+    /// <typeparam name="T">The type of the config item's value.</typeparam>
+    public sealed class ConfigKeyDefaultConstant<T> : IConfigKeyDefault<T>
+        where T : unmanaged
+    {
+        private readonly T _value;
+
+        /// <summary>
+        /// Creates an <see cref="IConfigKeyDefault{T}"/> component that uses
+        /// the provided <see langword="unmanaged"/> value as the default value.
+        /// </summary>
+        /// <param name="value">The constant value to use as a default.</param>
+        public ConfigKeyDefaultConstant(T value)
+        {
+            _value = value;
+        }
+
+        /// <inheritdoc/>
+        public T GetDefault() => _value;
+
+        /// <inheritdoc/>
+        public void Initialize(IDefiningConfigKey<T> entity)
         { }
     }
 

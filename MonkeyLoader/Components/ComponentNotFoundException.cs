@@ -10,9 +10,16 @@ namespace MonkeyLoader.Components
     public sealed class ComponentNotFoundException : Exception
     {
         /// <summary>
+        /// Gets the requested component <see cref="Type"/>.
+        /// </summary>
+        public Type ComponentType { get; }
+
+        /// <summary>
         /// Creates a new instance of this exception.
         /// </summary>
-        public ComponentNotFoundException() : base("No component of matching type found!")
-        { }
+        public ComponentNotFoundException(Type componentType) : base("No component of matching type found!")
+        {
+            ComponentType = componentType;
+        }
     }
 }
