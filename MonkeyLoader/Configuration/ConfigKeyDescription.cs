@@ -5,7 +5,7 @@ namespace MonkeyLoader.Configuration
     /// <summary>
     /// Represents a basic description of an <see cref="IDefiningConfigKey"/>.
     /// </summary>
-    public sealed class ConfigKeyDescription : IConfigKeyDescription
+    public class ConfigKeyDescription : IConfigKeyDescription
     {
         /// <inheritdoc/>
         public string Description { get; }

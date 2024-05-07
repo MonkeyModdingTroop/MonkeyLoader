@@ -114,7 +114,7 @@ namespace MonkeyLoader.Configuration
     /// This class also implements <see cref="IConfigKeyValidator{T}"/> and is therefore two components in one.
     /// </remarks>
     /// <inheritdoc/>
-    public sealed class ConfigKeyRange<T> : IConfigKeyRange<T>, IConfigKeyValidator<T>
+    public class ConfigKeyRange<T> : IConfigKeyRange<T>, IConfigKeyValidator<T>
     {
         /// <inheritdoc/>
         public IComparer<T?> Comparer { get; }
