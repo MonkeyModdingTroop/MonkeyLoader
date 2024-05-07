@@ -11,7 +11,7 @@ namespace MonkeyLoader.Events
     /// </summary>
     /// <typeparam name="TEvent">The type of cancelable async events handled.</typeparam>
     public interface IAsyncEventHandler<in TEvent> : IPrioritizable
-        where TEvent : class, IAsyncEvent
+        where TEvent : AsyncEvent
     {
         /// <summary>
         /// Handles the given async event based on its data.
@@ -25,7 +25,7 @@ namespace MonkeyLoader.Events
     /// </summary>
     /// <typeparam name="TEvent">The type of cancelable async events handled.</typeparam>
     public interface ICancelableAsyncEventHandler<in TEvent> : IPrioritizable
-        where TEvent : class, ICancelableEvent, IAsyncEvent
+        where TEvent : CancelableAsyncEvent
     {
         /// <summary>
         /// Gets whether this handler should be skipped for async events that have been
@@ -37,7 +37,7 @@ namespace MonkeyLoader.Events
         /// Handles the given cancelable async event based on its data.
         /// </summary>
         /// <remarks>
-        /// When this method sets <c><paramref name="eventData"/>.<see cref="ICancelableEvent.Canceled">Canceled</see>
+        /// When this method sets <c><paramref name="eventData"/>.<see cref="CancelableAsyncEvent.Canceled">Canceled</see>
         /// = true</c>, the default action should be prevented from happening and further
         /// <see cref="ICancelableAsyncEventHandler{TEvent}">async event handlers</see> may be skipped.
         /// </remarks>

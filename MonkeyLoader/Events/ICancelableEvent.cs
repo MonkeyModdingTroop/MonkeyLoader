@@ -4,7 +4,7 @@
     /// Defines the interface for the data of a cancelable event.
     /// </summary>
     /// <inheritdoc/>
-    public interface ICancelableEvent
+    internal interface ICancelableEvent
     {
         /// <summary>
         /// Gets or sets whether this event has been canceled by a previous event handler.
