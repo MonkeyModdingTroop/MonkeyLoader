@@ -18,6 +18,8 @@ namespace MonkeyLoader.Components
         /// <inheritdoc/>
         public IComponentList<TEntity> Components { get; }
 
+        TEntity IEntity<TEntity>.Self => (TEntity)this;
+
         /// <summary>
         /// Creates a new entity instance, using <c>this</c> as the
         /// <see cref="IComponentList{TEntity}.Entity">Entity</see> for the
@@ -46,5 +48,15 @@ namespace MonkeyLoader.Components
         /// Gets this entity's component list.
         /// </summary>
         public IComponentList<TEntity> Components { get; }
+
+        /// <summary>
+        /// Gets the entity itself.
+        /// </summary>
+        /// <remarks>
+        /// This allows methods that take in an entity to access
+        /// the main <typeparamref name="TEntity"/> value from the entity,
+        /// without having to deal with potential ambiguities by taking it in directly.
+        /// </remarks>
+        public TEntity Self { get; }
     }
 }

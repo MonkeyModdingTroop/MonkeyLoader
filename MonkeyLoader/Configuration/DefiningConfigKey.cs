@@ -82,6 +82,10 @@ namespace MonkeyLoader.Configuration
             }
         }
 
+        IDefiningConfigKey IEntity<IDefiningConfigKey>.Self => this;
+
+        IDefiningConfigKey<T> IEntity<IDefiningConfigKey<T>>.Self => this;
+
         /// <inheritdoc/>
         public Type ValueType { get; } = typeof(T);
 
