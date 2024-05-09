@@ -6,6 +6,12 @@
 
 Online Documentation is [here](https://monkeymoddingtroop.github.io/MonkeyLoader/).
 
+## Quick Links
+
+[Resonite Game Pack](https://github.com/ResoniteModdingGroup/MonkeyLoader.GamePacks.Resonite)
+
+[ResoniteModLoader Game Pack](https://github.com/ResoniteModdingGroup/MonkeyLoader.GamePacks.ResoniteModLoader)
+
 ## What's this?
 
 MonkeyLoader is a mod loader that aims to combine easy usability for developers and users,
