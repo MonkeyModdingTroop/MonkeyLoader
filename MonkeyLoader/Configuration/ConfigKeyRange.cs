@@ -152,7 +152,7 @@ namespace MonkeyLoader.Configuration
         /// <inheritdoc/>
         public void Initialize(IDefiningConfigKey<T> config)
         {
-            if (config.TryGetValue(out var value) && !IsValueInRange(value!))
+            if (config.HasValue && config.TryGetValue(out var value) && !IsValueInRange(value!))
                 throw new InvalidOperationException($"Value for key [{config.Id}] did not pass validation!");
         }
 
