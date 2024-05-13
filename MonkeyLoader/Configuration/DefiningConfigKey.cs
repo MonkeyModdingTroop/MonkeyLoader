@@ -8,6 +8,7 @@ using System.ComponentModel;
 using System.Collections.Specialized;
 using System.Collections;
 using MonkeyLoader.Components;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MonkeyLoader.Configuration
 {
@@ -45,7 +46,8 @@ namespace MonkeyLoader.Configuration
         public Config Config => Section.Config;
 
         /// <inheritdoc/>
-        public string? Description => Components.Get<IConfigKeyDescription>()?.Description;
+        public string? Description
+            => Components.TryGet<IConfigKeyDescription>(out var description) ? description.Description : null;
 
         /// <inheritdoc/>
         public string FullId => _fullId.Value;
@@ -56,6 +58,10 @@ namespace MonkeyLoader.Configuration
             get => _canAlwaysHaveChanges || _hasChanges;
             set => _hasChanges = value;
         }
+
+        /// <inheritdoc/>
+        [MemberNotNullWhen(true, nameof(Description))]
+        public bool HasDescription => Components.TryGet<IConfigKeyDescription>(out var _);
 
         /// <inheritdoc/>
         public bool HasValue { get; private set; }
@@ -403,6 +409,15 @@ namespace MonkeyLoader.Configuration
         /// Gets or sets whether this config item has unsaved changes.
         /// </summary>
         public bool HasChanges { get; set; }
+
+        /// <summary>
+        /// Gets whether this config item has a human-readable <see cref="Description">description</see>.
+        /// </summary>
+        /// <value>
+        /// <c>true</c> if <see cref="Description"/> is not <c>null</c>; otherwise, <c>false</c>.
+        /// </value>
+        [MemberNotNullWhen(true, nameof(Description))]
+        public bool HasDescription { get; }
 
         /// <summary>
         /// Gets whether this config item has a set value.
