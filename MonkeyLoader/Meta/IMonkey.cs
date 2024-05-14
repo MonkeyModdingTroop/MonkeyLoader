@@ -8,7 +8,7 @@ using System.Collections.Generic;
 namespace MonkeyLoader.Meta
 {
     /// <summary>
-    /// Interface for <see cref="EarlyMonkey{TMonkey}"/>s.
+    /// Defines the interface for all <see cref="EarlyMonkey{TMonkey}">early monkeys</see>.
     /// </summary>
     public interface IEarlyMonkey : IMonkey
     {
@@ -31,7 +31,8 @@ namespace MonkeyLoader.Meta
     }
 
     /// <summary>
-    /// The interface for any monkey.
+    /// Defines the interface for all (<see cref="EarlyMonkey{TMonkey}">early</see>)
+    /// <see cref="Monkey{TMonkey}">monkeys</see>.
     /// </summary>
     public interface IMonkey : IRun, IShutdown, IComparable<IMonkey>
     {

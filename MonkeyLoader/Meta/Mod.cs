@@ -1,5 +1,4 @@
-﻿using HarmonyLib;
-using MonkeyLoader.Configuration;
+﻿using MonkeyLoader.Configuration;
 using MonkeyLoader.Events;
 using MonkeyLoader.Logging;
 using MonkeyLoader.NuGet;

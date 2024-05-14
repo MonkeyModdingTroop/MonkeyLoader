@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 namespace MonkeyLoader.Meta
 {
     /// <summary>
-    /// Interface for everything that can be run.
+    /// Defines the interface for everything that can be run.
     /// </summary>
     public interface IRun
     {
