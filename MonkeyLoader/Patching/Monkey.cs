@@ -84,13 +84,17 @@ namespace MonkeyLoader.Patching
     /// Game assemblies and their types can be directly referenced from these.
     /// </remarks>
     /// <inheritdoc/>
-    public abstract class Monkey<TMonkey> : MonkeyBase<TMonkey> where TMonkey : Monkey<TMonkey>, new()
+    public abstract class Monkey<TMonkey> : MonkeyBase<TMonkey>
+        where TMonkey : Monkey<TMonkey>, new()
     {
         /// <summary>
         /// Allows creating only a single <typeparamref name="TMonkey"/> instance.
         /// </summary>
         protected Monkey()
-        { }
+        {
+            if (GetType() != typeof(TMonkey))
+                throw new InvalidOperationException("TMonkey must be the concrete Type being instantiated!");
+        }
 
         /// <inheritdoc/>
         public override sealed bool Run()
