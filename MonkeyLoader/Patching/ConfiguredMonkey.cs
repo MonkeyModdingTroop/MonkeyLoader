@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using MonkeyLoader.Configuration;
+using MonkeyLoader.Meta;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,14 +18,18 @@ namespace MonkeyLoader.Patching
     /// <inheritdoc/>
     /// <typeparam name="TMonkey">The type of the actual patcher.</typeparam>
     /// <typeparam name="TConfigSection">The type of the config section to load.</typeparam>
-    public abstract class ConfiguredMonkey<TMonkey, TConfigSection> : Monkey<TMonkey>
+    public abstract class ConfiguredMonkey<TMonkey, TConfigSection> : Monkey<TMonkey>, IConfiguredMonkey<TConfigSection>
         where TMonkey : ConfiguredMonkey<TMonkey, TConfigSection>, new()
         where TConfigSection : ConfigSection, new()
     {
         /// <summary>
         /// Gets the loaded config section for this patcher after it has been <see cref="MonkeyBase.Run">run</see>.
         /// </summary>
-        protected static TConfigSection ConfigSection { get; private set; } = null!;
+        public static TConfigSection ConfigSection { get; private set; } = null!;
+
+        TConfigSection IConfiguredMonkey<TConfigSection>.ConfigSection => ConfigSection;
+
+        ConfigSection IConfiguredMonkey.ConfigSection => ConfigSection;
 
         /// <summary>
         /// Allows creating only a single <typeparamref name="TMonkey"/> instance.

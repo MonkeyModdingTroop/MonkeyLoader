@@ -38,7 +38,7 @@ namespace MonkeyLoader.Meta
     }
 
     /// <summary>
-    /// Interface for everything that can be shut down.
+    /// Defines the interface for everything that can be shut down.
     /// </summary>
     public interface IShutdown
     {

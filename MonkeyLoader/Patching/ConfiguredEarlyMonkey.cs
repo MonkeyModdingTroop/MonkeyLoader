@@ -1,4 +1,5 @@
 ﻿using MonkeyLoader.Configuration;
+using MonkeyLoader.Meta;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,14 +16,18 @@ namespace MonkeyLoader.Patching
     /// <inheritdoc/>
     /// <typeparam name="TMonkey">The type of the actual patcher.</typeparam>
     /// <typeparam name="TConfigSection">The type of the config section to load.</typeparam>
-    public abstract class ConfiguredEarlyMonkey<TMonkey, TConfigSection> : EarlyMonkey<TMonkey>
+    public abstract class ConfiguredEarlyMonkey<TMonkey, TConfigSection> : EarlyMonkey<TMonkey>, IConfiguredMonkey<TConfigSection>
         where TMonkey : ConfiguredEarlyMonkey<TMonkey, TConfigSection>, new()
         where TConfigSection : ConfigSection, new()
     {
         /// <summary>
         /// Gets the loaded config section for this pre-patcher after it has been <see cref="EarlyMonkey{TMonkey}.Prepare()">prepared</see>.
         /// </summary>
-        protected static TConfigSection ConfigSection { get; private set; } = null!;
+        public static TConfigSection ConfigSection { get; private set; } = null!;
+
+        TConfigSection IConfiguredMonkey<TConfigSection>.ConfigSection => ConfigSection;
+
+        ConfigSection IConfiguredMonkey.ConfigSection => ConfigSection;
 
         /// <summary>
         /// Allows creating only a single <typeparamref name="TMonkey"/> instance.

@@ -36,6 +36,9 @@ namespace MonkeyLoader.Patching
         /// </summary>
         protected EarlyMonkey()
         {
+            if (GetType() != typeof(TMonkey))
+                throw new InvalidOperationException("TMonkey must be the concrete Type being instantiated!");
+
             _prePatchTargets = new Lazy<PrePatchTarget[]>(() => GetPrePatchTargets().ToArray());
         }
 
