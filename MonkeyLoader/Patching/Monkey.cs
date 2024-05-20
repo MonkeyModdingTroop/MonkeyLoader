@@ -87,14 +87,9 @@ namespace MonkeyLoader.Patching
     public abstract class Monkey<TMonkey> : MonkeyBase<TMonkey>
         where TMonkey : Monkey<TMonkey>, new()
     {
-        /// <summary>
-        /// Allows creating only a single <typeparamref name="TMonkey"/> instance.
-        /// </summary>
-        protected Monkey()
-        {
-            if (GetType() != typeof(TMonkey))
-                throw new InvalidOperationException("TMonkey must be the concrete Type being instantiated!");
-        }
+        /// <inheritdoc/>
+        protected Monkey() : base()
+        { }
 
         /// <inheritdoc/>
         public override sealed bool Run()

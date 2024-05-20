@@ -31,14 +31,9 @@ namespace MonkeyLoader.Patching
         /// <inheritdoc/>
         public bool TargetsAllAssemblies => ReferenceEquals(PrePatchTargets, PrePatchTarget.AllAvailable);
 
-        /// <summary>
-        /// Allows creating only a single <typeparamref name="TMonkey"/> instance.
-        /// </summary>
+        /// <inheritdoc/>
         protected EarlyMonkey()
         {
-            if (GetType() != typeof(TMonkey))
-                throw new InvalidOperationException("TMonkey must be the concrete Type being instantiated!");
-
             _prePatchTargets = new Lazy<PrePatchTarget[]>(() => GetPrePatchTargets().ToArray());
         }
 

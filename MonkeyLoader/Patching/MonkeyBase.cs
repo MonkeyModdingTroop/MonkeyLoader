@@ -319,8 +319,12 @@ namespace MonkeyLoader.Patching
         /// <summary>
         /// Allows creating only a single <typeparamref name="TMonkey"/> instance.
         /// </summary>
+        /// <exception cref="InvalidOperationException">When the concrete Type isn't <typeparamref name="TMonkey"/>; or when there's already an <see cref="Instance">Instance</see>.</exception>
         internal MonkeyBase() : base()
         {
+            if (GetType() != typeof(TMonkey))
+                throw new InvalidOperationException("TMonkey must be the concrete Type being instantiated!");
+
             if (Instance is not null)
                 throw new InvalidOperationException("Can't create more than one patcher instance!");
         }
