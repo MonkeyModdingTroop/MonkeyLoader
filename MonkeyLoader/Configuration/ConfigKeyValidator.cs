@@ -23,7 +23,7 @@ namespace MonkeyLoader.Configuration
     }
 
     /// <summary>
-    /// A validator component for a <see cref="IDefiningConfigKey{T}"/>.<br/>
+    /// Implements a validator component for <see cref="IDefiningConfigKey{T}"/>s using <see cref="Predicate{T}"/>s.<br/>
     /// Multiple <see cref="IConfigKeyValidator{T}"/> instances on one config key must all validate successfully.
     /// </summary>
     /// <typeparam name="T">The type of the config item's value.</typeparam>
@@ -57,7 +57,7 @@ namespace MonkeyLoader.Configuration
     }
 
     /// <summary>
-    /// A validator component for a <see cref="IDefiningConfigKey{T}"/>.<br/>
+    /// Defines the interface for validator components for <see cref="IDefiningConfigKey{T}"/>s.<br/>
     /// Multiple components of this type on one config key must all validate successfully.
     /// </summary>
     /// <remarks>
