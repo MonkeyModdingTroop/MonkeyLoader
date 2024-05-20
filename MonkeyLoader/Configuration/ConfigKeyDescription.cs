@@ -3,9 +3,9 @@
 namespace MonkeyLoader.Configuration
 {
     /// <summary>
-    /// Represents a basic description of an <see cref="IDefiningConfigKey"/>.
+    /// Implements a basic description component for <see cref="IDefiningConfigKey"/>s.
     /// </summary>
-    public class ConfigKeyDescription : IConfigKeyDescription
+    public sealed class ConfigKeyDescription : IConfigKeyDescription
     {
         /// <inheritdoc/>
         public string Description { get; }
@@ -29,7 +29,7 @@ namespace MonkeyLoader.Configuration
     }
 
     /// <summary>
-    /// Defines the interface for descriptions of a <see cref="IDefiningConfigKey"/>.
+    /// Defines the interface for description components for <see cref="IDefiningConfigKey"/>s.
     /// </summary>
     public interface IConfigKeyDescription : IConfigKeyComponent<IDefiningConfigKey>
     {

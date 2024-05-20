@@ -3,8 +3,8 @@
 namespace MonkeyLoader.Configuration
 {
     /// <summary>
-    /// Represents an <see cref="IConfigKeyDefault{T}"/> component that uses
-    /// a provided factory function to generate the default value.
+    /// Implements a components that provide a default value for
+    /// <see cref="IDefiningConfigKey{T}"/>s by using a provided factory function to generate the value.
     /// </summary>
     /// <typeparam name="T">The type of the config item's value.</typeparam>
     public sealed class ConfigKeyDefault<T> : IConfigKeyDefault<T>
@@ -30,8 +30,8 @@ namespace MonkeyLoader.Configuration
     }
 
     /// <summary>
-    /// Represents an <see cref="IConfigKeyDefault{T}"/> component that uses
-    /// a provided <see langword="unmanaged"/> value as the default value.
+    /// Implements a component that provides a default value for
+    /// <see cref="IDefiningConfigKey{T}"/>s by using a provided <see langword="unmanaged"/> value.
     /// </summary>
     /// <typeparam name="T">The type of the config item's value.</typeparam>
     public sealed class ConfigKeyDefaultConstant<T> : IConfigKeyDefault<T>
@@ -58,7 +58,7 @@ namespace MonkeyLoader.Configuration
     }
 
     /// <summary>
-    /// Default value for a <see cref="IDefiningConfigKey"/>.
+    /// Defines the interface for components that provide a default value for <see cref="IDefiningConfigKey{T}"/>s.
     /// </summary>
     /// <typeparam name="T">The type of the config item's value.</typeparam>
     public interface IConfigKeyDefault<T> : IConfigKeyComponent<IDefiningConfigKey<T>>

@@ -108,7 +108,7 @@ namespace MonkeyLoader.Configuration
     }
 
     /// <summary>
-    /// Represents the typed definition for a ranged config item.
+    /// Implements a range component for <see cref="IDefiningConfigKey{T}"/>s using min and max values with a <see cref="IComparer{T}"/>.
     /// </summary>
     /// <remarks>
     /// This class also implements <see cref="IConfigKeyValidator{T}"/> and is therefore two components in one.
@@ -170,8 +170,11 @@ namespace MonkeyLoader.Configuration
     }
 
     /// <summary>
-    /// Defines the typed definition for a ranged config item.
+    /// Defines the interface for range components for <see cref="IDefiningConfigKey{T}"/>s.
     /// </summary>
+    /// <remarks>
+    /// Game Packs implementing a settings page may use this to display a slider instead of a plain field.
+    /// </remarks>
     /// <inheritdoc/>
     public interface IConfigKeyRange<T> : IConfigKeyComponent<IDefiningConfigKey<T>>
     {

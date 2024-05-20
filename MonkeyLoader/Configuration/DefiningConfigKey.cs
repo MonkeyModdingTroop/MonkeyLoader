@@ -131,8 +131,8 @@ namespace MonkeyLoader.Configuration
 
             AsUntyped = new ConfigKey(id);
 
-            if (description is not null)
-                Components.Add(new ConfigKeyDescription(description));
+            if (!string.IsNullOrWhiteSpace(description))
+                Components.Add(new ConfigKeyDescription(description!));
 
             if (computeDefault is not null)
                 Components.Add(new ConfigKeyDefault<T>(computeDefault));
