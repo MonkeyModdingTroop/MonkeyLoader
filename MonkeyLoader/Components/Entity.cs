@@ -25,8 +25,12 @@ namespace MonkeyLoader.Components
         /// <see cref="IComponentList{TEntity}.Entity">Entity</see> for the
         /// <see cref="Entity{TEntity}.Components">component list</see>.
         /// </summary>
+        /// <exception cref="InvalidOperationException">When the concrete type isn't assignable to <typeparamref name="TEntity"/>.</exception>
         protected Entity()
         {
+            if (!typeof(TEntity).IsAssignableFrom(GetType()))
+                throw new InvalidOperationException("Concrete type must be assignable to TEntity!");
+
             Components = new ComponentList<TEntity>((TEntity)this);
         }
 
