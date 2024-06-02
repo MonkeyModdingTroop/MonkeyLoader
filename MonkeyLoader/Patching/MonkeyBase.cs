@@ -62,16 +62,24 @@ namespace MonkeyLoader.Patching
         /// <inheritdoc/>
         public IEnumerable<IFeaturePatch> FeaturePatches => _featurePatches.Value.AsSafeEnumerable();
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Gets fully unique identifier of this monkey.
+        /// </summary>
+        /// <remarks>
+        /// Format:
+        /// <c>$"{<see cref="Mod">Mod</see>.<see cref="Mod.Id">Id</see>}.{<see cref="Id">Id</see>}"</c>
+        /// </remarks>
         public string FullId => _fullId.Value;
 
         /// <inheritdoc/>
         public Harmony Harmony => _harmony.Value;
 
+        /// <summary>
+        /// Gets the mod-unique identifier of this monkey.
+        /// </summary>
         /// <remarks>
         /// <i>By Default</i>: The monkey's <see cref="Type">Type</see>'s Name.
         /// </remarks>
-        /// <inheritdoc/>
         public virtual string Id => Type.Name;
 
         /// <inheritdoc/>
@@ -107,6 +115,10 @@ namespace MonkeyLoader.Patching
         /// </remarks>
         /// <inheritdoc/>
         public virtual string Name => Id;
+
+        Mod INestedIdentifiable<Mod>.Parent => _mod;
+
+        IIdentifiable INestedIdentifiable.Parent => _mod;
 
         /// <summary>
         /// Gets whether this monkey's <see cref="Run">Run</see>() method has been called.

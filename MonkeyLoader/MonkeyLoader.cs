@@ -9,15 +9,12 @@ using Newtonsoft.Json;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Remoting.Messaging;
 using System.Threading;
 
 namespace MonkeyLoader
@@ -39,7 +36,9 @@ namespace MonkeyLoader
     /// <summary>
     /// The root of all mod loading.
     /// </summary>
-    public sealed class MonkeyLoader : IConfigOwner, IShutdown
+    public sealed class MonkeyLoader : IConfigOwner, IShutdown, IIdentifiableCollection<Mod>,
+        INestedIdentifiableCollection<IMonkey>, INestedIdentifiableCollection<IEarlyMonkey>,
+        INestedIdentifiableCollection<ConfigSection>, INestedIdentifiableCollection<IDefiningConfigKey>
     {
         /// <summary>
         /// All the currently loaded and still active mods of this loader, kept in topological order.
@@ -77,6 +76,20 @@ namespace MonkeyLoader
         /// Gets this loader's id.
         /// </summary>
         public string Id { get; }
+
+        IEnumerable<Mod> IIdentifiableCollection<Mod>.Items => Mods;
+
+        IEnumerable<ConfigSection> INestedIdentifiableCollection<ConfigSection>.Items
+            => Config.Sections.Concat(_allMods.SelectMany(mod => mod.Config.Sections));
+
+        IEnumerable<IDefiningConfigKey> INestedIdentifiableCollection<IDefiningConfigKey>.Items
+            => ((INestedIdentifiableCollection<ConfigSection>)this).Items.SelectMany(configSection => configSection.Keys);
+
+        IEnumerable<IEarlyMonkey> INestedIdentifiableCollection<IEarlyMonkey>.Items
+            => _allMods.SelectMany(mod => mod.EarlyMonkeys);
+
+        IEnumerable<IMonkey> INestedIdentifiableCollection<IMonkey>.Items
+            => _allMods.SelectMany(mod => mod.Monkeys).Concat(_allMods.SelectMany(mod => mod.EarlyMonkeys));
 
         /// <summary>
         /// Gets the json serializer used by this loader and any mods it loads.<br/>

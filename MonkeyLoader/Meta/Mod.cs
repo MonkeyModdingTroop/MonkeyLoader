@@ -18,7 +18,9 @@ namespace MonkeyLoader.Meta
     /// <summary>
     /// Contains the base metadata and references for a mod.
     /// </summary>
-    public abstract class Mod : IConfigOwner, IShutdown, ILoadedNuGetPackage, IComparable<Mod>
+    public abstract class Mod : IConfigOwner, IShutdown, ILoadedNuGetPackage, IComparable<Mod>,
+        IIdentifiableOwner<Mod, ConfigSection>, IIdentifiableOwner<Mod, IMonkey>, IIdentifiableOwner<Mod, IEarlyMonkey>,
+        INestedIdentifiableOwner<IDefiningConfigKey>
     {
         /// <summary>
         /// The file extension for mods' assemblies.
@@ -173,6 +175,15 @@ namespace MonkeyLoader.Meta
         /// </summary>
         public bool IsGamePack { get; }
 
+        IEnumerable<ConfigSection> IIdentifiableOwner<ConfigSection>.Items => Config.Sections;
+
+        IEnumerable<IMonkey> IIdentifiableOwner<IMonkey>.Items => monkeys.Concat(earlyMonkeys);
+
+        IEnumerable<IEarlyMonkey> IIdentifiableOwner<IEarlyMonkey>.Items => EarlyMonkeys;
+
+        IEnumerable<IDefiningConfigKey> INestedIdentifiableOwner<IDefiningConfigKey>.Items
+            => Config.Sections.SelectMany(section => section.Keys);
+
         /// <summary>
         /// Gets whether this mod's <see cref="LoadEarlyMonkeys">LoadEarlyMonkeys</see>() failed when it was called.
         /// </summary>
@@ -314,7 +325,7 @@ namespace MonkeyLoader.Meta
 
         /// <summary>
         /// Searches all of this mod's loaded <see cref="Monkeys">Monkeys</see> and
-        /// <see cref="EarlyMonkeys">Early Monkeys</see> to find one with the given <see cref="IMonkey.Id">id</see>.
+        /// <see cref="EarlyMonkeys">Early Monkeys</see> to find one with the given <see cref="IIdentifiable.Id">id</see>.
         /// </summary>
         /// <param name="id">The id to find a monkey for.</param>
         /// <returns>The found monkey.</returns>

@@ -9,6 +9,7 @@ using System.Collections.Specialized;
 using System.Collections;
 using MonkeyLoader.Components;
 using System.Diagnostics.CodeAnalysis;
+using MonkeyLoader.Meta;
 
 namespace MonkeyLoader.Configuration
 {
@@ -49,7 +50,13 @@ namespace MonkeyLoader.Configuration
         public string? Description
             => Components.TryGet<IConfigKeyDescription>(out var description) ? description.Description : null;
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Gets the fully unique identifier for this config item.
+        /// </summary>
+        /// <remarks>
+        /// Format:
+        /// <c>$"{<see cref="Section">Section</see>.<see cref="ConfigSection.FullId">FullId</see>}.{<see cref="DefiningConfigKey{T}.Id">Id</see>}"</c>
+        /// </remarks>
         public string FullId => _fullId.Value;
 
         /// <inheritdoc/>
@@ -66,7 +73,9 @@ namespace MonkeyLoader.Configuration
         /// <inheritdoc/>
         public bool HasValue { get; private set; }
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Gets the mod-unique identifier of this config item.
+        /// </summary>
         public string Id => AsUntyped.Id;
 
         /// <inheritdoc/>
@@ -74,6 +83,10 @@ namespace MonkeyLoader.Configuration
 
         /// <inheritdoc/>
         public bool IsDefiningKey => true;
+
+        ConfigSection INestedIdentifiable<ConfigSection>.Parent => Section;
+
+        IIdentifiable INestedIdentifiable.Parent => Section;
 
         /// <inheritdoc/>
         public ConfigSection Section
@@ -384,7 +397,7 @@ namespace MonkeyLoader.Configuration
     /// <summary>
     /// Defines the definition for a config item.
     /// </summary>
-    public interface IDefiningConfigKey : ITypedConfigKey, IEntity<IDefiningConfigKey>
+    public interface IDefiningConfigKey : ITypedConfigKey, IEntity<IDefiningConfigKey>, INestedIdentifiable<ConfigSection>
     {
         /// <summary>
         /// Gets the config this item belongs to.
@@ -395,15 +408,6 @@ namespace MonkeyLoader.Configuration
         /// Gets the human-readable description of this config item.
         /// </summary>
         public string? Description { get; }
-
-        /// <summary>
-        /// Gets the fully unique identifier for this config item.
-        /// </summary>
-        /// <remarks>
-        /// Format:
-        /// <c>$"{<see cref="Section">Section</see>.<see cref="ConfigSection.FullId">FullId</see>}.{<see cref="IConfigKey.Id">Id</see>}"</c>
-        /// </remarks>
-        public string FullId { get; }
 
         /// <summary>
         /// Gets or sets whether this config item has unsaved changes.

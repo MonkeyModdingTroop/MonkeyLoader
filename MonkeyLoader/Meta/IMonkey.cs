@@ -34,7 +34,7 @@ namespace MonkeyLoader.Meta
     /// Defines the interface for all (<see cref="EarlyMonkey{TMonkey}">early</see>)
     /// <see cref="Monkey{TMonkey}">monkeys</see>.
     /// </summary>
-    public interface IMonkey : IRun, IShutdown, IComparable<IMonkey>
+    public interface IMonkey : IRun, IShutdown, IComparable<IMonkey>, INestedIdentifiable<Mod>
     {
         /// <summary>
         /// Gets the name of the assembly this monkey is defined in.
@@ -70,19 +70,9 @@ namespace MonkeyLoader.Meta
         public IEnumerable<IFeaturePatch> FeaturePatches { get; }
 
         /// <summary>
-        /// Gets fully unique identifier of this monkey.
-        /// </summary>
-        public string FullId { get; }
-
-        /// <summary>
         /// Gets the <see cref="HarmonyLib.Harmony">Harmony</see> instance to be used by this patcher.
         /// </summary>
         public Harmony Harmony { get; }
-
-        /// <summary>
-        /// Gets mod-unique identifier of this monkey.
-        /// </summary>
-        public string Id { get; }
 
         /// <summary>
         /// Gets the <see cref="Logging.Logger"/> that this monkey can use to log messages to game-specific channels.

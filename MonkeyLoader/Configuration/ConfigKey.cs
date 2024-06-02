@@ -1,3 +1,4 @@
+using MonkeyLoader.Meta;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -35,7 +36,9 @@ namespace MonkeyLoader.Configuration
 
         IConfigKey IConfigKey.AsUntyped => this;
 
-        /// <inheritdoc/>
+        /// <summary>
+        /// Gets the mod-unique identifier for the wanted config item.
+        /// </summary>
         public string Id { get; }
 
         /// <inheritdoc/>
@@ -141,17 +144,12 @@ namespace MonkeyLoader.Configuration
     /// <summary>
     /// Defines a name-only config item, which can be used to get or set the values of defining keys with the same name.
     /// </summary>
-    public interface IConfigKey : IEquatable<IConfigKey>
+    public interface IConfigKey : IEquatable<IConfigKey>, IIdentifiable
     {
         /// <summary>
         /// Gets the untyped version of this config item.
         /// </summary>
         public IConfigKey AsUntyped { get; }
-
-        /// <summary>
-        /// Gets the mod-unique identifier of this config item.
-        /// </summary>
-        public string Id { get; }
 
         /// <summary>
         /// Gets whether this instance defines the config item with this <see cref="Id">Name</see>.
