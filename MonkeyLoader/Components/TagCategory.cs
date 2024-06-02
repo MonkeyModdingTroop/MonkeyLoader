@@ -9,13 +9,14 @@ namespace MonkeyLoader.Components
     public abstract class TagCategory : IEquatable<TagCategory>
     {
         public abstract string Description { get; }
+
         public abstract string Id { get; }
 
         public virtual string Name => Id;
 
         /// <inheritdoc/>
         public bool Equals(TagCategory other)
-            => Tags.EqualityComparer.Equals(this, other);
+            => TagCategories.EqualityComparer.Equals(this, other);
 
         /// <inheritdoc/>
         public override bool Equals(object obj)
@@ -23,7 +24,7 @@ namespace MonkeyLoader.Components
 
         /// <inheritdoc/>
         public override int GetHashCode()
-            => EqualityComparer.GetHashCode(this);
+            => TagCategories.EqualityComparer.GetHashCode(this);
 
         /// <summary>
         /// Gets the <see cref="Id">Id</see> of this tag.
