@@ -11,17 +11,12 @@ namespace MonkeyLoader.Configuration
     /// <summary>
     /// Interface to let <see cref="Mod">mods</see> and the <see cref="MonkeyLoader">loader</see> own <see cref="Config"/>s.
     /// </summary>
-    public interface IConfigOwner
+    public interface IConfigOwner : IIdentifiable
     {
         /// <summary>
         /// Gets the path where this owner's config file should be.
         /// </summary>
         public string ConfigPath { get; }
-
-        /// <summary>
-        /// Gets the unique identifier of this owner.
-        /// </summary>
-        public string Id { get; }
 
         /// <summary>
         /// Gets the <see cref="MonkeyLoader"/> instance that loaded this owner.

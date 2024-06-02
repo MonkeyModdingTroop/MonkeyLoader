@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using MonkeyLoader.Meta;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using NuGet.Packaging;
@@ -9,7 +10,6 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using static System.Collections.Specialized.BitVector32;
 
 namespace MonkeyLoader.Configuration
 {
@@ -19,7 +19,7 @@ namespace MonkeyLoader.Configuration
     /// <remarks>
     /// Use your mod's <see cref="Configuration.Config"/> instance to <see cref="Config.LoadSection{TSection}()">load sections</see>.
     /// </remarks>
-    public abstract class ConfigSection
+    public abstract class ConfigSection : INestedIdentifiable<Mod>, IIdentifiableOwner<ConfigSection, IDefiningConfigKey>
     {
         /// <summary>
         /// Stores the <see cref="IDefiningConfigKey"/>s tracked by this section.
@@ -40,11 +40,11 @@ namespace MonkeyLoader.Configuration
         public abstract string Description { get; }
 
         /// <summary>
-        /// Gets the fully unique identifier for this section.
+        /// Gets the fully qualified unique identifier for this section.
         /// </summary>
         /// <remarks>
         /// Format:
-        /// <c>$"{<see cref="Config">Config</see>.<see cref="Config.Owner">Owner</see>.<see cref="IConfigOwner.Id">Id</see>}.{<see cref="IConfigKey.Id">Id</see>}"</c>
+        /// <c>$"{<see cref="Config">Config</see>.<see cref="Config.Owner">Owner</see>.<see cref="IIdentifiable.Id">Id</see>}.{<see cref="Id">Id</see>}"</c>
         /// </remarks>
         public string FullId => _fullId.Value;
 
@@ -66,6 +66,8 @@ namespace MonkeyLoader.Configuration
         /// </remarks>
         public virtual bool InternalAccessOnly => false;
 
+        IEnumerable<IDefiningConfigKey> IIdentifiableOwner<IDefiningConfigKey>.Items => Keys;
+
         /// <summary>
         /// Gets all the config keys of this section.
         /// </summary>
@@ -75,6 +77,10 @@ namespace MonkeyLoader.Configuration
         /// Gets the name for this section.
         /// </summary>
         public virtual string Name => Id;
+
+        Mod INestedIdentifiable<Mod>.Parent => (Mod)Config.Owner;
+
+        IIdentifiable INestedIdentifiable.Parent => Config.Owner;
 
         /// <summary>
         /// Gets whether this config section is allowed to be saved.<br/>
