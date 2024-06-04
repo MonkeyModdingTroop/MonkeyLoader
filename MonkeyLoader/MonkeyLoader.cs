@@ -303,9 +303,10 @@ namespace MonkeyLoader
         /// <param name="id">The id to find a mod for.</param>
         /// <returns>The found mod.</returns>
         /// <exception cref="KeyNotFoundException">When no mod with the given id was found.</exception>
+        [Obsolete("Use extension method Get<Mod>")]
         public Mod FindModById(string id)
         {
-            if (!TryFindModById(id, out var mod))
+            if (!this.TryGet<Mod>().ById(id, out var mod))
                 throw new KeyNotFoundException(id);
 
             return mod;
@@ -816,6 +817,7 @@ namespace MonkeyLoader
         /// <param name="id">The id to find a mod for.</param>
         /// <param name="mod">The mod that was found or <c>null</c>.</param>
         /// <returns><c>true</c> if a mod was found; otherwise, <c>false</c>.</returns>
+        [Obsolete("Use extension method TryGet<Mod>")]
         public bool TryFindModById(string id, [NotNullWhen(true)] out Mod? mod)
         {
             mod = null;
