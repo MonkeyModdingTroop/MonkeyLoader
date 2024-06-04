@@ -330,9 +330,10 @@ namespace MonkeyLoader.Meta
         /// <param name="id">The id to find a monkey for.</param>
         /// <returns>The found monkey.</returns>
         /// <exception cref="KeyNotFoundException">When no monkey with the given id was found.</exception>
+        [Obsolete("Use the extension method Get<IMonkey> or Get<IEarlyMonkey>")]
         public IMonkey FindMonkeyById(string id)
         {
-            if (!TryFindMonkeyById(id, out var monkey))
+            if (!this.TryGet<IMonkey>().ById(id, out var monkey))
                 throw new KeyNotFoundException(id);
 
             return monkey;
@@ -499,11 +500,12 @@ namespace MonkeyLoader.Meta
 
         /// <summary>
         /// Searches all of this mod's loaded <see cref="Monkeys">Monkeys</see> and
-        /// <see cref="EarlyMonkeys">Early Monkeys</see> to find one with the given <see cref="IMonkey.Id">id</see>.
+        /// <see cref="EarlyMonkeys">Early Monkeys</see> to find one with the given <see cref="IIdentifiable.Id">id</see>.
         /// </summary>
         /// <param name="id">The id to find a monkey for.</param>
         /// <param name="monkey">The monkey that was found or <c>null</c>.</param>
         /// <returns><c>true</c> if a monkey was found; otherwise, <c>false</c>.</returns>
+        [Obsolete("Use the extension method TryGet<IMonkey> or TryGet<IEarlyMonkey>")]
         public bool TryFindMonkeyById(string id, [NotNullWhen(true)] out IMonkey? monkey)
         {
             monkey = null;
