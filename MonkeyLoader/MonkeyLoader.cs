@@ -198,11 +198,13 @@ namespace MonkeyLoader
             NuGet = new NuGetManager(this);
             NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("MonkeyLoader", new NuGetVersion(Assembly.GetExecutingAssembly().GetName().Version)), NuGetHelper.Framework));
             NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Newtonsoft.Json", new NuGetVersion(13, 0, 3)), NuGetHelper.Framework));
-            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("NuGet.Packaging", new NuGetVersion(6, 9, 1)), NuGetHelper.Framework));
-            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("NuGet.Protocol", new NuGetVersion(6, 9, 1)), NuGetHelper.Framework));
+            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("NuGet.Packaging", new NuGetVersion(6, 10, 0)), NuGetHelper.Framework));
+            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("NuGet.Protocol", new NuGetVersion(6, 10, 0)), NuGetHelper.Framework));
             NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Mono.Cecil", new NuGetVersion(0, 11, 5)), NuGetHelper.Framework));
-            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Harmony", new NuGetVersion(2, 3, 0)), NuGetHelper.Framework));
-            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Zio", new NuGetVersion(0, 17, 0)), NuGetHelper.Framework));
+            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Harmony", new NuGetVersion(2, 3, 3)), NuGetHelper.Framework));
+            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Lib.Harmony", new NuGetVersion(2, 3, 3)), NuGetHelper.Framework));
+            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Lib.Harmony.Thin", new NuGetVersion(2, 3, 3)), NuGetHelper.Framework));
+            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Zio", new NuGetVersion(0, 18, 0)), NuGetHelper.Framework));
 
             var executablePath = Environment.GetCommandLineArgs()[0];
             GameName = Path.GetFileNameWithoutExtension(executablePath);
