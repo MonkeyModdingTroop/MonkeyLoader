@@ -6,6 +6,7 @@ using MonkeyLoader.NuGet;
 using MonkeyLoader.Patching;
 using Mono.Cecil;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
 using System;
@@ -178,6 +179,7 @@ namespace MonkeyLoader
             Logger = new(LoggingController);
 
             JsonSerializer = new();
+            JsonSerializer.Converters.Add(new StringEnumConverter());
 
             Config = new Config(this);
             Locations = Config.LoadSection<LocationConfigSection>();
