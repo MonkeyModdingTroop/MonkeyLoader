@@ -11,7 +11,7 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>MonkeyLoader</Title>
     <Authors>Banane9</Authors>
-    <Version>0.17.0-beta</Version>
+    <Version>0.17.1-beta</Version>
     <Description>A convenience and extendability focused mod loader using NuGet packages.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
@@ -79,10 +79,10 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3">
       <Private>False</Private>
     </PackageReference>
-    <PackageReference Include="NuGet.Packaging" Version="6.9.1">
+    <PackageReference Include="NuGet.Packaging" Version="6.10.0">
       <Private>True</Private>
     </PackageReference>
-    <PackageReference Include="NuGet.Protocol" Version="6.9.1">
+    <PackageReference Include="NuGet.Protocol" Version="6.10.0">
       <Private>True</Private>
     </PackageReference>
     <PackageReference Include="PolySharp" Version="1.14.1">
@@ -93,17 +93,10 @@
     <PackageReference Include="System.ValueTuple" Version="4.5.0">
       <Private>True</Private>
     </PackageReference>
-    <PackageReference Include="Zio" Version="0.17.0" ExcludeAssets="compile; build; runtime; native" GeneratePathProperty="true">
+    <PackageReference Include="Zio" Version="0.18.0">
       <Private>True</Private>
     </PackageReference>
     <!--<ProjectReference Include="..\MonkeyLoader.CodeGenerators\MonkeyLoader.CodeGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />-->
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Zio">
-      <HintPath>$(PkgZio)\lib\netstandard2.0\Zio.dll</HintPath>
-      <Private>True</Private>
-    </Reference>
   </ItemGroup>
 
   <!-- Remove `System.*` DLLs from the output folder -->
