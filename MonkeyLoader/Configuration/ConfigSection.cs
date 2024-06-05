@@ -69,9 +69,9 @@ namespace MonkeyLoader.Configuration
         IEnumerable<IDefiningConfigKey> IIdentifiableOwner<IDefiningConfigKey>.Items => Keys;
 
         /// <summary>
-        /// Gets all the config keys of this section.
+        /// Gets all the config keys of this section in order of their <see cref="IPrioritizable.Priority">priority</see>.
         /// </summary>
-        public IEnumerable<IDefiningConfigKey> Keys => keys.AsSafeEnumerable();
+        public IEnumerable<IDefiningConfigKey> Keys => keys.OrderByDescending(key => key.Priority);
 
         /// <summary>
         /// Gets the name for this section.

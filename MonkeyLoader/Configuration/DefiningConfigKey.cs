@@ -89,6 +89,12 @@ namespace MonkeyLoader.Configuration
         IIdentifiable INestedIdentifiable.Parent => Section;
 
         /// <inheritdoc/>
+        /// <remarks>
+        /// Add a <see cref="IConfigKeyPriority">priority</see> component to this component to set a value.
+        /// </remarks>
+        public int Priority => Components.TryGet<IConfigKeyPriority>(out var priorityComponent) ? priorityComponent.Priority : 0;
+
+        /// <inheritdoc/>
         public ConfigSection Section
         {
             get => _configSection!;
@@ -397,7 +403,8 @@ namespace MonkeyLoader.Configuration
     /// <summary>
     /// Defines the definition for a config item.
     /// </summary>
-    public interface IDefiningConfigKey : ITypedConfigKey, IEntity<IDefiningConfigKey>, INestedIdentifiable<ConfigSection>
+    public interface IDefiningConfigKey : ITypedConfigKey, IEntity<IDefiningConfigKey>,
+        INestedIdentifiable<ConfigSection>, IPrioritizable
     {
         /// <summary>
         /// Gets the config this item belongs to.
