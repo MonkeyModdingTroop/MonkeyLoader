@@ -2,6 +2,7 @@
 using NuGet.Protocol.Plugins;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
@@ -157,8 +158,8 @@ namespace MonkeyLoader
         {
             return ex switch
             {
-                AggregateException aggrex => $"{ex.Message}{Environment.NewLine}{ex.StackTrace}{Environment.NewLine}{string.Join(Environment.NewLine, aggrex.InnerExceptions.Select(Format))}{Environment.NewLine}--------------------",
-                _ => $"{ex.Message}{Environment.NewLine}{ex.StackTrace}{(ex.InnerException is Exception innerEx ? $"{Environment.NewLine}{innerEx.Format()}" : "")}{Environment.NewLine}--------------------"
+                AggregateException aggrex => $"{ex.Demystify()}{Environment.NewLine}------ Inner Exceptions ------{Environment.NewLine}{string.Join(Environment.NewLine, aggrex.InnerExceptions.Select(Format))}{Environment.NewLine}------------------------------",
+                _ => $"{ex.Demystify()}{(ex.InnerException is Exception innerEx ? $"{Environment.NewLine}------ Inner Exception ------{Environment.NewLine}{innerEx.Format()}{Environment.NewLine}------------------------------" : "")}"
             };
         }
 
