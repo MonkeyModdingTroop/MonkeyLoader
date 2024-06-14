@@ -1,4 +1,5 @@
-﻿using MonkeyLoader.Configuration;
+﻿using HarmonyLib;
+using MonkeyLoader.Configuration;
 using MonkeyLoader.Events;
 using MonkeyLoader.Logging;
 using MonkeyLoader.Meta;
@@ -161,9 +162,15 @@ namespace MonkeyLoader
         public bool ShutdownRan => Phase >= ExecutionPhase.ShuttingDown;
 
         internal EventManager EventManager { get; }
-        internal AssemblyPool GameAssemblyPool { get; }
 
+        internal AssemblyPool GameAssemblyPool { get; }
         internal AssemblyPool PatcherAssemblyPool { get; }
+
+        static MonkeyLoader()
+        {
+            var harmony = new Harmony("MonkeyLoader");
+            harmony.PatchAll();
+        }
 
         /// <summary>
         /// Creates a new mod loader with the given configuration file.

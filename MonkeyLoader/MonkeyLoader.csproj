@@ -11,7 +11,7 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>MonkeyLoader</Title>
     <Authors>Banane9</Authors>
-    <Version>0.17.3-beta</Version>
+    <Version>0.17.4-beta</Version>
     <Description>A convenience and extendability focused mod loader using NuGet packages.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>

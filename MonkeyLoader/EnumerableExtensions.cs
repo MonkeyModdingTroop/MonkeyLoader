@@ -155,13 +155,7 @@ namespace MonkeyLoader
         /// <param name="ex">The exception to format.</param>
         /// <returns>The formatted exception.</returns>
         public static string Format(this Exception ex)
-        {
-            return ex switch
-            {
-                AggregateException aggrex => $"{ex.Demystify()}{Environment.NewLine}------ Inner Exceptions ------{Environment.NewLine}{string.Join(Environment.NewLine, aggrex.InnerExceptions.Select(Format))}{Environment.NewLine}------------------------------",
-                _ => $"{ex.Demystify()}{(ex.InnerException is Exception innerEx ? $"{Environment.NewLine}------ Inner Exception ------{Environment.NewLine}{innerEx.Format()}{Environment.NewLine}------------------------------" : "")}"
-            };
-        }
+            => ex.ToStringDemystified();
 
         /// <summary>
         /// Tries to get a value for the given key from this dictionary.<br/>
