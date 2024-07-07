@@ -255,7 +255,7 @@ namespace MonkeyLoader.Configuration
                 return;
 
             var value = token.ToObject(key.ValueType, jsonSerializer);
-            key.SetValue(value, "Load");
+            key.SetValue(value, ConfigKey.SetFromLoadEventLabel);
             key.HasChanges = false;
         }
 
