@@ -105,8 +105,11 @@ namespace MonkeyLoader.Patching
                 _mod = value;
                 Logger = new Logger(_mod.Logger, Name);
 
-                if (CanBeDisabled)
-                    _shouldBeEnabledKey = _mod.MonkeyToggles.GetToggle(this);
+                if (!CanBeDisabled)
+                    return;
+
+                _shouldBeEnabledKey = _mod.MonkeyToggles.GetToggle(this);
+                _shouldBeEnabledKey.Changed += OnActiveStateChanged;
             }
         }
 
@@ -227,6 +230,26 @@ namespace MonkeyLoader.Patching
         protected abstract IEnumerable<IFeaturePatch> GetFeaturePatches();
 
         /// <summary>
+        /// Lets this monkey react to being disabled at runtime.<br/>
+        /// Will only ever be called when <see cref="CanBeDisabled">CanBeDisabled</see> is <c>true</c>.
+        /// </summary>
+        /// <remarks>
+        /// <i>By default:</i> does nothing.
+        /// </remarks>
+        protected virtual void OnDisabled()
+        { }
+
+        /// <summary>
+        /// Lets this monkey react to being enabled at runtime.<br/>
+        /// Will only ever be called when <see cref="CanBeDisabled">CanBeDisabled</see> is <c>true</c>.
+        /// </summary>
+        /// <remarks>
+        /// <i>By default:</i> does nothing.
+        /// </remarks>
+        protected virtual void OnEnabled()
+        { }
+
+        /// <summary>
         /// Lets this monkey cleanup and shutdown.
         /// </summary>
         /// <remarks>
@@ -253,6 +276,24 @@ namespace MonkeyLoader.Patching
         {
             if (Ran)
                 throw new InvalidOperationException("A monkey's Run() method must only be called once!");
+        }
+
+        private void OnActiveStateChanged(object sender, ConfigKeyChangedEventArgs<bool> configKeyChangedEventArgs)
+        {
+            if (configKeyChangedEventArgs.Label is ConfigKey.SetFromLoadEventLabel or ConfigKey.SetFromDefaultEventLabel)
+                return;
+
+            try
+            {
+                if (configKeyChangedEventArgs.NewValue)
+                    OnEnabled();
+                else
+                    OnDisabled();
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(() => ex.Format($"{(configKeyChangedEventArgs.NewValue ? nameof(OnEnabled) : nameof(OnDisabled))}() threw an Exception:"));
+            }
         }
 
         private void OnShutdownDone(bool applicationExiting)

@@ -30,6 +30,11 @@ namespace MonkeyLoader.Configuration
         public const string SetFromDefaultEventLabel = "Default";
 
         /// <summary>
+        /// The event label used when a config item's value is set from getting loaded from a saved config.
+        /// </summary>
+        public const string SetFromLoadEventLabel = "Load";
+
+        /// <summary>
         /// Gets the custom <see cref="IEqualityComparer{T}"/> for <see cref="IConfigKey"/>s.
         /// </summary>
         public static readonly IEqualityComparer<IConfigKey> EqualityComparer = new ConfigKeyEqualityComparer();
