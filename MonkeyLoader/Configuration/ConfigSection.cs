@@ -19,7 +19,7 @@ namespace MonkeyLoader.Configuration
     /// <remarks>
     /// Use your mod's <see cref="Configuration.Config"/> instance to <see cref="Config.LoadSection{TSection}()">load sections</see>.
     /// </remarks>
-    public abstract class ConfigSection : INestedIdentifiable<Mod>, IIdentifiableOwner<ConfigSection, IDefiningConfigKey>
+    public abstract class ConfigSection : INestedIdentifiable<Config>, IIdentifiableOwner<ConfigSection, IDefiningConfigKey>
     {
         /// <summary>
         /// Stores the <see cref="IDefiningConfigKey"/>s tracked by this section.
@@ -78,9 +78,9 @@ namespace MonkeyLoader.Configuration
         /// </summary>
         public virtual string Name => Id;
 
-        Mod INestedIdentifiable<Mod>.Parent => (Mod)Config.Owner;
-
         IIdentifiable INestedIdentifiable.Parent => Config.Owner;
+
+        Config INestedIdentifiable<Config>.Parent => Config;
 
         /// <summary>
         /// Gets whether this config section is allowed to be saved.<br/>

@@ -54,9 +54,9 @@ namespace MonkeyLoader.Meta
     {
         /// <summary>
         /// Searches for an indirect child item by the given partial id,
-        /// which is what remains of its <see cref="INestedIdentifiable.FullId">FullId</see> after the search root's FullId.
+        /// which is what remains of its <see cref="IIdentifiable.FullId">FullId</see> after the search root's FullId.
         /// </summary>
-        /// <param name="partialId">The partial <see cref="INestedIdentifiable.FullId"/> of the item to search for.</param>
+        /// <param name="partialId">The partial <see cref="IIdentifiable.FullId"/> of the item to search for.</param>
         /// <returns>The found item.</returns>
         /// <exception cref="KeyNotFoundException">When no item with the given partial id was found.</exception>
         public TIdentifiable ByPartialId(string partialId);
@@ -73,9 +73,9 @@ namespace MonkeyLoader.Meta
     {
         /// <summary>
         /// Tries searching for an indirect child item by the given partial id,
-        /// which is what remains of its <see cref="INestedIdentifiable.FullId">FullId</see> after the search root's FullId.
+        /// which is what remains of its <see cref="IIdentifiable.FullId">FullId</see> after the search root's FullId.
         /// </summary>
-        /// <param name="partialId">The partial <see cref="INestedIdentifiable.FullId"/> of the item to search for.</param>
+        /// <param name="partialId">The partial <see cref="IIdentifiable.FullId"/> of the item to search for.</param>
         /// <param name="item">The item if found; otherwise, <c>default(<typeparamref name="TIdentifiable"/>)</c>.</param>
         /// <returns><c>true</c> if an item was found; otherwise, <c>false</c>.</returns>
         public bool ByPartialId(string partialId, [NotNullWhen(true)] out TIdentifiable? item);
@@ -89,9 +89,9 @@ namespace MonkeyLoader.Meta
         where TIdentifiable : INestedIdentifiable
     {
         /// <summary>
-        /// Searches for an item by its given <see cref="INestedIdentifiable.FullId">id</see>.
+        /// Searches for an item by its given <see cref="IIdentifiable.FullId">id</see>.
         /// </summary>
-        /// <param name="fullId">The <see cref="INestedIdentifiable.FullId"/> of the item to search for.</param>
+        /// <param name="fullId">The <see cref="IIdentifiable.FullId"/> of the item to search for.</param>
         /// <returns>The found item.</returns>
         /// <exception cref="KeyNotFoundException">When no item with the given full id was found.</exception>
         public TIdentifiable ByFullId(string fullId);
@@ -105,9 +105,9 @@ namespace MonkeyLoader.Meta
         where TIdentifiable : INestedIdentifiable
     {
         /// <summary>
-        /// Tries searching for an item by its given <see cref="INestedIdentifiable.FullId"/>.
+        /// Tries searching for an item by its given <see cref="IIdentifiable.FullId"/>.
         /// </summary>
-        /// <param name="fullId">The <see cref="INestedIdentifiable.FullId"/> of the item to search for.</param>
+        /// <param name="fullId">The <see cref="IIdentifiable.FullId"/> of the item to search for.</param>
         /// <param name="item">The item if found; otherwise, <c>default(<typeparamref name="TIdentifiable"/>)</c>.</param>
         /// <returns><c>true</c> if an item was found; otherwise, <c>false</c>.</returns>
         public bool ByFullId(string fullId, [NotNullWhen(true)] out TIdentifiable? item);

@@ -1,6 +1,7 @@
 // Adapted from the NeosModLoader project.
 
 using MonkeyLoader.Logging;
+using MonkeyLoader.Meta;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -9,7 +10,6 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using static System.Collections.Specialized.BitVector32;
 
 namespace MonkeyLoader.Configuration
 {
@@ -17,7 +17,8 @@ namespace MonkeyLoader.Configuration
     /// The configuration for a mod. Each mod has exactly one configuration.<br/>
     /// The configuration object will never be reassigned once initialized.
     /// </summary>
-    public sealed class Config
+    public sealed class Config : INestedIdentifiable<IConfigOwner>,
+        IIdentifiableOwner<Config, ConfigSection>, INestedIdentifiableOwner<IDefiningConfigKey>
     {
         private const string OwnerKey = "Owner";
         private const string SectionsKey = "Sections";
@@ -34,6 +35,14 @@ namespace MonkeyLoader.Configuration
         /// </summary>
         public IEnumerable<IDefiningConfigKey> ConfigurationItemDefinitions => _configurationItemDefinitionsSelfMap.Values.AsSafeEnumerable();
 
+        string IIdentifiable.FullId => $"{Owner.FullId}.Config";
+
+        string IIdentifiable.Id => "Config";
+
+        IEnumerable<IDefiningConfigKey> INestedIdentifiableOwner<IDefiningConfigKey>.Items => ConfigurationItemDefinitions;
+
+        IEnumerable<ConfigSection> IIdentifiableOwner<ConfigSection>.Items => Sections;
+
         /// <summary>
         /// Gets the logger used by this config.
         /// </summary>
@@ -43,6 +52,10 @@ namespace MonkeyLoader.Configuration
         /// Gets the mod that owns this config.
         /// </summary>
         public IConfigOwner Owner { get; }
+
+        IConfigOwner INestedIdentifiable<IConfigOwner>.Parent => Owner;
+
+        IIdentifiable INestedIdentifiable.Parent => Owner;
 
         /// <summary>
         /// Gets all loaded sections of this config.

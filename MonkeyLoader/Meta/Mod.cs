@@ -19,8 +19,9 @@ namespace MonkeyLoader.Meta
     /// Contains the base metadata and references for a mod.
     /// </summary>
     public abstract class Mod : IConfigOwner, IShutdown, ILoadedNuGetPackage, IComparable<Mod>,
-        IIdentifiableOwner<Mod, ConfigSection>, IIdentifiableOwner<Mod, IMonkey>, IIdentifiableOwner<Mod, IEarlyMonkey>,
-        INestedIdentifiableOwner<IDefiningConfigKey>
+        INestedIdentifiableOwner<ConfigSection>, INestedIdentifiableOwner<IDefiningConfigKey>,
+        IIdentifiableOwner<Mod, IMonkey>, IIdentifiableOwner<Mod, IEarlyMonkey>
+
     {
         /// <summary>
         /// The file extension for mods' assemblies.
@@ -138,6 +139,8 @@ namespace MonkeyLoader.Meta
         /// </summary>
         public abstract IFileSystem FileSystem { get; }
 
+        string IIdentifiable.FullId => Id;
+
         /// <summary>
         /// Gets whether this mod has any <see cref="Monkeys">monkeys</see>.
         /// </summary>
@@ -175,14 +178,16 @@ namespace MonkeyLoader.Meta
         /// </summary>
         public bool IsGamePack { get; }
 
-        IEnumerable<ConfigSection> IIdentifiableOwner<ConfigSection>.Items => Config.Sections;
-
         IEnumerable<IMonkey> IIdentifiableOwner<IMonkey>.Items => monkeys.Concat(earlyMonkeys);
 
         IEnumerable<IEarlyMonkey> IIdentifiableOwner<IEarlyMonkey>.Items => EarlyMonkeys;
 
         IEnumerable<IDefiningConfigKey> INestedIdentifiableOwner<IDefiningConfigKey>.Items
             => Config.Sections.SelectMany(section => section.Keys);
+
+        IEnumerable<Config> IIdentifiableOwner<Config>.Items => Config.Yield();
+
+        IEnumerable<ConfigSection> INestedIdentifiableOwner<ConfigSection>.Items => Config.Sections;
 
         /// <summary>
         /// Gets whether this mod's <see cref="LoadEarlyMonkeys">LoadEarlyMonkeys</see>() failed when it was called.

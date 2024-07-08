@@ -59,6 +59,8 @@ namespace MonkeyLoader
         /// </summary>
         public string ConfigPath { get; }
 
+        string IIdentifiable.FullId => Id;
+
         /// <summary>
         /// Gets the path pointing of the directory containing the game's assemblies.
         /// </summary>
@@ -92,6 +94,8 @@ namespace MonkeyLoader
 
         IEnumerable<IMonkey> INestedIdentifiableCollection<IMonkey>.Items
             => _allMods.SelectMany(mod => mod.Monkeys).Concat(_allMods.SelectMany(mod => mod.EarlyMonkeys));
+
+        IEnumerable<Config> IIdentifiableOwner<Config>.Items => Config.Yield();
 
         /// <summary>
         /// Gets the json serializer used by this loader and any mods it loads.<br/>

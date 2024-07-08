@@ -41,6 +41,8 @@ namespace MonkeyLoader.Configuration
 
         IConfigKey IConfigKey.AsUntyped => this;
 
+        string IIdentifiable.FullId => Id;
+
         /// <summary>
         /// Gets the mod-unique identifier for the wanted config item.
         /// </summary>
@@ -157,7 +159,7 @@ namespace MonkeyLoader.Configuration
         public IConfigKey AsUntyped { get; }
 
         /// <summary>
-        /// Gets whether this instance defines the config item with this <see cref="Id">Name</see>.
+        /// Gets whether this instance defines the config item with this <see cref="IIdentifiable.Id">name</see>.
         /// </summary>
         public bool IsDefiningKey { get; }
     }
