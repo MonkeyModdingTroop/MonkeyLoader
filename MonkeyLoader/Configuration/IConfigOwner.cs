@@ -11,7 +11,7 @@ namespace MonkeyLoader.Configuration
     /// <summary>
     /// Interface to let <see cref="Mod">mods</see> and the <see cref="MonkeyLoader">loader</see> own <see cref="Config"/>s.
     /// </summary>
-    public interface IConfigOwner : IIdentifiable
+    public interface IConfigOwner : IIdentifiableOwner<IConfigOwner, Config>
     {
         /// <summary>
         /// Gets the path where this owner's config file should be.

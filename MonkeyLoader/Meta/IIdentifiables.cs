@@ -6,7 +6,18 @@
     public interface IIdentifiable
     {
         /// <summary>
-        /// Gets the unique identifier of this item.
+        /// Gets the fully qualified identifier for this item.<br/>
+        /// Should be implemented explicitly in non-<see cref="INestedIdentifiable"/>s.
+        /// </summary>
+        /// <value>
+        /// <i>Should be:</i>
+        /// <c>{<see cref="INestedIdentifiable.Parent">Parent</see>.<see cref="FullId">FullId</see>}.{<see cref="Id">Id</see>}</c>,
+        /// or just <c><see cref="Id">Id</see></c> for top level items.
+        /// </value>
+        public string FullId { get; }
+
+        /// <summary>
+        /// Gets the category-unique identifier of this item.
         /// </summary>
         public string Id { get; }
     }
@@ -20,14 +31,6 @@
     /// </remarks>
     public interface INestedIdentifiable : IIdentifiable
     {
-        /// <summary>
-        /// Gets the fully qualified identifier for this item.
-        /// </summary>
-        /// <value>
-        /// <i>Should be:</i> <c>{<see cref="Parent">Parent</see>.(Full)Id}.{<see cref="IIdentifiable.Id">Id</see>}</c>
-        /// </value>
-        public string FullId { get; }
-
         /// <summary>
         /// Gets this item's <see cref="IIdentifiable">identifiable</see> parent.
         /// </summary>
