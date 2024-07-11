@@ -11,6 +11,9 @@ namespace MonkeyLoader.Events
     /// </summary>
     public abstract class AsyncEvent : Event
     {
+        /// <summary>
+        /// Initializes this asynchronous event.
+        /// </summary>
         protected AsyncEvent()
         { }
     }
@@ -23,6 +26,9 @@ namespace MonkeyLoader.Events
         /// <inheritdoc/>
         public bool Canceled { get; set; }
 
+        /// <summary>
+        /// Initializes this cancelable asynchronous event.
+        /// </summary>
         protected CancelableAsyncEvent()
         { }
     }

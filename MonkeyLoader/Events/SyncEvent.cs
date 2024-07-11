@@ -14,15 +14,21 @@ namespace MonkeyLoader.Events
         /// <inheritdoc/>
         public bool Canceled { get; set; }
 
+        /// <summary>
+        /// Initializes this cancelable synchronous event.
+        /// </summary>
         protected CancelableSyncEvent()
         { }
     }
 
     /// <summary>
-    /// Marks the base for all cancelable synchronous events used by <see cref="IEventSource{TEvent}"/>s.
+    /// Marks the base for all synchronous events used by <see cref="IEventSource{TEvent}"/>s.
     /// </summary>
     public abstract class SyncEvent : Event
     {
+        /// <summary>
+        /// Initializes this synchronous event.
+        /// </summary>
         protected SyncEvent()
         { }
     }
