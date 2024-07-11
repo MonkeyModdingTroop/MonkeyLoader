@@ -80,10 +80,10 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3">
       <Private>False</Private>
     </PackageReference>
-    <PackageReference Include="NuGet.Packaging" Version="6.10.0">
+    <PackageReference Include="NuGet.Packaging" Version="6.10.1">
       <Private>True</Private>
     </PackageReference>
-    <PackageReference Include="NuGet.Protocol" Version="6.10.0">
+    <PackageReference Include="NuGet.Protocol" Version="6.10.1">
       <Private>True</Private>
     </PackageReference>
     <PackageReference Include="PolySharp" Version="1.14.1">
@@ -91,6 +91,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="System.Text.Json" Version="8.0.4" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0">
       <Private>True</Private>
     </PackageReference>
