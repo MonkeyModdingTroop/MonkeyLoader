@@ -36,6 +36,14 @@ namespace MonkeyLoader.Configuration
         private ConfigKeyChangedEventHandler? _untypedChanged;
         private T? _value;
 
+        /// <summary>
+        /// Implicit way to get the value for this config key
+        /// </summary>
+        public static implicit operator T?(DefiningConfigKey<T> key)
+        {
+            return key.GetValue();
+        }
+
         /// <inheritdoc/>
         public IConfigKey AsUntyped { get; }
 
