@@ -36,14 +36,6 @@ namespace MonkeyLoader.Configuration
         private ConfigKeyChangedEventHandler? _untypedChanged;
         private T? _value;
 
-        /// <summary>
-        /// Implicit way to get the value for this config key
-        /// </summary>
-        public static implicit operator T?(DefiningConfigKey<T> key)
-        {
-            return key.GetValue();
-        }
-
         /// <inheritdoc/>
         public IConfigKey AsUntyped { get; }
 
@@ -177,6 +169,13 @@ namespace MonkeyLoader.Configuration
             // Make the Compiler shut up about Section not being set - it gets set by the ConfigSection loading the keys.
             Section = default!;
         }
+
+        /// <summary>
+        /// Implicitly gets the value of this config item.
+        /// </summary>
+        /// <param name="key">The config item to get the value of.</param>
+        /// <returns>The item's internal value or its <see cref="ValueType">type's</see> <c>default</c>.</returns>
+        public static implicit operator T?(DefiningConfigKey<T> key) => key.GetValue();
 
         /// <inheritdoc/>
         public bool Equals(IConfigKey other) => ConfigKey.EqualityComparer.Equals(this, other);
@@ -462,7 +461,7 @@ namespace MonkeyLoader.Configuration
         /// <summary>
         /// Gets this config item's set value, falling back to the <see cref="TryComputeDefault">computed default</see>.
         /// </summary>
-        /// <returns>The item's internal value or its <see cref="ValueType">type's</see> <c>default</c>.</returns>
+        /// <returns>The item's internal value or its <see cref="ITypedConfigKey.ValueType">type's</see> <c>default</c>.</returns>
         public object? GetValue();
 
         /// <summary>
@@ -523,7 +522,7 @@ namespace MonkeyLoader.Configuration
         /// <summary>
         /// Gets this config item's set value, falling back to the <see cref="TryComputeDefault">computed default</see>.
         /// </summary>
-        /// <returns>The item's internal value or its <see cref="ValueType">type's</see> <c>default</c>.</returns>
+        /// <returns>The item's internal value or its <see cref="ITypedConfigKey.ValueType">type's</see> <c>default</c>.</returns>
         public new T? GetValue();
 
         /// <summary>
