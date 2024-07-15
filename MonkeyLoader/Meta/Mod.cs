@@ -501,7 +501,7 @@ namespace MonkeyLoader.Meta
         }
 
         /// <inheritdoc/>
-        public override string ToString() => $"{Title} ({(IsGamePack ? "Game Pack" : "Regular")})";
+        public override string ToString() => $"{Identity} ({(IsGamePack ? "Game Pack" : "Regular")})";
 
         /// <summary>
         /// Searches all of this mod's loaded <see cref="Monkeys">Monkeys</see> and

@@ -273,14 +273,27 @@ namespace MonkeyLoader
         /// Adds a mod to be managed by this loader.
         /// </summary>
         /// <param name="mod">The mod to add.</param>
+        /// <exception cref="InvalidOperationException">When the <paramref name="mod"/> mod is invalid.</exception>
         public void AddMod(Mod mod)
         {
-            Logger.Debug(() => $"Adding {(mod.IsGamePack ? "game pack" : "regular")} mod: {mod.Title}");
+            if (mod.Loader != this)
+                throw new InvalidOperationException($"Attempted to add mod from another loader instance: {mod}");
 
-            _allMods.Add(mod);
-            NuGet.Add(mod);
+            if (mod.ShutdownRan)
+                throw new InvalidOperationException($"Attempted to add already shutdown mod: {mod}");
 
-            ModAdded?.TryInvokeAll(this, mod);
+            if (_allMods.Add(mod))
+            {
+                Logger.Debug(() => $"Adding mod: {mod}");
+
+                NuGet.Add(mod);
+
+                ModAdded?.TryInvokeAll(this, mod);
+            }
+            else
+            {
+                Logger.Warn(() => $"Attempted to add already present mod: {mod}");
+            }
         }
 
         /// <summary>
@@ -628,6 +641,7 @@ namespace MonkeyLoader
         /// <see cref="Mod.EarlyMonkeys">early</see> and <see cref="Mod.Monkeys">regular</see> monkeys.
         /// </summary>
         /// <param name="mod">The mod to run.</param>
+        /// <exception cref="InvalidOperationException">When the <paramref name="mod"/> mod is invalid.</exception>
         public void RunMod(Mod mod) => RunMods(mod);
 
         /// <summary>
@@ -635,8 +649,13 @@ namespace MonkeyLoader
         /// <see cref="Mod.EarlyMonkeys">early</see> and <see cref="Mod.Monkeys">regular</see> monkeys in topological order.
         /// </summary>
         /// <param name="mods">The mods to run.</param>
+        /// <exception cref="InvalidOperationException">When <paramref name="mods"/> contains invalid items.</exception>
         public void RunMods(params Mod[] mods)
         {
+            var invalidMods = mods.Where(FilterInvalidPresentMod).ToArray();
+            if (invalidMods.Length > 0)
+                throw new InvalidOperationException($"Attempted to run mod(s) from other loader, that isn't present or was already shut down: {invalidMods.Join()}");
+
             LoadEarlyMonkeys(mods);
             RunEarlyMonkeys(mods);
 
@@ -759,9 +778,13 @@ namespace MonkeyLoader
         /// </summary>
         /// <param name="mod">The mod to shut down.</param>
         /// <param name="applicationExiting">Whether the shutdown is caused by the application exiting.</param>
-        /// <returns><c>true</c> if it ran successfully; otherwise, <c>false</c>.</returns>
+        /// <returns><c>true</c> if it the mod belongs to this loader and the shutdown ran successfully; otherwise, <c>false</c>.</returns>
+        /// <exception cref="InvalidOperationException">When the <paramref name="mod"/> mod is invalid.</exception>
         public bool ShutdownMod(Mod mod, bool applicationExiting = false)
         {
+            if (FilterInvalidPresentMod(mod))
+                throw new InvalidOperationException($"Attempted to shut down mod from other loader, that isn't present or was already shut down: {mod}");
+
             ModsShuttingDown?.TryInvokeAll(this, mod.Yield());
 
             var earlyMonkeys = mod.GetEarlyMonkeysDescending();
@@ -792,6 +815,10 @@ namespace MonkeyLoader
         /// <exception cref="InvalidOperationException">When <paramref name="mods"/> contains invalid items.</exception>
         public bool ShutdownMods(bool applicationExiting = false, params Mod[] mods)
         {
+            var invalidMods = mods.Where(FilterInvalidPresentMod).ToArray();
+            if (invalidMods.Length > 0)
+                throw new InvalidOperationException($"Attempted to shut down mod(s) from other loader, that aren't present or were already shut down: {invalidMods.Join()}");
+
             var success = true;
             Array.Sort(mods, Mod.DescendingComparer);
 
@@ -971,6 +998,9 @@ namespace MonkeyLoader
                 Logger.Error(() => ex.Format($"Some {nameof(AnyConfigChanged)} event subscriber(s) threw an exception:"));
             }
         }
+
+        private bool FilterInvalidPresentMod(Mod mod)
+                                                                    => mod.Loader != this || mod.ShutdownRan || !_allMods.Contains(mod);
 
         private void OnShutdownDone(bool applicationExiting)
         {
