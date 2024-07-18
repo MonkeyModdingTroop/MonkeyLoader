@@ -255,12 +255,12 @@ namespace MonkeyLoader.Meta
         public abstract string? ReleaseNotes { get; }
 
         /// <summary>
-        /// Gets whether this <see cref="NuGetPackageMod"/>'s <see cref="Shutdown"/> method failed when it was called.
+        /// Gets whether this <see cref="Mod"/>'s <see cref="Shutdown"/> method failed when it was called.
         /// </summary>
         public bool ShutdownFailed { get; private set; } = false;
 
         /// <summary>
-        /// Gets whether this <see cref="NuGetPackageMod"/>'s <see cref="Shutdown"/> method has been called.
+        /// Gets whether this <see cref="Mod"/>'s <see cref="Shutdown"/> method has been called.
         /// </summary>
         public bool ShutdownRan { get; private set; } = false;
 
