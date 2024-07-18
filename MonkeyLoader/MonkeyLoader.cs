@@ -347,6 +347,8 @@ namespace MonkeyLoader
             EnsureAllLocationsExist();
             LoadGameAssemblyDefinitions();
 
+            LoadAllLibraries();
+
             LoadAllGamePacks();
             LoadAllMods();
 
@@ -381,6 +383,36 @@ namespace MonkeyLoader
             {
                 Logger.Error(() => ex.Format($"Exception while searching files at location {Locations.GamePacks}:"));
                 return Enumerable.Empty<NuGetPackageMod>();
+            }
+        }
+
+        /// <summary>
+        /// Loads all .nupkg files from the loader's <see cref="LocationConfigSection.Libs"/> folder.
+        /// </summary>
+        public void LoadAllLibraries()
+        {
+            try
+            {
+                Logger.Warn(() => "Loading libraries as NuGetPackageMods to make use of the logic - this should be changed.");
+
+                // Abuse the NuGetPackageMod loading mechanisms to load the right libraries
+                // It's already implemented there... but should be handled separately
+                var loadedLibraries = Directory.EnumerateFiles(Locations.Libs, NuGetPackageMod.SearchPattern, SearchOption.TopDirectoryOnly)
+                    .TrySelect<string, NuGetPackageMod>(TryLoadGamePack)
+                    .ToArray();
+
+                Logger.Info(() => "Loaded the following libraries:");
+                Logger.Info(loadedLibraries);
+
+                // Make sure the assemblies inside are loaded
+                LoadMonkeys(loadedLibraries);
+
+                // Remove the mod entries again
+                ShutdownMods(loadedLibraries);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(() => ex.Format($"Exception while searching files at location {Locations.Libs} and loading libraries:"));
             }
         }
 
