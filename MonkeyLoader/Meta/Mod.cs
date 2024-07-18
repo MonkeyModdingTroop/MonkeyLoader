@@ -1,5 +1,4 @@
 ﻿using MonkeyLoader.Configuration;
-using MonkeyLoader.Events;
 using MonkeyLoader.Logging;
 using MonkeyLoader.NuGet;
 using MonkeyLoader.Patching;
@@ -18,7 +17,7 @@ namespace MonkeyLoader.Meta
     /// <summary>
     /// Contains the base metadata and references for a mod.
     /// </summary>
-    public abstract class Mod : IConfigOwner, IShutdown, ILoadedNuGetPackage, IComparable<Mod>,
+    public abstract partial class Mod : IConfigOwner, IShutdown, ILoadedNuGetPackage, IComparable<Mod>,
         INestedIdentifiableOwner<ConfigSection>, INestedIdentifiableOwner<IDefiningConfigKey>,
         IIdentifiableOwner<Mod, IMonkey>, IIdentifiableOwner<Mod, IEarlyMonkey>
 
@@ -329,22 +328,6 @@ namespace MonkeyLoader.Meta
         public bool DependsOn(ILoadedNuGetPackage otherPackage) => DependsOn(otherPackage.Identity.Id);
 
         /// <summary>
-        /// Searches all of this mod's loaded <see cref="Monkeys">Monkeys</see> and
-        /// <see cref="EarlyMonkeys">Early Monkeys</see> to find one with the given <see cref="IIdentifiable.Id">id</see>.
-        /// </summary>
-        /// <param name="id">The id to find a monkey for.</param>
-        /// <returns>The found monkey.</returns>
-        /// <exception cref="KeyNotFoundException">When no monkey with the given id was found.</exception>
-        [Obsolete("Use the extension method Get<IMonkey> or Get<IEarlyMonkey>")]
-        public IMonkey FindMonkeyById(string id)
-        {
-            if (!this.TryGet<IMonkey>().ById(id, out var monkey))
-                throw new KeyNotFoundException(id);
-
-            return monkey;
-        }
-
-        /// <summary>
         /// Efficiently checks, whether a given name is listed as an author for this mod.
         /// </summary>
         /// <param name="author">The name to check for.</param>
@@ -357,110 +340,6 @@ namespace MonkeyLoader.Meta
         /// <param name="tag">The tag to check for.</param>
         /// <returns><c>true</c> if the given tag is listed for this mod; otherwise, <c>false</c>.</returns>
         public bool HasTag(string tag) => tags.Contains(tag);
-
-        /// <summary>
-        /// Registers the given <see cref="IEventHandler{TEvent}">event handler</see> for this mod.
-        /// </summary>
-        /// <remarks>
-        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
-        /// </remarks>
-        /// <typeparam name="TEvent">The type of events handled.</typeparam>
-        /// <param name="eventHandler">The <see cref="IEventHandler{TEvent}">event handler</see> to register.</param>
-        /// <returns><c>true</c> if the <paramref name="eventHandler"/> was newly registered; otherwise, <c>false</c>.</returns>
-        public bool RegisterEventHandler<TEvent>(IEventHandler<TEvent> eventHandler)
-            where TEvent : SyncEvent
-            => Loader.EventManager.RegisterSyncEventHandler(this, eventHandler);
-
-        /// <summary>
-        /// Registers the given <see cref="ICancelableEventHandler{TEvent}">cancelable event handler</see> for this mod.
-        /// </summary>
-        /// <remarks>
-        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
-        /// </remarks>
-        /// <typeparam name="TEvent">The type of cancelable events handled.</typeparam>
-        /// <param name="cancelableEventHandler">The <see cref="ICancelableEventHandler{TEvent}">cancelable event handler</see> to register.</param>
-        /// <returns><c>true</c> if the <paramref name="cancelableEventHandler"/> was newly registered; otherwise, <c>false</c>.</returns>
-        public bool RegisterEventHandler<TEvent>(ICancelableEventHandler<TEvent> cancelableEventHandler)
-            where TEvent : CancelableSyncEvent
-            => Loader.EventManager.RegisterCancelableSyncEventHandler(this, cancelableEventHandler);
-
-        /// <summary>
-        /// Registers the given <see cref="IAsyncEventHandler{TEvent}">async event handler</see> for this mod.
-        /// </summary>
-        /// <remarks>
-        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
-        /// </remarks>
-        /// <typeparam name="TEvent">The type of async events handled.</typeparam>
-        /// <param name="asyncEventHandler">The <see cref="IAsyncEventHandler{TEvent}">async event handler</see> to register.</param>
-        /// <returns><c>true</c> if the <paramref name="asyncEventHandler"/> was newly registered; otherwise, <c>false</c>.</returns>
-        public bool RegisterEventHandler<TEvent>(IAsyncEventHandler<TEvent> asyncEventHandler)
-            where TEvent : AsyncEvent
-            => Loader.EventManager.RegisterAsyncEventHandler(this, asyncEventHandler);
-
-        /// <summary>
-        /// Registers the given <see cref="ICancelableEventHandler{TEvent}">cancelable async event handler</see> for this mod.
-        /// </summary>
-        /// <remarks>
-        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
-        /// </remarks>
-        /// <typeparam name="TEvent">The type of cancelable async events handled.</typeparam>
-        /// <param name="cancelableAsyncEventHandler">The <see cref="ICancelableEventHandler{TEvent}">cancelable async event handler</see> to register.</param>
-        /// <returns><c>true</c> if the <paramref name="cancelableAsyncEventHandler"/> was newly registered; otherwise, <c>false</c>.</returns>
-        public bool RegisterEventHandler<TEvent>(ICancelableAsyncEventHandler<TEvent> cancelableAsyncEventHandler)
-            where TEvent : CancelableAsyncEvent
-            => Loader.EventManager.RegisterCancelableAsyncEventHandler(this, cancelableAsyncEventHandler);
-
-        /// <summary>
-        /// Registers the given <see cref="IEventSource{TEvent}">event source</see> for this mod.
-        /// </summary>
-        /// <remarks>
-        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
-        /// </remarks>
-        /// <typeparam name="TEvent">The type of events handled.</typeparam>
-        /// <param name="eventSource">The <see cref="IEventSource{TEvent}">event source</see> to register.</param>
-        /// <returns><c>true</c> if the <paramref name="eventSource"/> was newly registered; otherwise, <c>false</c>.</returns>
-        public bool RegisterEventSource<TEvent>(IEventSource<TEvent> eventSource)
-            where TEvent : SyncEvent
-            => Loader.EventManager.RegisterEventSource(this, eventSource);
-
-        /// <summary>
-        /// Registers the given <see cref="ICancelableEventSource{TEvent}">cancelable event source</see> for this mod.
-        /// </summary>
-        /// <remarks>
-        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
-        /// </remarks>
-        /// <typeparam name="TEvent">The type of events handled.</typeparam>
-        /// <param name="cancelableEventSource">The <see cref="ICancelableEventSource{TEvent}">cancelable event source</see> to register.</param>
-        /// <returns><c>true</c> if the <paramref name="cancelableEventSource"/> was newly registered; otherwise, <c>false</c>.</returns>
-        public bool RegisterEventSource<TEvent>(ICancelableEventSource<TEvent> cancelableEventSource)
-            where TEvent : CancelableSyncEvent
-            => Loader.EventManager.RegisterEventSource(this, cancelableEventSource);
-
-        /// <summary>
-        /// Registers the given <see cref="IAsyncEventSource{TEvent}">event source</see> for this mod.
-        /// </summary>
-        /// <remarks>
-        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
-        /// </remarks>
-        /// <typeparam name="TEvent">The type of async events handled.</typeparam>
-        /// <param name="eventSource">The <see cref="IAsyncEventSource{TEvent}">event source</see> to register.</param>
-        /// <returns><c>true</c> if the <paramref name="eventSource"/> was newly registered; otherwise, <c>false</c>.</returns>
-        public bool RegisterEventSource<TEvent>(IAsyncEventSource<TEvent> eventSource)
-            where TEvent : AsyncEvent
-            => Loader.EventManager.RegisterEventSource(this, eventSource);
-
-        /// <summary>
-        /// Registers the given <see cref="ICancelableEventSource{TEvent}">cancelable event source</see> for this mod.
-        /// </summary>
-        /// <remarks>
-        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
-        /// </remarks>
-        /// <typeparam name="TEvent">The type of async events handled.</typeparam>
-        /// <param name="cancelableAsyncEventSource">The <see cref="ICancelableEventSource{TEvent}">cancelable event source</see> to register.</param>
-        /// <returns><c>true</c> if the <paramref name="cancelableAsyncEventSource"/> was newly registered; otherwise, <c>false</c>.</returns>
-        public bool RegisterEventSource<TEvent>(ICancelableAsyncEventSource<TEvent> cancelableAsyncEventSource)
-            where TEvent : CancelableAsyncEvent
-            => Loader.EventManager.RegisterEventSource(this, cancelableAsyncEventSource);
 
         /// <summary>
         /// Lets this mod cleanup and shutdown.<br/>
@@ -503,136 +382,9 @@ namespace MonkeyLoader.Meta
         /// <inheritdoc/>
         public override string ToString() => $"{Identity} ({(IsGamePack ? "Game Pack" : "Regular")})";
 
-        /// <summary>
-        /// Searches all of this mod's loaded <see cref="Monkeys">Monkeys</see> and
-        /// <see cref="EarlyMonkeys">Early Monkeys</see> to find one with the given <see cref="IIdentifiable.Id">id</see>.
-        /// </summary>
-        /// <param name="id">The id to find a monkey for.</param>
-        /// <param name="monkey">The monkey that was found or <c>null</c>.</param>
-        /// <returns><c>true</c> if a monkey was found; otherwise, <c>false</c>.</returns>
-        [Obsolete("Use the extension method TryGet<IMonkey> or TryGet<IEarlyMonkey>")]
-        public bool TryFindMonkeyById(string id, [NotNullWhen(true)] out IMonkey? monkey)
-        {
-            monkey = null;
-
-            if (string.IsNullOrWhiteSpace(id))
-            {
-                Logger.Warn(() => $"Attempted to get a monkey using an invalid id!");
-                return false;
-            }
-
-            monkey = monkeys.Concat(earlyMonkeys).FirstOrDefault(monkey => monkey.Id == id);
-
-            return monkey is not null;
-        }
-
         /// <inheritdoc/>
         public bool TryResolveDependencies()
             => dependencies.Values.Select(dep => dep.TryResolve()).All();
-
-        /// <summary>
-        /// Unregisters the given <see cref="IEventHandler{TEvent}">event handler</see> for this mod.
-        /// </summary>
-        /// <remarks>
-        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
-        /// </remarks>
-        /// <typeparam name="TEvent">The type of events handled.</typeparam>
-        /// <param name="eventHandler">The <see cref="IEventHandler{TEvent}">event handler</see> to unregister.</param>
-        /// <returns><c>true</c> if the <paramref name="eventHandler"/> was found and unregistered; otherwise, <c>false</c>.</returns>
-        public bool UnregisterEventHandler<TEvent>(IEventHandler<TEvent> eventHandler)
-            where TEvent : SyncEvent
-            => Loader.EventManager.UnregisterSyncEventHandler(this, eventHandler);
-
-        /// <summary>
-        /// Unregisters the given <see cref="ICancelableEventHandler{TEvent}">cancelable event handler</see> for this mod.
-        /// </summary>
-        /// <remarks>
-        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
-        /// </remarks>
-        /// <typeparam name="TEvent">The type of cancelable events handled.</typeparam>
-        /// <param name="cancelableEventHandler">The <see cref="ICancelableEventHandler{TEvent}">cancelable event handler</see> to unregister.</param>
-        /// <returns><c>true</c> if the <paramref name="cancelableEventHandler"/> was found and unregistered; otherwise, <c>false</c>.</returns>
-        public bool UnregisterEventHandler<TEvent>(ICancelableEventHandler<TEvent> cancelableEventHandler)
-            where TEvent : CancelableSyncEvent
-            => Loader.EventManager.UnregisterCancelableSyncEventHandler(this, cancelableEventHandler);
-
-        /// <summary>
-        /// Unregisters the given <see cref="IAsyncEventHandler{TEvent}">event handler</see> for this mod.
-        /// </summary>
-        /// <remarks>
-        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
-        /// </remarks>
-        /// <typeparam name="TEvent">The type of async events handled.</typeparam>
-        /// <param name="asyncEventHandler">The <see cref="IAsyncEventHandler{TEvent}">event handler</see> to unregister.</param>
-        /// <returns><c>true</c> if the <paramref name="asyncEventHandler"/> was found and unregistered; otherwise, <c>false</c>.</returns>
-        public bool UnregisterEventHandler<TEvent>(IAsyncEventHandler<TEvent> asyncEventHandler)
-            where TEvent : AsyncEvent
-            => Loader.EventManager.UnregisterAsyncEventHandler(this, asyncEventHandler);
-
-        /// <summary>
-        /// Unregisters the given <see cref="ICancelableEventHandler{TEvent}">cancelable async event handler</see> for this mod.
-        /// </summary>
-        /// <remarks>
-        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
-        /// </remarks>
-        /// <typeparam name="TEvent">The type of cancelable async events handled.</typeparam>
-        /// <param name="cancelableAsyncEventHandler">The <see cref="ICancelableEventHandler{TEvent}">cancelable async event handler</see> to unregister.</param>
-        /// <returns><c>true</c> if the <paramref name="cancelableAsyncEventHandler"/> was found and unregistered; otherwise, <c>false</c>.</returns>
-        public bool UnregisterEventHandler<TEvent>(ICancelableAsyncEventHandler<TEvent> cancelableAsyncEventHandler)
-            where TEvent : CancelableAsyncEvent
-            => Loader.EventManager.UnregisterCancelableAsyncEventHandler(this, cancelableAsyncEventHandler);
-
-        /// <summary>
-        /// Unregisters the given <see cref="IEventSource{TEvent}">event source</see> for this mod.
-        /// </summary>
-        /// <remarks>
-        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
-        /// </remarks>
-        /// <typeparam name="TEvent">The type of events handled.</typeparam>
-        /// <param name="eventSource">The <see cref="IEventSource{TEvent}">event source</see> to unregister.</param>
-        /// <returns><c>true</c> if the <paramref name="eventSource"/> was found and unregistered; otherwise, <c>false</c>.</returns>
-        public bool UnregisterEventSource<TEvent>(IEventSource<TEvent> eventSource)
-            where TEvent : SyncEvent
-            => Loader.EventManager.UnregisterEventSource(this, eventSource);
-
-        /// <summary>
-        /// Unregisters the given <see cref="ICancelableEventSource{TEvent}">cancelable event source</see> for this mod.
-        /// </summary>
-        /// <remarks>
-        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
-        /// </remarks>
-        /// <typeparam name="TEvent">The type of events handled.</typeparam>
-        /// <param name="cancelableEventSource">The <see cref="ICancelableEventSource{TEvent}">cancelable event source</see> to unregister.</param>
-        /// <returns><c>true</c> if the <paramref name="cancelableEventSource"/> was found and unregistered; otherwise, <c>false</c>.</returns>
-        public bool UnregisterEventSource<TEvent>(ICancelableEventSource<TEvent> cancelableEventSource)
-            where TEvent : CancelableSyncEvent
-            => Loader.EventManager.UnregisterEventSource(this, cancelableEventSource);
-
-        /// <summary>
-        /// Unregisters the given <see cref="IAsyncEventSource{TEvent}">event source</see> for this mod.
-        /// </summary>
-        /// <remarks>
-        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
-        /// </remarks>
-        /// <typeparam name="TEvent">The type of async events handled.</typeparam>
-        /// <param name="asyncEventSource">The <see cref="IAsyncEventSource{TEvent}">event source</see> to unregister.</param>
-        /// <returns><c>true</c> if the <paramref name="asyncEventSource"/> was found and unregistered; otherwise, <c>false</c>.</returns>
-        public bool UnregisterEventSource<TEvent>(IAsyncEventSource<TEvent> asyncEventSource)
-            where TEvent : AsyncEvent
-            => Loader.EventManager.UnregisterEventSource(this, asyncEventSource);
-
-        /// <summary>
-        /// Unregisters the given <see cref="ICancelableEventSource{TEvent}">cancelable async event source</see> for this mod.
-        /// </summary>
-        /// <remarks>
-        /// Handlers are automatically unregistered when the mod is <see cref="Shutdown">shutdown</see>.
-        /// </remarks>
-        /// <typeparam name="TEvent">The type of async events handled.</typeparam>
-        /// <param name="cancelableAsyncEventSource">The <see cref="ICancelableEventSource{TEvent}">cancelable async event source</see> to unregister.</param>
-        /// <returns><c>true</c> if the <paramref name="cancelableAsyncEventSource"/> was found and unregistered; otherwise, <c>false</c>.</returns>
-        public bool UnregisterEventSource<TEvent>(ICancelableAsyncEventSource<TEvent> cancelableAsyncEventSource)
-            where TEvent : CancelableAsyncEvent
-            => Loader.EventManager.UnregisterEventSource(this, cancelableAsyncEventSource);
 
         internal bool LoadEarlyMonkeys()
         {

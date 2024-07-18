@@ -326,21 +326,6 @@ namespace MonkeyLoader
         }
 
         /// <summary>
-        /// Searches all of this loader's loaded <see cref="Mods">Mods</see> to find one with the given <see cref="Mod.Id">id</see>.
-        /// </summary>
-        /// <param name="id">The id to find a mod for.</param>
-        /// <returns>The found mod.</returns>
-        /// <exception cref="KeyNotFoundException">When no mod with the given id was found.</exception>
-        [Obsolete("Use extension method Get<Mod>")]
-        public Mod FindModById(string id)
-        {
-            if (!this.TryGet<Mod>().ById(id, out var mod))
-                throw new KeyNotFoundException(id);
-
-            return mod;
-        }
-
-        /// <summary>
         /// Searches all of this loader's loaded <see cref="Mods">Mods</see> to find one with the given <see cref="Mod.Location">location</see>.
         /// </summary>
         /// <param name="location">The location to find a mod for.</param>
@@ -854,28 +839,6 @@ namespace MonkeyLoader
         public bool ShutdownMods(IEnumerable<Mod> mods, bool applicationExiting = false) => ShutdownMods(applicationExiting, mods.ToArray());
 
         /// <summary>
-        /// Searches all of this loader's loaded <see cref="Mods">Mods</see> to find one with the given <see cref="Mod.Id">id</see>.
-        /// </summary>
-        /// <param name="id">The id to find a mod for.</param>
-        /// <param name="mod">The mod that was found or <c>null</c>.</param>
-        /// <returns><c>true</c> if a mod was found; otherwise, <c>false</c>.</returns>
-        [Obsolete("Use extension method TryGet<Mod>")]
-        public bool TryFindModById(string id, [NotNullWhen(true)] out Mod? mod)
-        {
-            mod = null;
-
-            if (string.IsNullOrWhiteSpace(id))
-            {
-                Logger.Warn(() => $"Attempted to get a mod using an invalid id!");
-                return false;
-            }
-
-            mod = _allMods.FirstOrDefault(mod => mod.Id == id);
-
-            return mod is not null;
-        }
-
-        /// <summary>
         /// Searches all of this loader's loaded <see cref="Mods">Mods</see> to find a single one with the given <see cref="Mod.Location">location</see>.
         /// </summary>
         /// <remarks>
@@ -1000,7 +963,7 @@ namespace MonkeyLoader
         }
 
         private bool FilterInvalidPresentMod(Mod mod)
-                                                                    => mod.Loader != this || mod.ShutdownRan || !_allMods.Contains(mod);
+            => mod.Loader != this || mod.ShutdownRan || !_allMods.Contains(mod);
 
         private void OnShutdownDone(bool applicationExiting)
         {
