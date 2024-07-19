@@ -1,6 +1,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 
 namespace MonkeyLoader.Utility
 {
@@ -33,9 +35,11 @@ namespace MonkeyLoader.Utility
 
         private Action _postfix = () => { };
         private Action<TOriginal, TTransformed, bool> _postItem = (original, transformed, returned) => { };
+        private Action<TOriginal, TTransformed[], bool> _postItems;
         private Action _prefix = () => { };
         private Func<TOriginal, bool> _preItem = item => true;
-        private Func<TOriginal, TTransformed> _transformItem = item => throw new NotImplementedException("You're supposed to insert your own transformation function here!");
+        private Func<TOriginal, TTransformed> _transformItem = item => throw new NotImplementedException("You're supposed to insert your own transformation function here when not using TransformItems!");
+        private Func<TOriginal, IEnumerable<TTransformed>> _transformItems;
 
         /// <summary>
         /// Gets called when the wrapped enumeration returned the last item.
@@ -43,6 +47,8 @@ namespace MonkeyLoader.Utility
         public Action Postfix
         {
             get => _postfix;
+
+            [MemberNotNull(nameof(_postfix))]
             set => _postfix = value ?? throw new ArgumentNullException(nameof(value), "Postfix can't be null!");
         }
 
@@ -50,10 +56,30 @@ namespace MonkeyLoader.Utility
         /// Gets called for each item, with the transformed item, and whether it was passed through.
         /// First thing to be called after execution returns to the enumerator after a yield return.
         /// </summary>
+        /// <remarks>
+        /// Called by the default <see cref="TransformItems">TransformItems</see> for each item, but not directly.
+        /// </remarks>
         public Action<TOriginal, TTransformed, bool> PostItem
         {
             get => _postItem;
+
+            [MemberNotNull(nameof(_postItem))]
             set => _postItem = value ?? throw new ArgumentNullException(nameof(value), "PostItem can't be null!");
+        }
+
+        /// <summary>
+        /// Gets called for each item, with the transformed items, and whether they were passed through.
+        /// First thing to be called after execution returns to the enumerator after a yield return.
+        /// </summary>
+        /// <remarks>
+        /// Has precedence over <see cref="PostItem">PostItem</see> - the default implementation just passes the call through for each item.
+        /// </remarks>
+        public Action<TOriginal, TTransformed[], bool> PostItems
+        {
+            get => _postItems;
+
+            [MemberNotNull(nameof(_postItems))]
+            set => _postItems = value ?? throw new ArgumentNullException(nameof(value), "PostItems can't be null!");
         }
 
         /// <summary>
@@ -62,6 +88,8 @@ namespace MonkeyLoader.Utility
         public Action Prefix
         {
             get => _prefix;
+
+            [MemberNotNull(nameof(_prefix))]
             set => _prefix = value ?? throw new ArgumentNullException(nameof(value), "Prefix can't be null!");
         }
 
@@ -71,16 +99,37 @@ namespace MonkeyLoader.Utility
         public Func<TOriginal, bool> PreItem
         {
             get => _preItem;
+
+            [MemberNotNull(nameof(_preItem))]
             set => _preItem = value ?? throw new ArgumentNullException(nameof(value), "PreItem can't be null!");
         }
 
         /// <summary>
         /// Gets called for each item to transform it, even if it won't be passed through.
         /// </summary>
+        /// <remarks>
+        /// Called by the default <see cref="TransformItems">TransformItems</see>, but not directly.
+        /// </remarks>
         public Func<TOriginal, TTransformed> TransformItem
         {
             get => _transformItem;
+
+            [MemberNotNull(nameof(_transformItem))]
             set => _transformItem = value ?? throw new ArgumentNullException(nameof(value), "TransformItem can't be null!");
+        }
+
+        /// <summary>
+        /// Gets called for each item to transform it into a sequence of items to return, even if it won't be passed through.
+        /// </summary>
+        /// <remarks>
+        /// Has precedence over <see cref="TransformItem">TransformItem</see> - the default implementation just passes the call through.
+        /// </remarks>
+        public Func<TOriginal, IEnumerable<TTransformed>> TransformItems
+        {
+            get => _transformItems;
+
+            [MemberNotNull(nameof(_transformItems))]
+            set => _transformItems = value ?? throw new ArgumentNullException(nameof(value), "TransformItems can't be null!");
         }
 
         /// <summary>
@@ -95,11 +144,33 @@ namespace MonkeyLoader.Utility
         /// Creates a new instance of the <see cref="EnumerableInjector{TIn, TOut}"/> class using the supplied input <see cref="IEnumerator{T}"/> and transform function.
         /// </summary>
         /// <param name="enumerator">The enumerator to inject into and transform.</param>
-        /// <param name="transformItem">The transformation function.</param>
+        /// <param name="transformItem">The transformation function. Called through the default <see cref="TransformItems">TransformItems</see> implementation.</param>
         public EnumerableInjector(IEnumerator<TOriginal> enumerator, Func<TOriginal, TTransformed> transformItem)
         {
-            _enumerator = enumerator;
+            _enumerator = enumerator ?? throw new ArgumentNullException(nameof(enumerator));
             TransformItem = transformItem;
+            TransformItems = DefaultTransformItems;
+            PostItems = DefaultPostItems;
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="EnumerableInjector{TIn, TOut}"/> class using the supplied input <see cref="IEnumerable{T}"/> and transform function.
+        /// </summary>
+        /// <param name="enumerable">The enumerable to inject into and transform.</param>
+        /// <param name="transformItems">The transformation function. Takes precendence over <see cref="TransformItem">TransformItem</see>.</param>
+        public EnumerableInjector(IEnumerable<TOriginal> enumerable, Func<TOriginal, IEnumerable<TTransformed>> transformItems)
+            : this(enumerable.GetEnumerator(), transformItems) { }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="EnumerableInjector{TIn, TOut}"/> class using the supplied input <see cref="IEnumerator{T}"/> and transform function.
+        /// </summary>
+        /// <param name="enumerator">The enumerator to inject into and transform.</param>
+        /// <param name="transformItems">The transformation function. Takes precendence over <see cref="TransformItem">TransformItem</see>.</param>
+        public EnumerableInjector(IEnumerator<TOriginal> enumerator, Func<TOriginal, IEnumerable<TTransformed>> transformItems)
+        {
+            _enumerator = enumerator ?? throw new ArgumentNullException(nameof(enumerator));
+            TransformItems = transformItems;
+            PostItems = DefaultPostItems;
         }
 
         /// <summary>
@@ -114,12 +185,15 @@ namespace MonkeyLoader.Utility
             {
                 var item = _enumerator.Current;
                 var returnItem = PreItem(item);
-                var transformedItem = TransformItem(item);
+                var transformedItems = TransformItems(item).ToArray();
 
                 if (returnItem)
-                    yield return transformedItem;
+                {
+                    foreach (var transformedItem in transformedItems)
+                        yield return transformedItem;
+                }
 
-                PostItem(item, transformedItem, returnItem);
+                PostItems(item, transformedItems, returnItem);
             }
 
             Postfix();
@@ -130,6 +204,15 @@ namespace MonkeyLoader.Utility
         /// </summary>
         /// <returns>The injected and transformed enumeration without a generic type.</returns>
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+        private void DefaultPostItems(TOriginal original, TTransformed[] transformedItems, bool returned)
+        {
+            foreach (var transformedItem in transformedItems)
+                PostItem(original, transformedItem, returned);
+        }
+
+        private IEnumerable<TTransformed> DefaultTransformItems(TOriginal original)
+                                                    => TransformItem(original).Yield();
     }
 
     /// <summary>
