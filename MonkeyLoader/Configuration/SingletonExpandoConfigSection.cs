@@ -17,7 +17,7 @@ namespace MonkeyLoader.Configuration
         where TConfigSection : SingletonExpandoConfigSection<TConfigSection>
     {
         /// <summary>
-        /// Gets this singleton <see cref="ConfigSection"/>'s instance.
+        /// Gets this singleton <see cref="ExpandoConfigSection"/>'s instance.
         /// </summary>
         public static TConfigSection Instance { get; private set; } = null!;
 

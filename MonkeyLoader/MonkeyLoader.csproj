@@ -95,7 +95,7 @@
     <PackageReference Include="System.ValueTuple" Version="4.5.0">
       <Private>True</Private>
     </PackageReference>
-    <PackageReference Include="Zio" Version="0.19.0">
+    <PackageReference Include="Zio" Version="0.19.1">
       <Private>True</Private>
     </PackageReference>
     <!--<ProjectReference Include="..\MonkeyLoader.CodeGenerators\MonkeyLoader.CodeGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />-->
