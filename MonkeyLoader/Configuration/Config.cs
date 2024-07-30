@@ -35,7 +35,8 @@ namespace MonkeyLoader.Configuration
         /// </summary>
         public IEnumerable<IDefiningConfigKey> ConfigurationItemDefinitions => _configurationItemDefinitionsSelfMap.Values.AsSafeEnumerable();
 
-        string IIdentifiable.FullId => $"{Owner.FullId}.Config";
+        /// <inheritdoc/>
+        public string FullId { get; }
 
         string IIdentifiable.Id => "Config";
 
@@ -82,6 +83,7 @@ namespace MonkeyLoader.Configuration
         internal Config(IConfigOwner owner)
         {
             Owner = owner;
+            FullId = $"{Owner.FullId}.Config";
             Logger = new Logger(owner.Logger, "Config");
 
             _loadedConfig = LoadConfig();
@@ -356,7 +358,7 @@ namespace MonkeyLoader.Configuration
             }
             catch (AggregateException ex)
             {
-                Logger.Error(() => ex.Format($"Some {nameof(ItemChanged)} event subscriber(s) threw an exception:"));
+                Logger.Error(() => ex.Format($"Some Config.{nameof(ItemChanged)} event subscriber(s) threw an exception:"));
             }
 
             Owner.Loader.OnAnyConfigChanged(configKeyChangedEventArgs);

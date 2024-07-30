@@ -115,7 +115,7 @@ namespace MonkeyLoader.Configuration
         public Type ValueType { get; } = typeof(T);
 
         /// <summary>
-        /// Gets the logger of the config this item belongs to if it's a <see cref="IsDefiningKey">defining key</see>.
+        /// Gets the logger of the config this item belongs to.
         /// </summary>
         private Logger Logger => Section.Config.Logger;
 
@@ -322,7 +322,15 @@ namespace MonkeyLoader.Configuration
         /// <inheritdoc/>
         public bool Validate(T value)
             => Components.GetAll<IConfigKeyValidator<T>>()
-                .All(validator => validator.IsValid(value));
+                .All(validator =>
+                {
+                    var valid = validator.IsValid(value);
+
+                    if (!valid)
+                        Logger.Debug(() => $"Validator [{validator}] of key [{Id}] didn't validate value: {value}");
+
+                    return valid;
+                });
 
         /// <inheritdoc/>
         bool IDefiningConfigKey.Validate(object? value) => Validate(value);
@@ -385,7 +393,7 @@ namespace MonkeyLoader.Configuration
                 Logger.Error(() => ex.Format($"Some untyped {nameof(Changed)} event subscriber(s) of key [{Id}] threw an exception:"));
             }
 
-            Config.OnItemChanged(eventArgs);
+            Section.OnItemChanged(eventArgs);
         }
 
         private bool Validate(object? value)
