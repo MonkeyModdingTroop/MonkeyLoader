@@ -1,4 +1,5 @@
 ﻿using HarmonyLib;
+using MonkeyLoader.Logging;
 using MonkeyLoader.Meta;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -78,7 +79,7 @@ namespace MonkeyLoader.Configuration
         /// </summary>
         public virtual string Name => Id;
 
-        IIdentifiable INestedIdentifiable.Parent => Config.Owner;
+        IIdentifiable INestedIdentifiable.Parent => Config;
 
         Config INestedIdentifiable<Config>.Parent => Config;
 
@@ -101,11 +102,16 @@ namespace MonkeyLoader.Configuration
         protected virtual IncompatibleConfigHandling IncompatibilityHandling => IncompatibleConfigHandling.Error;
 
         /// <summary>
+        /// Gets the logger of the config this section belongs to.
+        /// </summary>
+        private Logger Logger => Config.Logger;
+
+        /// <summary>
         /// Creates a new config section instance.
         /// </summary>
         protected ConfigSection()
         {
-            _fullId = new(() => $"{Config.Owner.Id}.{Id}");
+            _fullId = new(() => $"{Config.FullId}.{Id}");
         }
 
         /// <summary>
@@ -124,15 +130,15 @@ namespace MonkeyLoader.Configuration
         /// <param name="right">The second section.</param>
         /// <returns><c>true</c> if they're considered equal.</returns>
         public static bool operator ==(ConfigSection? left, ConfigSection? right)
-            => ReferenceEquals(left, right)
-            || (left is not null && right is not null && left.Id == right.Id);
+            => left?.FullId == right?.FullId;
 
         /// <summary>
         /// Checks if the given object can be considered equal to this one.
         /// </summary>
         /// <param name="obj">The other object.</param>
         /// <returns><c>true</c> if the other object is considered equal.</returns>
-        public override bool Equals(object obj) => obj is ConfigSection section && section == this;
+        public override bool Equals(object obj)
+            => obj is ConfigSection section && section == this;
 
         /// <summary>
         /// Gets the <see cref="IDefiningConfigKey"/> defined in this config section,
@@ -166,6 +172,25 @@ namespace MonkeyLoader.Configuration
 
         /// <inheritdoc/>
         public override int GetHashCode() => Id.GetHashCode();
+
+        /// <summary>
+        /// Invokes this config section's <see cref="ItemChanged">ItemChanged</see> event,
+        /// and passes the invocation on to the <see cref="Config"/> and <see cref="MonkeyLoader"/> it belongs to.
+        /// </summary>
+        /// <param name="configKeyChangedEventArgs">The data for the event.</param>
+        public void OnItemChanged(IConfigKeyChangedEventArgs configKeyChangedEventArgs)
+        {
+            try
+            {
+                ItemChanged?.TryInvokeAll(this, configKeyChangedEventArgs);
+            }
+            catch (AggregateException ex)
+            {
+                Logger.Error(() => ex.Format($"Some ConfigSection.{nameof(ItemChanged)} event subscriber(s) threw an exception:"));
+            }
+
+            Config.OnItemChanged(configKeyChangedEventArgs);
+        }
 
         /// <summary>
         /// Determines if this config section contains an item matching the <paramref name="typedTemplateKey"/>
@@ -378,7 +403,7 @@ namespace MonkeyLoader.Configuration
                 switch (IncompatibilityHandling)
                 {
                     case IncompatibleConfigHandling.Clobber:
-                        Config.Logger.Warn(() => $"Saved section [{Id}] version [{serializedVersion}] is incompatible with mod's version [{Version}]. Clobbering old config and starting fresh.");
+                        Logger.Warn(() => $"Saved section [{Id}] version [{serializedVersion}] is incompatible with mod's version [{Version}]. Clobbering old config and starting fresh.");
                         return;
 
                     case IncompatibleConfigHandling.ForceLoad:
@@ -392,5 +417,10 @@ namespace MonkeyLoader.Configuration
                 }
             }
         }
+
+        /// <summary>
+        /// Called when the value of one of this config's items gets changed.
+        /// </summary>
+        public event ConfigKeyChangedEventHandler? ItemChanged;
     }
 }
