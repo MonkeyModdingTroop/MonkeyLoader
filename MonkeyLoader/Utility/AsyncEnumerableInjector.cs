@@ -3,17 +3,21 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
 
 namespace MonkeyLoader.Utility
 {
     /// <summary>
     /// Provides the ability to inject actions into the execution of an enumeration while transforming it.<br/><br/>
-    /// This example shows how to apply the <see cref="EnumerableInjector{TIn, TOut}"/> when patching a function.<br/>
+    /// This example shows how to apply the <see cref="AsyncEnumerableInjector{TIn, TOut}"/> when patching a function.<br/>
     /// Of course you typically wouldn't patch with a generic method, that's just for illustrating the Type usage.
     /// <code>
     /// private static void Postfix&lt;Original, Transformed&gt;(ref IEnumerable&lt;Original&gt; __result) where Transformed : Original
     /// {
-    ///     __result = new EnumerableInjector&lt;Original, Transformed&gt;(__result,
+    ///     __result = new AsyncEnumerableInjector&lt;Original, Transformed&gt;(__result,
     ///         item =&gt; { Msg("Change what the item is exactly"); return new Transformed(item); })
     ///     {
     ///         Prefix = () =&gt; Msg("Before the first item is returned"),
@@ -26,25 +30,25 @@ namespace MonkeyLoader.Utility
     /// </summary>
     /// <typeparam name="TOriginal">The type of the original enumeration's items.</typeparam>
     /// <typeparam name="TTransformed">The type of the transformed enumeration's items.<br/>Must be assignable to <c>TOriginal</c> for compatibility.</typeparam>
-    public class EnumerableInjector<TOriginal, TTransformed> : IEnumerable<TTransformed> where TTransformed : TOriginal
+    public class AsyncEnumerableInjector<TOriginal, TTransformed> : IAsyncEnumerable<TTransformed> where TTransformed : TOriginal
     {
         /// <summary>
         /// Internal enumerator for iteration.
         /// </summary>
-        private readonly IEnumerator<TOriginal> _enumerator;
+        private readonly IAsyncEnumerator<TOriginal> _enumerator;
 
-        private Action _postfix = () => { };
-        private Action<TOriginal, TTransformed, bool> _postItem = (original, transformed, returned) => { };
-        private Action<TOriginal, TTransformed[], bool> _postItems;
-        private Action _prefix = () => { };
-        private Func<TOriginal, bool> _preItem = item => true;
-        private Func<TOriginal, TTransformed> _transformItem = item => throw new NotImplementedException("You're supposed to insert your own transformation function here when not using TransformItems!");
-        private Func<TOriginal, IEnumerable<TTransformed>> _transformItems;
+        private Func<Task> _postfix = async () => { };
+        private Func<TOriginal, TTransformed, bool, Task> _postItem = async (original, transformed, returned) => { };
+        private Func<TOriginal, TTransformed[], bool, Task> _postItems;
+        private Func<Task> _prefix = async () => { };
+        private Func<TOriginal, Task<bool>> _preItem = async item => true;
+        private Func<TOriginal, Task<TTransformed>> _transformItem = item => throw new NotImplementedException("You're supposed to insert your own transformation function here when not using TransformItems!");
+        private Func<TOriginal, IAsyncEnumerable<TTransformed>> _transformItems;
 
         /// <summary>
         /// Gets called when the wrapped enumeration returned the last item.
         /// </summary>
-        public Action Postfix
+        public Func<Task> Postfix
         {
             get => _postfix;
 
@@ -59,7 +63,7 @@ namespace MonkeyLoader.Utility
         /// <remarks>
         /// Called by the default <see cref="TransformItems">TransformItems</see> for each item, but not directly.
         /// </remarks>
-        public Action<TOriginal, TTransformed, bool> PostItem
+        public Func<TOriginal, TTransformed, bool, Task> PostItem
         {
             get => _postItem;
 
@@ -74,7 +78,7 @@ namespace MonkeyLoader.Utility
         /// <remarks>
         /// Has precedence over <see cref="PostItem">PostItem</see> - the default implementation just passes the call through for each item.
         /// </remarks>
-        public Action<TOriginal, TTransformed[], bool> PostItems
+        public Func<TOriginal, TTransformed[], bool, Task> PostItems
         {
             get => _postItems;
 
@@ -85,7 +89,7 @@ namespace MonkeyLoader.Utility
         /// <summary>
         /// Gets called before the enumeration returns the first item.
         /// </summary>
-        public Action Prefix
+        public Func<Task> Prefix
         {
             get => _prefix;
 
@@ -96,7 +100,7 @@ namespace MonkeyLoader.Utility
         /// <summary>
         /// Gets called for each item to determine whether it should be passed through.
         /// </summary>
-        public Func<TOriginal, bool> PreItem
+        public Func<TOriginal, Task<bool>> PreItem
         {
             get => _preItem;
 
@@ -110,7 +114,7 @@ namespace MonkeyLoader.Utility
         /// <remarks>
         /// Called by the default <see cref="TransformItems">TransformItems</see>, but not directly.
         /// </remarks>
-        public Func<TOriginal, TTransformed> TransformItem
+        public Func<TOriginal, Task<TTransformed>> TransformItem
         {
             get => _transformItem;
 
@@ -124,7 +128,7 @@ namespace MonkeyLoader.Utility
         /// <remarks>
         /// Has precedence over <see cref="TransformItem">TransformItem</see> - the default implementation just passes the call through.
         /// </remarks>
-        public Func<TOriginal, IEnumerable<TTransformed>> TransformItems
+        public Func<TOriginal, IAsyncEnumerable<TTransformed>> TransformItems
         {
             get => _transformItems;
 
@@ -133,59 +137,59 @@ namespace MonkeyLoader.Utility
         }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="EnumerableInjector{TIn, TOut}"/> class using the supplied input <see cref="IEnumerable{T}"/> and transform function.
+        /// Creates a new instance of the <see cref="AsyncEnumerableInjector{TIn, TOut}"/> class using the supplied input <see cref="IEnumerable{T}"/> and transform function.
         /// </summary>
         /// <param name="enumerable">The enumerable to inject into and transform.</param>
         /// <param name="transformItem">The transformation function.</param>
-        public EnumerableInjector(IEnumerable<TOriginal> enumerable, Func<TOriginal, TTransformed> transformItem)
-            : this(enumerable.GetEnumerator(), transformItem) { }
+        public AsyncEnumerableInjector(IAsyncEnumerable<TOriginal> enumerable, Func<TOriginal, Task<TTransformed>> transformItem)
+            : this(enumerable.GetAsyncEnumerator(), transformItem) { }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="EnumerableInjector{TIn, TOut}"/> class using the supplied input <see cref="IEnumerator{T}"/> and transform function.
+        /// Creates a new instance of the <see cref="AsyncEnumerableInjector{TIn, TOut}"/> class using the supplied input <see cref="IEnumerator{T}"/> and transform function.
         /// </summary>
         /// <param name="enumerator">The enumerator to inject into and transform.</param>
         /// <param name="transformItem">The transformation function. Called through the default <see cref="TransformItems">TransformItems</see> implementation.</param>
-        public EnumerableInjector(IEnumerator<TOriginal> enumerator, Func<TOriginal, TTransformed> transformItem)
+        public AsyncEnumerableInjector(IAsyncEnumerator<TOriginal> enumerator, Func<TOriginal, Task<TTransformed>> transformItem)
         {
             _enumerator = enumerator ?? throw new ArgumentNullException(nameof(enumerator));
             TransformItem = transformItem;
-            TransformItems = DefaultTransformItems;
-            PostItems = DefaultPostItems;
+            TransformItems = DefaultTransformItemsAsync;
+            PostItems = DefaultPostItemsAsync;
         }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="EnumerableInjector{TIn, TOut}"/> class using the supplied input <see cref="IEnumerable{T}"/> and transform function.
+        /// Creates a new instance of the <see cref="AsyncEnumerableInjector{TIn, TOut}"/> class using the supplied input <see cref="IEnumerable{T}"/> and transform function.
         /// </summary>
         /// <param name="enumerable">The enumerable to inject into and transform.</param>
         /// <param name="transformItems">The transformation function. Takes precendence over <see cref="TransformItem">TransformItem</see>.</param>
-        public EnumerableInjector(IEnumerable<TOriginal> enumerable, Func<TOriginal, IEnumerable<TTransformed>> transformItems)
-            : this(enumerable.GetEnumerator(), transformItems) { }
+        public AsyncEnumerableInjector(IAsyncEnumerable<TOriginal> enumerable, Func<TOriginal, IAsyncEnumerable<TTransformed>> transformItems)
+            : this(enumerable.GetAsyncEnumerator(), transformItems) { }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="EnumerableInjector{TIn, TOut}"/> class using the supplied input <see cref="IEnumerator{T}"/> and transform function.
+        /// Creates a new instance of the <see cref="AsyncEnumerableInjector{TIn, TOut}"/> class using the supplied input <see cref="IEnumerator{T}"/> and transform function.
         /// </summary>
         /// <param name="enumerator">The enumerator to inject into and transform.</param>
         /// <param name="transformItems">The transformation function. Takes precendence over <see cref="TransformItem">TransformItem</see>.</param>
-        public EnumerableInjector(IEnumerator<TOriginal> enumerator, Func<TOriginal, IEnumerable<TTransformed>> transformItems)
+        public AsyncEnumerableInjector(IAsyncEnumerator<TOriginal> enumerator, Func<TOriginal, IAsyncEnumerable<TTransformed>> transformItems)
         {
             _enumerator = enumerator ?? throw new ArgumentNullException(nameof(enumerator));
             TransformItems = transformItems;
-            PostItems = DefaultPostItems;
+            PostItems = DefaultPostItemsAsync;
         }
 
         /// <summary>
         /// Injects into and transforms the input enumeration.
         /// </summary>
         /// <returns>The injected and transformed enumeration.</returns>
-        public IEnumerator<TTransformed> GetEnumerator()
+        public async IAsyncEnumerator<TTransformed> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
-            Prefix();
+            await Prefix();
 
-            while (_enumerator.MoveNext())
+            while (await _enumerator.MoveNextAsync())
             {
                 var item = _enumerator.Current;
-                var returnItem = PreItem(item);
-                var transformedItems = TransformItems(item).ToArray();
+                var returnItem = await PreItem(item);
+                var transformedItems = await TransformItems(item).ToArrayAsync();
 
                 if (returnItem)
                 {
@@ -193,36 +197,32 @@ namespace MonkeyLoader.Utility
                         yield return transformedItem;
                 }
 
-                PostItems(item, transformedItems, returnItem);
+                await PostItems(item, transformedItems, returnItem);
             }
 
-            Postfix();
+            await Postfix();
         }
 
-        /// <summary>
-        /// Injects into and transforms the input enumeration without a generic type.
-        /// </summary>
-        /// <returns>The injected and transformed enumeration without a generic type.</returns>
-        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-        private void DefaultPostItems(TOriginal original, TTransformed[] transformedItems, bool returned)
+        private async Task DefaultPostItemsAsync(TOriginal original, TTransformed[] transformedItems, bool returned)
         {
             foreach (var transformedItem in transformedItems)
-                PostItem(original, transformedItem, returned);
+                await PostItem(original, transformedItem, returned);
         }
 
-        private IEnumerable<TTransformed> DefaultTransformItems(TOriginal original)
-            => TransformItem(original).Yield();
+        private async IAsyncEnumerable<TTransformed> DefaultTransformItemsAsync(TOriginal original)
+        {
+            yield return await TransformItem(original);
+        }
     }
 
     /// <summary>
     /// Provides the ability to inject actions into the execution of an enumeration without transforming it.<br/><br/>
-    /// This example shows how to apply the <see cref="EnumerableInjector{T}"/> when patching a function.<br/>
+    /// This example shows how to apply the <see cref="AsyncEnumerableInjector{T}"/> when patching a function.<br/>
     /// Of course you typically wouldn't patch with a generic method, that's just for illustrating the Type usage.
     /// <code>
     /// static void Postfix&lt;T&gt;(ref IEnumerable&lt;T&gt; __result)
     /// {
-    ///     __result = new EnumerableInjector&lt;T&gt;(__result)
+    ///     __result = new AsyncEnumerableInjector&lt;T&gt;(__result)
     ///     {
     ///         Prefix = () => Msg("Before the first item is returned"),
     ///         PreItem = item => { Msg("Decide if an item gets returned"); return true; },
@@ -234,20 +234,22 @@ namespace MonkeyLoader.Utility
     /// </code>
     /// </summary>
     /// <typeparam name="T">The type of the enumeration's items.</typeparam>
-    public class EnumerableInjector<T> : EnumerableInjector<T, T>
+    public class AsyncEnumerableInjector<T> : AsyncEnumerableInjector<T, T>
     {
         /// <summary>
-        /// Creates a new instance of the <see cref="EnumerableInjector{T}"/> class using the supplied input <see cref="IEnumerable{T}"/>.
+        /// Creates a new instance of the <see cref="AsyncEnumerableInjector{T}"/> class using the supplied input <see cref="IAsyncEnumerable{T}"/>.
         /// </summary>
         /// <param name="enumerable">The enumerable to inject into.</param>
-        public EnumerableInjector(IEnumerable<T> enumerable)
-            : this(enumerable.GetEnumerator()) { }
+        public AsyncEnumerableInjector(IAsyncEnumerable<T> enumerable)
+            : this(enumerable.GetAsyncEnumerator()) { }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="EnumerableInjector{T}"/> class using the supplied input <see cref="IEnumerator{T}"/>.
+        /// Creates a new instance of the <see cref="AsyncEnumerableInjector{T}"/> class using the supplied input <see cref="IAsyncEnumerator{T}"/>.
         /// </summary>
         /// <param name="enumerator">The enumerator to inject into.</param>
-        public EnumerableInjector(IEnumerator<T> enumerator)
-            : base(enumerator, EnumerableExtensions.Yield) { }
+        public AsyncEnumerableInjector(IAsyncEnumerator<T> enumerator)
+            : base(enumerator, EnumerableExtensions.YieldAsync) { }
     }
 }
+
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
