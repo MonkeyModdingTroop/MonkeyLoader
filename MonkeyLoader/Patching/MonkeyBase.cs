@@ -198,7 +198,7 @@ namespace MonkeyLoader.Patching
             catch (Exception ex)
             {
                 ShutdownFailed = true;
-                Logger.Error(() => ex.Format("OnShutdown threw an Exception:"));
+                Logger.Error(ex.LogFormat("OnShutdown threw an Exception:"));
             }
 
             OnShutdownDone(applicationExiting);
@@ -293,7 +293,7 @@ namespace MonkeyLoader.Patching
             }
             catch (Exception ex)
             {
-                Logger.Error(() => ex.Format($"{(configKeyChangedEventArgs.NewValue ? nameof(OnEnabled) : nameof(OnDisabled))}() threw an Exception:"));
+                Logger.Error(ex.LogFormat($"{(configKeyChangedEventArgs.NewValue ? nameof(OnEnabled) : nameof(OnDisabled))}() threw an Exception:"));
             }
         }
 
@@ -305,7 +305,7 @@ namespace MonkeyLoader.Patching
             }
             catch (AggregateException ex)
             {
-                Logger.Error(() => ex.Format($"Some {nameof(ShutdownDone)} event subscriber(s) threw an exception:"));
+                Logger.Error(ex.LogFormat($"Some {nameof(ShutdownDone)} event subscriber(s) threw an exception:"));
             }
         }
 
@@ -317,7 +317,7 @@ namespace MonkeyLoader.Patching
             }
             catch (AggregateException ex)
             {
-                Logger.Error(() => ex.Format($"Some {nameof(ShuttingDown)} event subscriber(s) threw an exception:"));
+                Logger.Error(ex.LogFormat($"Some {nameof(ShuttingDown)} event subscriber(s) threw an exception:"));
             }
         }
 

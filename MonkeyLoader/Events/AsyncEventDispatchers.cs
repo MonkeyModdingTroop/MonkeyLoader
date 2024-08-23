@@ -29,7 +29,7 @@ namespace MonkeyLoader.Events
                 }
                 catch (Exception ex)
                 {
-                    Logger.Warn(() => ex.Format($"Event handler [{handler.GetType().CompactDescription()}] threw an exception for event [{eventArgs}]:"));
+                    Logger.Warn(ex.LogFormat($"Event handler [{handler.GetType().CompactDescription()}] threw an exception for event [{eventArgs}]:"));
                 }
             }
         }
@@ -64,7 +64,7 @@ namespace MonkeyLoader.Events
                 }
                 catch (Exception ex)
                 {
-                    Logger.Warn(() => ex.Format($"Event handler [{handler.GetType().CompactDescription()}] threw an exception for event [{eventArgs}]:"));
+                    Logger.Warn(ex.LogFormat($"Event handler [{handler.GetType().CompactDescription()}] threw an exception for event [{eventArgs}]:"));
                 }
             }
         }

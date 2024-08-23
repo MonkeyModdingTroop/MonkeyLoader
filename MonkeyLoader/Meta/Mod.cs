@@ -371,7 +371,7 @@ namespace MonkeyLoader.Meta
             catch (Exception ex)
             {
                 ShutdownFailed = true;
-                Logger.Error(() => ex.Format("OnShutdown threw an Exception:"));
+                Logger.Error(ex.LogFormat("OnShutdown threw an Exception:"));
             }
 
             OnShutdownDone(applicationExiting);
@@ -405,7 +405,7 @@ namespace MonkeyLoader.Meta
             catch (Exception ex)
             {
                 LoadEarlyMonkeysFailed = true;
-                Logger.Error(() => ex.Format("A mod's OnLoadEarlyMonkeys() method threw an Exception:"));
+                Logger.Error(ex.LogFormat("A mod's OnLoadEarlyMonkeys() method threw an Exception:"));
             }
 
             return !LoadEarlyMonkeysFailed;
@@ -429,7 +429,7 @@ namespace MonkeyLoader.Meta
             catch (Exception ex)
             {
                 LoadMonkeysFailed = true;
-                Logger.Error(() => ex.Format("A mod's OnLoadMonkeys() method threw an Exception:"));
+                Logger.Error(ex.LogFormat("A mod's OnLoadMonkeys() method threw an Exception:"));
             }
 
             return !LoadMonkeysFailed;
@@ -470,7 +470,7 @@ namespace MonkeyLoader.Meta
             }
             catch (AggregateException ex)
             {
-                Logger.Error(() => ex.Format($"Some {nameof(ShutdownDone)} event subscriber(s) threw an exception:"));
+                Logger.Error(ex.LogFormat($"Some {nameof(ShutdownDone)} event subscriber(s) threw an exception:"));
             }
         }
 
@@ -482,7 +482,7 @@ namespace MonkeyLoader.Meta
             }
             catch (AggregateException ex)
             {
-                Logger.Error(() => ex.Format($"Some {nameof(ShuttingDown)} event subscriber(s) threw an exception:"));
+                Logger.Error(ex.LogFormat($"Some {nameof(ShuttingDown)} event subscriber(s) threw an exception:"));
             }
         }
 

@@ -205,7 +205,7 @@ namespace MonkeyLoader.Meta
                 catch (Exception ex)
                 {
                     error = true;
-                    Logger.Error(() => ex.Format($"Error while loading Early Monkeys from assembly: {prepatcherPath}!"));
+                    Logger.Error(ex.LogFormat($"Error while loading Early Monkeys from assembly: {prepatcherPath}!"));
                 }
             }
 
@@ -245,7 +245,7 @@ namespace MonkeyLoader.Meta
                 catch (Exception ex)
                 {
                     error = true;
-                    Logger.Error(() => ex.Format($"Error while loading Monkeys from assembly: {patcherPath}!"));
+                    Logger.Error(ex.LogFormat($"Error while loading Monkeys from assembly: {patcherPath}!"));
                 }
             }
 

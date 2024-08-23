@@ -161,7 +161,7 @@ namespace MonkeyLoader.Patching
             }
             catch (Exception ex)
             {
-                Logger.Error(() => ex.Format($"Pre-patcher threw an exception on assembly [{patchJob.Target.Assembly}]!"));
+                Logger.Error(ex.LogFormat($"Pre-patcher threw an exception on assembly [{patchJob.Target.Assembly}]!"));
                 patchJob.Error = true;
             }
         }

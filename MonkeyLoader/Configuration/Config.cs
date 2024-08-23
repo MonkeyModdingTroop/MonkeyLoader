@@ -205,7 +205,7 @@ namespace MonkeyLoader.Configuration
                     }
                     catch (Exception ex)
                     {
-                        Logger.Error(() => ex.Format($"Exception while serializing section [{section.Id}] - skipping it!"));
+                        Logger.Error(ex.LogFormat($"Exception while serializing section [{section.Id}] - skipping it!"));
                     }
                 }
 
@@ -228,7 +228,7 @@ namespace MonkeyLoader.Configuration
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error(() => ex.Format($"Exception while saving config!"));
+                    Logger.Error(ex.LogFormat($"Exception while saving config!"));
                 }
             }
         }
@@ -359,7 +359,7 @@ namespace MonkeyLoader.Configuration
             }
             catch (AggregateException ex)
             {
-                Logger.Error(() => ex.Format($"Some Config.{nameof(ItemChanged)} event subscriber(s) threw an exception:"));
+                Logger.Error(ex.LogFormat($"Some Config.{nameof(ItemChanged)} event subscriber(s) threw an exception:"));
             }
 
             Owner.Loader.OnAnyConfigChanged(configKeyChangedEventArgs);

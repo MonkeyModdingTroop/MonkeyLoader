@@ -135,7 +135,7 @@ namespace MonkeyLoader.Configuration
             {
                 // I know not what exceptions the JSON library will throw, but they must be contained
                 // Saveable = false;
-                Config.Logger.Error(() => ex.Format($"Error loading expando key [{name}] of type [{definingKey.ValueType}] in section [{Id}]!"));
+                Config.Logger.Error(ex.LogFormat($"Error loading expando key [{name}] of type [{definingKey.ValueType}] in section [{Id}]!"));
             }
 
             return definingKey;

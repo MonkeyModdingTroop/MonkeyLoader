@@ -382,7 +382,7 @@ namespace MonkeyLoader.Configuration
             }
             catch (AggregateException ex)
             {
-                Logger.Error(() => ex.Format($"Some typed {nameof(Changed)} event subscriber(s) of key [{Id}] threw an exception:"));
+                Logger.Error(ex.LogFormat($"Some typed {nameof(Changed)} event subscriber(s) of key [{Id}] threw an exception:"));
             }
 
             try
@@ -391,7 +391,7 @@ namespace MonkeyLoader.Configuration
             }
             catch (AggregateException ex)
             {
-                Logger.Error(() => ex.Format($"Some untyped {nameof(Changed)} event subscriber(s) of key [{Id}] threw an exception:"));
+                Logger.Error(ex.LogFormat($"Some untyped {nameof(Changed)} event subscriber(s) of key [{Id}] threw an exception:"));
             }
 
             Section.OnItemChanged(eventArgs);

@@ -321,7 +321,7 @@ namespace MonkeyLoader
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error(() => ex.Format($"Exception while trying to create directory: {location}"));
+                    Logger.Error(ex.LogFormat($"Exception while trying to create directory: {location}"));
                 }
             }
         }
@@ -382,7 +382,7 @@ namespace MonkeyLoader
             }
             catch (Exception ex)
             {
-                Logger.Error(() => ex.Format($"Exception while searching files at location {Locations.GamePacks}:"));
+                Logger.Error(ex.LogFormat($"Exception while searching files at location {Locations.GamePacks}:"));
                 return Enumerable.Empty<NuGetPackageMod>();
             }
         }
@@ -413,7 +413,7 @@ namespace MonkeyLoader
             }
             catch (Exception ex)
             {
-                Logger.Error(() => ex.Format($"Exception while searching files at location {Locations.Libs} and loading libraries:"));
+                Logger.Error(ex.LogFormat($"Exception while searching files at location {Locations.Libs} and loading libraries:"));
             }
         }
 
@@ -431,7 +431,7 @@ namespace MonkeyLoader
                 }
                 catch (Exception ex)
                 {
-                    Logger.Error(() => ex.Format($"Exception while searching files at location {location}:"));
+                    Logger.Error(ex.LogFormat($"Exception while searching files at location {location}:"));
                 }
 
                 return Enumerable.Empty<string>();
@@ -484,7 +484,7 @@ namespace MonkeyLoader
                 }
                 catch (Exception ex)
                 {
-                    Logger.Debug(() => ex.Format($"Exception while trying to load assembly {assemblyFile}"));
+                    Logger.Debug(ex.LogFormat($"Exception while trying to load assembly {assemblyFile}"));
                 }
             }
 
@@ -506,7 +506,7 @@ namespace MonkeyLoader
                 }
                 catch (Exception ex)
                 {
-                    Logger.Debug(() => ex.Format($"Exception while trying to load assembly {assemblyFile}"));
+                    Logger.Debug(ex.LogFormat($"Exception while trying to load assembly {assemblyFile}"));
                 }
             }
 
@@ -779,7 +779,7 @@ namespace MonkeyLoader
             catch (Exception ex)
             {
                 ShutdownFailed = true;
-                Logger.Error(() => ex.Format("The mod loader's config threw an exception while saving during shutdown!"));
+                Logger.Error(ex.LogFormat("The mod loader's config threw an exception while saving during shutdown!"));
             }
 
             Logger.Info(() => $"Processed shutdown in {sw.ElapsedMilliseconds}ms!");
@@ -977,7 +977,7 @@ namespace MonkeyLoader
             }
             catch (Exception ex)
             {
-                Logger.Error(() => ex.Format($"Exception while trying to load mod from {path}:"));
+                Logger.Error(ex.LogFormat($"Exception while trying to load mod from {path}:"));
             }
 
             return false;
@@ -991,7 +991,7 @@ namespace MonkeyLoader
             }
             catch (AggregateException ex)
             {
-                Logger.Error(() => ex.Format($"Some {nameof(AnyConfigChanged)} event subscriber(s) threw an exception:"));
+                Logger.Error(ex.LogFormat($"Some {nameof(AnyConfigChanged)} event subscriber(s) threw an exception:"));
             }
         }
 
@@ -1006,7 +1006,7 @@ namespace MonkeyLoader
             }
             catch (AggregateException ex)
             {
-                Logger.Error(() => ex.Format($"Some {nameof(ShutdownDone)} event subscriber(s) threw an exception:"));
+                Logger.Error(ex.LogFormat($"Some {nameof(ShutdownDone)} event subscriber(s) threw an exception:"));
             }
         }
 
@@ -1018,7 +1018,7 @@ namespace MonkeyLoader
             }
             catch (AggregateException ex)
             {
-                Logger.Error(() => ex.Format($"Some {nameof(ShuttingDown)} event subscriber(s) threw an exception:"));
+                Logger.Error(ex.LogFormat($"Some {nameof(ShuttingDown)} event subscriber(s) threw an exception:"));
             }
         }
 

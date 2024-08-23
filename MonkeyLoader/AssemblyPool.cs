@@ -376,7 +376,7 @@ namespace MonkeyLoader
                         }
                         catch (Exception ex)
                         {
-                            logger.Warn(() => ex.Format($"Exception while trying to save assembly to {targetPath}"));
+                            logger.Warn(ex.LogFormat($"Exception while trying to save assembly to {targetPath}"));
                         }
                     }
 
@@ -447,7 +447,7 @@ namespace MonkeyLoader
                 }
                 catch (Exception ex)
                 {
-                    logger.Warn(() => ex.Format($"Exception while trying to save assembly to {targetPath}"));
+                    logger.Warn(ex.LogFormat($"Exception while trying to save assembly to {targetPath}"));
                 }
 
                 return null;
