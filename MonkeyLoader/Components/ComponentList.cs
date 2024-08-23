@@ -74,7 +74,7 @@ namespace MonkeyLoader.Components
         /// <inheritdoc/>
         public IEnumerable<TComponent> GetAll<TComponent>()
             where TComponent : class, IComponent<TEntity>
-            => _components.SelectCastable<IComponent<TEntity>, TComponent>();
+            => _components.OfType<TComponent>();
 
         /// <inheritdoc/>
         public IEnumerable<TComponent> GetAll<TComponent>(Predicate<TComponent> predicate)

@@ -1,4 +1,5 @@
-﻿using MonkeyLoader.Configuration;
+﻿using EnumerableToolkit;
+using MonkeyLoader.Configuration;
 using MonkeyLoader.Logging;
 using MonkeyLoader.NuGet;
 using MonkeyLoader.Patching;
@@ -384,7 +385,7 @@ namespace MonkeyLoader.Meta
 
         /// <inheritdoc/>
         public bool TryResolveDependencies()
-            => dependencies.Values.Select(dep => dep.TryResolve()).All();
+            => dependencies.Values.Select(dep => dep.TryResolve()).AllTrue();
 
         internal bool LoadEarlyMonkeys()
         {

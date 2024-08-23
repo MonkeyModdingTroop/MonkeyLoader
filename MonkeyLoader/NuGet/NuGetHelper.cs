@@ -1,4 +1,5 @@
-﻿using NuGet.Frameworks;
+﻿using EnumerableToolkit;
+using NuGet.Frameworks;
 using System;
 using System.Collections.Generic;
 using System.Linq;

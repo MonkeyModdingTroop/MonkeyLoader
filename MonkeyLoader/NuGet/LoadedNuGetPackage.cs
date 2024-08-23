@@ -1,4 +1,5 @@
-﻿using NuGet.Frameworks;
+﻿using EnumerableToolkit;
+using NuGet.Frameworks;
 using NuGet.Packaging.Core;
 using System;
 using System.Collections.Generic;
@@ -117,6 +118,6 @@ namespace MonkeyLoader.NuGet
 
         /// <inheritdoc/>
         public bool TryResolveDependencies()
-            => _dependencies.Select(dep => dep.TryResolve()).All();
+            => _dependencies.Select(dep => dep.TryResolve()).AllTrue();
     }
 }

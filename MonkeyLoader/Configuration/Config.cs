@@ -1,5 +1,6 @@
 // Adapted from the NeosModLoader project.
 
+using EnumerableToolkit;
 using MonkeyLoader.Logging;
 using MonkeyLoader.Meta;
 using Newtonsoft.Json;

@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using EnumerableToolkit;
+using HarmonyLib;
 using MonkeyLoader.Logging;
 using MonkeyLoader.Meta;
 using Newtonsoft.Json;

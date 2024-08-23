@@ -1,3 +1,4 @@
+using EnumerableToolkit;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -248,6 +249,6 @@ namespace MonkeyLoader.Utility
         /// </summary>
         /// <param name="enumerator">The enumerator to inject into.</param>
         public EnumerableInjector(IEnumerator<T> enumerator)
-            : base(enumerator, EnumerableExtensions.Yield) { }
+            : base(enumerator, EnumerableItemExtensions.Yield) { }
     }
 }
