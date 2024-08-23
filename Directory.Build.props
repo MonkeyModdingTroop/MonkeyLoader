@@ -1,19 +1,20 @@
 <Project>
-	<PropertyGroup>
-		<OutputType>Library</OutputType>
-		<TargetFramework>net462</TargetFramework>
-		<LangVersion>11.0</LangVersion>
-		<Nullable>enable</Nullable>
-		<Deterministic>true</Deterministic>
-		<AllowUnsafeBlocks>False</AllowUnsafeBlocks>
-		<DebugType>portable</DebugType>
-		<GenerateDocumentationFile>True</GenerateDocumentationFile>
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    <LangVersion>11.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <Deterministic>true</Deterministic>
+    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+    <DebugType>portable</DebugType>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
 
-		<CopyToLibraries Condition="'$(CopyToLibraries)'==''">true</CopyToLibraries>
-	</PropertyGroup>
+    <CopyToLibraries Condition="'$(CopyToLibraries)'==''">true</CopyToLibraries>
+  </PropertyGroup>
 
-	<PropertyGroup Condition="'$(GamePath)'==''">
-		<GamePath>$(MSBuildThisFileDirectory)Game</GamePath>
-	</PropertyGroup>
+  <PropertyGroup Condition="'$(GamePath)'==''">
+    <GamePath>$(MSBuildThisFileDirectory)Game</GamePath>
+  </PropertyGroup>
 
 </Project>

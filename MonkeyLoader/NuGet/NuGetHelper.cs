@@ -76,8 +76,9 @@ namespace MonkeyLoader.NuGet
         {
             // https://github.com/mono/mono/issues/14141
             // This works in regular .NET, but not on Mono - only been an open issue since 2019
-            if (!string.IsNullOrWhiteSpace(AppDomain.CurrentDomain.SetupInformation.TargetFrameworkName))
-                return AppDomain.CurrentDomain.SetupInformation.TargetFrameworkName;
+            // Doesn't work on netstandard anyways
+            // if (!string.IsNullOrWhiteSpace(AppDomain.CurrentDomain.SetupInformation.TargetFrameworkName))
+            //    return AppDomain.CurrentDomain.SetupInformation.TargetFrameworkName;
 
             // For example: ".NET Framework 4.6.57.0"
             var descSplit = RuntimeInformation.FrameworkDescription?.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
