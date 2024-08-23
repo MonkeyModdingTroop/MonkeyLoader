@@ -1,4 +1,5 @@
-﻿using MonkeyLoader.Meta;
+﻿using EnumerableToolkit;
+using MonkeyLoader.Meta;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;

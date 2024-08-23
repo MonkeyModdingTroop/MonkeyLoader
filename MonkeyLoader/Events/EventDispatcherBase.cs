@@ -1,4 +1,5 @@
-﻿using MonkeyLoader.Logging;
+﻿using EnumerableToolkit;
+using MonkeyLoader.Logging;
 using MonkeyLoader.Meta;
 using System.Collections.Generic;
 

@@ -16,7 +16,7 @@
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/MonkeyModdingTroop/MonkeyLoader</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/MonkeyModdingTroop/MonkeyLoader.git</RepositoryUrl>
+    <RepositoryUrl>$(PackageProjectUrl).git</RepositoryUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/MonkeyModdingTroop/MonkeyLoader/master/Icon.png</PackageIconUrl>
     <PackageIconUrl>/Icon.png</PackageIconUrl>
     <RepositoryType>git</RepositoryType>
@@ -74,10 +74,11 @@
 
   <ItemGroup>
     <PackageReference Include="Ben.Demystifier" Version="0.4.1" />
+    <PackageReference Include="EnumerableToolkit.Builder" Version="1.2.0" />
+    <PackageReference Include="EnumerableToolkit.Builder.Async" Version="1.2.0" />
     <PackageReference Include="Lib.Harmony.Thin" Version="2.3.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="NuGet.Packaging" Version="6.10.1" />
-    <PackageReference Include="NuGet.Protocol" Version="6.10.1" />
+    <PackageReference Include="NuGet.Protocol" Version="6.11.0" />
     <PackageReference Include="PolySharp" Version="1.14.1">
       <Private>False</Private>
       <PrivateAssets>all</PrivateAssets>

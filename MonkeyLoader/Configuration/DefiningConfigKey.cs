@@ -10,6 +10,7 @@ using System.Collections;
 using MonkeyLoader.Components;
 using System.Diagnostics.CodeAnalysis;
 using MonkeyLoader.Meta;
+using EnumerableToolkit;
 
 namespace MonkeyLoader.Configuration
 {

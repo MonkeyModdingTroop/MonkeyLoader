@@ -1,4 +1,5 @@
-﻿using MonkeyLoader.NuGet;
+﻿using EnumerableToolkit;
+using MonkeyLoader.NuGet;
 using MonkeyLoader.Patching;
 using NuGet.Frameworks;
 using NuGet.Packaging;

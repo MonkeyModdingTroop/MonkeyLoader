@@ -1,4 +1,5 @@
-﻿using MonkeyLoader.NuGet;
+﻿using EnumerableToolkit;
+using MonkeyLoader.NuGet;
 using MonkeyLoader.Patching;
 using Mono.Cecil;
 using NuGet.Frameworks;
@@ -190,7 +191,7 @@ namespace MonkeyLoader.Meta
                     Loader.AddJsonConverters(assembly);
                     PrePatcherAssemblies.Add(assembly);
 
-                    var instantiableTypes = assembly.GetTypes().Instantiable<IEarlyMonkey>().ToArray();
+                    var instantiableTypes = assembly.GetTypes().ParameterlessInstantiable<IEarlyMonkey>().ToArray();
                     Logger.Trace(() => $"Found the following instantiable EarlyMonkey Types:{Environment.NewLine}    - {string.Join($"{Environment.NewLine}    - ", instantiableTypes.Select(t => t.FullName))}");
 
                     foreach (var type in instantiableTypes)
@@ -230,7 +231,7 @@ namespace MonkeyLoader.Meta
 
                     Logger.Info(() => $"Loaded patcher assembly: {assembly.FullName}");
 
-                    var instantiableTypes = assembly.GetTypes().Instantiable<MonkeyBase>();
+                    var instantiableTypes = assembly.GetTypes().ParameterlessInstantiable<MonkeyBase>();
                     Logger.Trace(() => $"Found the following instantiable Monkey Types:{Environment.NewLine}    - {string.Join($"{Environment.NewLine}    - ", instantiableTypes.Select(t => t.FullName))}");
 
                     foreach (var type in instantiableTypes)

@@ -43,7 +43,7 @@ namespace MonkeyLoader
         /// <typeparam name="T">The common type of the values.</typeparam>
         /// <returns>All non-<c>null</c> values that are castable to <typeparamref name="T"/>.</returns>
         public IEnumerable<T> GetCastableValues<T>()
-            => _dict.Values.SelectCastable<object, T>();
+            => _dict.Values.OfType<T>();
 
         /// <summary>
         /// Gets the value associated with the type <typeparamref name="T"/> in this AnyMap,

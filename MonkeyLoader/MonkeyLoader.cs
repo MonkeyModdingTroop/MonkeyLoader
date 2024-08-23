@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using EnumerableToolkit;
+using HarmonyLib;
 using MonkeyLoader.Configuration;
 using MonkeyLoader.Events;
 using MonkeyLoader.Logging;
@@ -262,7 +263,7 @@ namespace MonkeyLoader
         /// <param name="assembly"></param>
         public void AddJsonConverters(Assembly assembly)
         {
-            foreach (var type in assembly.GetTypes().Instantiable<JsonConverter>())
+            foreach (var type in assembly.GetTypes().ParameterlessInstantiable<JsonConverter>())
             {
                 if (type.GetCustomAttribute<IgnoreJsonConverterAttribute>() is null)
                     AddJsonConverter(type);
