@@ -332,10 +332,12 @@ namespace MonkeyLoader.Patching
     /// <typeparam name="TMonkey">The type of the actual patcher.</typeparam>
     public abstract class MonkeyBase<TMonkey> : MonkeyBase where TMonkey : MonkeyBase<TMonkey>, new()
     {
+        private static readonly MonkeyBase _instance = new TMonkey();
+
         /// <summary>
         /// Gets the <see cref="Configuration.Config"/> that this patcher can use to load <see cref="ConfigSection"/>s.
         /// </summary>
-        public new static Config Config => Instance.Config;
+        public new static Config Config => _instance.Config;
 
         /// <summary>
         /// Gets or sets whether this monkey should currently be active.
@@ -346,29 +348,29 @@ namespace MonkeyLoader.Patching
         /// </remarks>
         public new static bool Enabled
         {
-            get => Instance.Enabled;
-            set => Instance.Enabled = value;
+            get => _instance.Enabled;
+            set => _instance.Enabled = value;
         }
 
         /// <summary>
         /// Gets the <see cref="HarmonyLib.Harmony">Harmony</see> instance to be used by this patcher.
         /// </summary>
-        public new static Harmony Harmony => Instance.Harmony;
+        public new static Harmony Harmony => _instance.Harmony;
 
         /// <summary>
         /// Gets the instance of this patcher.
         /// </summary>
-        public static MonkeyBase Instance { get; } = new TMonkey();
+        public static TMonkey Instance => (TMonkey)_instance;
 
         /// <summary>
         /// Gets the <see cref="Logging.Logger"/> that this patcher can use to log messages to game-specific channels.
         /// </summary>
-        public new static Logger Logger => Instance.Logger;
+        public new static Logger Logger => _instance.Logger;
 
         /// <summary>
         /// Gets the mod that this patcher is a part of.
         /// </summary>
-        public new static Mod Mod => Instance.Mod;
+        public new static Mod Mod => _instance.Mod;
 
         /// <summary>
         /// Allows creating only a single <typeparamref name="TMonkey"/> instance.
@@ -379,7 +381,7 @@ namespace MonkeyLoader.Patching
             if (GetType() != typeof(TMonkey))
                 throw new InvalidOperationException("TMonkey must be the concrete Type being instantiated!");
 
-            if (Instance is not null)
+            if (_instance is not null)
                 throw new InvalidOperationException("Can't create more than one patcher instance!");
         }
     }
