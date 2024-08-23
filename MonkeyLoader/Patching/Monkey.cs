@@ -110,7 +110,7 @@ namespace MonkeyLoader.Patching
             catch (Exception ex)
             {
                 Failed = true;
-                Logger.Error(() => ex.Format("OnLoaded threw an Exception:"));
+                Logger.Error(ex.LogFormat("OnLoaded threw an Exception:"));
             }
 
             return !Failed;

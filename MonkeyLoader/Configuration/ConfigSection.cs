@@ -187,7 +187,7 @@ namespace MonkeyLoader.Configuration
             }
             catch (AggregateException ex)
             {
-                Logger.Error(() => ex.Format($"Some ConfigSection.{nameof(ItemChanged)} event subscriber(s) threw an exception:"));
+                Logger.Error(ex.LogFormat($"Some ConfigSection.{nameof(ItemChanged)} event subscriber(s) threw an exception:"));
             }
 
             Config.OnItemChanged(configKeyChangedEventArgs);
