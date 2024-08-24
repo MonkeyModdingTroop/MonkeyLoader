@@ -175,6 +175,17 @@ namespace MonkeyLoader.Configuration
         }
 
         /// <summary>
+        /// Removes the value of all of this configuration's sections' keys and resets them to their default.
+        /// </summary>
+        public void Reset()
+        {
+            Logger.Warn(() => $"Resetting config: {FullId}");
+
+            foreach (var section in Sections)
+                section.Reset();
+        }
+
+        /// <summary>
         /// Persists this configuration to disk.
         /// </summary>
         public void Save()

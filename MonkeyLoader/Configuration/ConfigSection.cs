@@ -194,6 +194,17 @@ namespace MonkeyLoader.Configuration
         }
 
         /// <summary>
+        /// Removes the value of all keys of this config section and resets them to their default.
+        /// </summary>
+        public void Reset()
+        {
+            Logger.Warn(() => $"Resetting config section: {FullId}");
+
+            foreach (var configKey in keys)
+                configKey.Reset();
+        }
+
+        /// <summary>
         /// Determines if this config section contains an item matching the <paramref name="typedTemplateKey"/>
         /// and returns the optional match as <paramref name="definingKey"/>.
         /// </summary>

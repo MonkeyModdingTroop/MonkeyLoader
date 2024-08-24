@@ -204,6 +204,19 @@ namespace MonkeyLoader.Configuration
         object? IDefiningConfigKey.GetValue() => GetValue();
 
         /// <inheritdoc/>
+        public void Reset()
+        {
+            Logger.Info(() => $"Resetting config key: {FullId}");
+
+            var hadValue = HasValue;
+            var oldValue = _value;
+
+            HasValue = TryComputeDefault(out _value);
+
+            OnChanged(hadValue, oldValue, nameof(Reset));
+        }
+
+        /// <inheritdoc/>
         public void SetValue(T value, string? eventLabel = null)
         {
             if (!TrySetValue(value, eventLabel))
@@ -472,6 +485,11 @@ namespace MonkeyLoader.Configuration
         /// </summary>
         /// <returns>The item's internal value or its <see cref="ITypedConfigKey.ValueType">type's</see> <c>default</c>.</returns>
         public object? GetValue();
+
+        /// <summary>
+        /// Removes this config item's value and attempts to reset it back to its default.
+        /// </summary>
+        public void Reset();
 
         /// <summary>
         /// Set the config item's internal value to the given one.
