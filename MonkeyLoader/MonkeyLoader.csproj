@@ -11,7 +11,7 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>MonkeyLoader</Title>
     <Authors>Banane9</Authors>
-    <Version>0.22.5-beta</Version>
+    <Version>0.22.6-beta</Version>
     <Description>A convenience and extendability focused mod loader using NuGet packages.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
@@ -74,8 +74,8 @@
 
   <ItemGroup>
     <PackageReference Include="Ben.Demystifier" Version="0.4.1" />
-    <PackageReference Include="EnumerableToolkit.Builder" Version="2.0.1" />
-    <PackageReference Include="EnumerableToolkit.Builder.Async" Version="2.0.1" />
+    <PackageReference Include="EnumerableToolkit.Builder" Version="2.0.2" />
+    <PackageReference Include="EnumerableToolkit.Builder.Async" Version="2.0.2" />
     <PackageReference Include="Lib.Harmony.Thin" Version="2.3.3" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="NuGet.Protocol" Version="6.11.0" />
