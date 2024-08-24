@@ -41,7 +41,7 @@ namespace MonkeyLoader
     /// </summary>
     public sealed class MonkeyLoader : IConfigOwner, IShutdown, IIdentifiableCollection<Mod>,
         INestedIdentifiableCollection<IMonkey>, INestedIdentifiableCollection<IEarlyMonkey>,
-        INestedIdentifiableCollection<ConfigSection>, INestedIdentifiableCollection<IDefiningConfigKey>
+        INestedIdentifiableCollection<Config>, INestedIdentifiableCollection<ConfigSection>, INestedIdentifiableCollection<IDefiningConfigKey>
     {
         /// <summary>
         /// All the currently loaded and still active mods of this loader, kept in topological order.
@@ -97,6 +97,9 @@ namespace MonkeyLoader
             => _allMods.SelectMany(mod => mod.Monkeys).Concat(_allMods.SelectMany(mod => mod.EarlyMonkeys));
 
         IEnumerable<Config> IIdentifiableOwner<Config>.Items => Config.Yield();
+
+        IEnumerable<Config> INestedIdentifiableCollection<Config>.Items
+            => Config.Yield().Concat(_allMods.Select(mod => mod.Config));
 
         /// <summary>
         /// Gets the json serializer used by this loader and any mods it loads.<br/>
