@@ -6,7 +6,7 @@ using System.Collections.Generic;
 namespace MonkeyLoader.Events
 {
     internal abstract class EventDispatcherBase<TSource, THandler> : IEventDispatcher
-        where THandler : IPrioritizable
+        where THandler : class, IPrioritizable
     {
         protected readonly PrioritySortedCollection<THandler> handlers = [];
 
