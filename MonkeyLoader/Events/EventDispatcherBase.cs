@@ -8,11 +8,11 @@ namespace MonkeyLoader.Events
     internal abstract class EventDispatcherBase<TSource, THandler> : IEventDispatcher
         where THandler : IPrioritizable
     {
-        protected readonly SortedCollection<THandler> handlers = new((IComparer<THandler>)Prioritizable.Comparer);
+        protected readonly PrioritySortedCollection<THandler> handlers = [];
 
-        private readonly Dictionary<Mod, HashSet<THandler>> _handlersByMod = new();
+        private readonly Dictionary<Mod, HashSet<THandler>> _handlersByMod = [];
         private readonly EventManager _manager;
-        private readonly Dictionary<Mod, HashSet<TSource>> _sourcesByMod = new();
+        private readonly Dictionary<Mod, HashSet<TSource>> _sourcesByMod = [];
 
         protected Logger Logger => _manager.Logger;
 
