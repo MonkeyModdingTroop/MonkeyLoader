@@ -27,7 +27,7 @@ namespace MonkeyLoader.Configuration
         /// Gets the logger to be used by this owner.
         /// </summary>
         /// <remarks>
-        /// All loggers share the <see cref="Loader">Loader</see>'s <see cref="MonkeyLoader.LoggingController">LoggingController</see>.
+        /// All loggers share the <see cref="Loader">Loader</see>'s <see cref="LoggingController"/>.
         /// </remarks>
         public Logger Logger { get; }
     }

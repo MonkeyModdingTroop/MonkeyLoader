@@ -64,3 +64,6 @@
 
 ### CRLF scripts would fail on linux
 **/*.sh text eol=lf
+
+### LFS Files
+*.dll filter=lfs diff=lfs merge=lfs -text

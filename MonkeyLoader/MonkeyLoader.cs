@@ -43,6 +43,8 @@ namespace MonkeyLoader
         INestedIdentifiableCollection<IMonkey>, INestedIdentifiableCollection<IEarlyMonkey>,
         INestedIdentifiableCollection<Config>, INestedIdentifiableCollection<ConfigSection>, INestedIdentifiableCollection<IDefiningConfigKey>
     {
+        public const string DefaultConfigPath = "MonkeyLoader/MonkeyLoader.json";
+
         /// <summary>
         /// All the currently loaded and still active mods of this loader, kept in topological order.
         /// </summary>
@@ -120,9 +122,9 @@ namespace MonkeyLoader
         public Logger Logger { get; }
 
         /// <summary>
-        /// Gets the <see cref="LoggingController"/> used by this loader and everything loaded by it.
+        /// Gets the configuration for whether and how this loader should write logs.
         /// </summary>
-        public LoggingController LoggingController { get; }
+        public LoggingConfig Logging { get; }
 
         /// <summary>
         /// Gets <i>all</i> loaded <see cref="Mod"/>s in topological order.
@@ -183,21 +185,31 @@ namespace MonkeyLoader
         /// <summary>
         /// Creates a new mod loader with the given configuration file.
         /// </summary>
+        /// <param name="initialLoggingLevel">The initial <see cref="LoggingLevel"/> to pass to the <see cref="LoggingController"/> the loader is created with.</param>
         /// <param name="configPath">The path to the configuration file to use.</param>
+        public MonkeyLoader(LoggingLevel initialLoggingLevel = LoggingLevel.Trace, string configPath = DefaultConfigPath)
+            : this(new LoggingController(GetId(configPath)) { Level = initialLoggingLevel }, configPath)
+        { }
+
+        /// <summary>
+        /// Creates a new mod loader with the given configuration file.
+        /// </summary>
         /// <param name="loggingController">The logging controller that this loader should use or a default one when <c>null</c>.</param>
-        public MonkeyLoader(string configPath = "MonkeyLoader/MonkeyLoader.json", LoggingController? loggingController = null)
+        /// <param name="configPath">The path to the configuration file to use.</param>
+        public MonkeyLoader(LoggingController loggingController, string configPath = DefaultConfigPath)
         {
             ConfigPath = configPath;
-            Id = Path.GetFileNameWithoutExtension(configPath);
+            Id = GetId(configPath);
 
-            LoggingController = loggingController ?? new LoggingController(Id);
-            Logger = new(LoggingController);
+            Logger = new(loggingController);
 
             JsonSerializer = new();
             JsonSerializer.Converters.Add(new StringEnumConverter());
 
             Config = new Config(this);
             Locations = Config.LoadSection<LocationConfigSection>();
+            Logging = Config.LoadSection<LoggingConfig>();
+            Logging.Controller = loggingController;
 
             foreach (var modLocation in Locations.Mods)
             {
@@ -305,10 +317,10 @@ namespace MonkeyLoader
         /// </summary>
         public void EnsureAllLocationsExist()
         {
-            IEnumerable<string> locations = new[] { Locations.Configs, Locations.GamePacks, Locations.Libs, Locations.PatchedAssemblies };
+            IEnumerable<string> locations = [Locations.Configs, Locations.GamePacks, Locations.Libs, Locations.PatchedAssemblies];
             var modLocations = Locations.Mods.Select(modLocation => modLocation.Path).ToArray();
 
-            Logger.Info(() => $"Ensuring that all configured locations exist as directories:{Environment.NewLine}" +
+            Logger.Info(() => $"Ensuring that all configured loading locations exist as directories:{Environment.NewLine}" +
                 $"    {nameof(Locations.Configs)}: {Locations.Configs}{Environment.NewLine}" +
                 $"    {nameof(Locations.GamePacks)}: {Locations.GamePacks}{Environment.NewLine}" +
                 $"    {nameof(Locations.Libs)}: {Locations.Libs}{Environment.NewLine}" +
@@ -997,6 +1009,9 @@ namespace MonkeyLoader
                 Logger.Error(ex.LogFormat($"Some {nameof(AnyConfigChanged)} event subscriber(s) threw an exception:"));
             }
         }
+
+        private static string GetId(string configPath)
+                                                                                                                                                                                                                                                                                                                                                                    => Path.GetFileNameWithoutExtension(configPath);
 
         private bool FilterInvalidPresentMod(Mod mod)
             => mod.Loader != this || mod.ShutdownRan || !_allMods.Contains(mod);

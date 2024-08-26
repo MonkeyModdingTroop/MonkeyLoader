@@ -228,8 +228,7 @@ namespace MonkeyLoader.Meta
         /// Gets the logger to be used by this mod.
         /// </summary>
         /// <remarks>
-        /// Every mod instance has its own logger and can thus have a different <see cref="LoggingLevel"/>.<br/>
-        /// They do all share the <see cref="Loader">Loader's</see> <see cref="MonkeyLoader.LoggingController">LoggingController</see> though.
+        /// They all share the <see cref="Loader">Loader's</see> <see cref="LoggingController"/>.
         /// </remarks>
         public Logger Logger => _logger.Value;
 
