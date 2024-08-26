@@ -1,5 +1,4 @@
 ﻿using MonkeyLoader;
-using MonkeyLoader.Logging;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -13,33 +12,26 @@ namespace Doorstop
     {
         public static void Start()
         {
-            var log = new FileLoggingHandler("MonkeyLoader/MonkeyLog.log");
-
-            foreach (var file in Directory.EnumerateFiles("./"))
-            {
-                try
-                {
-                    if (Path.GetFileName(file).StartsWith("doorstop", StringComparison.OrdinalIgnoreCase)
-                        && Path.GetExtension(file).Equals(".log", StringComparison.OrdinalIgnoreCase))
-                        File.Delete(file);
-                }
-                catch
-                {
-                    log.Warn(() => $"Failed to delete doorstop logfile - probably the active one: {file}");
-                }
-            }
+            var loader = new MonkeyLoader.MonkeyLoader();
+            var log = loader.Logger;
 
             try
             {
-                AppDomain.CurrentDomain.UnhandledException += (sender, e) => log.Fatal(() => (e.ExceptionObject as Exception)?.Format("Unhandled Exception!") ?? "Unhandled Exception!");
-
-                var loggingController = new LoggingController("MonkeyLoader")
+                foreach (var file in Directory.EnumerateFiles("./"))
                 {
-                    Level = LoggingLevel.Trace,
-                    Handler = log
-                };
+                    try
+                    {
+                        if (Path.GetFileName(file).StartsWith("doorstop", StringComparison.OrdinalIgnoreCase)
+                            && Path.GetExtension(file).Equals(".log", StringComparison.OrdinalIgnoreCase))
+                            File.Delete(file);
+                    }
+                    catch
+                    {
+                        log.Warn(() => $"Failed to delete doorstop logfile - probably the active one: {file}");
+                    }
+                }
 
-                var loader = new MonkeyLoader.MonkeyLoader(loggingController: loggingController);
+                AppDomain.CurrentDomain.UnhandledException += (sender, e) => log.Fatal(() => (e.ExceptionObject as Exception)?.Format("Unhandled Exception!") ?? "Unhandled Exception!");
 
                 AppDomain.CurrentDomain.ProcessExit += (_, _) => loader.Shutdown();
 

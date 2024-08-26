@@ -14,11 +14,11 @@ namespace MonkeyLoader.Logging
         public const string FileExtension = ".log";
         public const string FileNamePrefix = $"MonkeyLog_";
         public const string FileSearchPattern = "*" + FileExtension;
-        public const string TimestampFormat = "yyyy-MM-ddTHH\\:mm\\:ss";
+        public const string TimestampFormat = "yyyy-MM-ddTHH-mm-ss";
 
         public readonly DefiningConfigKey<string?> DirectoryPathKey = new("DirectoryPath", "The directory to write log files to. Changes will only take effect on restart.", () => "./MonkeyLoader/Logs");
         public readonly DefiningConfigKey<int> FilesToPreserveKey = new("FilesToPreserve", "The number of recent log files to keep around. Set <1 to disable. Changes take effect on restart.", () => 16);
-        public readonly DefiningConfigKey<LoggingLevel> LevelKey = new("Level", "The logging level used to filter logging requests. Changes take effect immediately.", () => LoggingLevel.Info);
+        public readonly DefiningConfigKey<LoggingLevel> LevelKey = new("Level", "The logging level used to filter logging requests. May be ignored in the initial startup phase. Changes take effect immediately.", () => LoggingLevel.Info);
         private readonly Lazy<string?> _currentLogFilePath;
         private LoggingController _loggingController;
 
@@ -71,13 +71,20 @@ namespace MonkeyLoader.Logging
 
         public static bool TryGetTimestamp(string logFile, [NotNullWhen(true)] out DateTime? timestamp)
         {
-            if (DateTime.TryParseExact(Path.GetFileNameWithoutExtension(logFile), $"{FileNamePrefix}{TimestampFormat}", CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var result))
+            timestamp = default;
+            var fileName = Path.GetFileNameWithoutExtension(logFile);
+
+            if (!fileName.StartsWith(FileNamePrefix))
+                return false;
+
+            var timestampStr = fileName[FileNamePrefix.Length..];
+
+            if (DateTime.TryParseExact(timestampStr, TimestampFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal, out var result))
             {
                 timestamp = result;
                 return true;
             }
 
-            timestamp = default;
             return false;
         }
 
@@ -90,7 +97,7 @@ namespace MonkeyLoader.Logging
 
             try
             {
-                var logFilesToDelete = Directory.EnumerateFiles(CurrentLogFilePath, FileSearchPattern)
+                var logFilesToDelete = Directory.EnumerateFiles(DirectoryPath, FileSearchPattern)
                     .Select(logFile => (File: logFile, Success: TryGetTimestamp(logFile, out var timestamp), Created: timestamp))
                     .Where(logFile => logFile.Success)
                     .OrderByDescending(logFile => logFile.Created)
