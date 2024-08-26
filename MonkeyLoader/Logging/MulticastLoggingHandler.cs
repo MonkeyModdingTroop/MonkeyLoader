@@ -16,7 +16,7 @@ namespace MonkeyLoader.Logging
         private readonly LoggingHandler[] _loggingHandlers;
 
         /// <inheritdoc/>
-        public override bool Connected => _loggingHandlers.Any(IsConnected);
+        public override bool Connected => ConnectedHandlers.Any();
 
         /// <summary>
         /// Gets the currently <see cref="LoggingHandler.Connected">connected</see> logging handlers that this one delegates messages to.
@@ -55,7 +55,7 @@ namespace MonkeyLoader.Logging
         {
             messageProducer = PreloadMessage(messageProducer);
 
-            foreach (var loggingHandler in _loggingHandlers)
+            foreach (var loggingHandler in ConnectedHandlers)
                 loggingHandler.Debug(messageProducer);
         }
 
@@ -64,7 +64,7 @@ namespace MonkeyLoader.Logging
         {
             messageProducer = PreloadMessage(messageProducer);
 
-            foreach (var loggingHandler in _loggingHandlers)
+            foreach (var loggingHandler in ConnectedHandlers)
                 loggingHandler.Error(messageProducer);
         }
 
@@ -73,14 +73,14 @@ namespace MonkeyLoader.Logging
         {
             messageProducer = PreloadMessage(messageProducer);
 
-            foreach (var loggingHandler in _loggingHandlers)
+            foreach (var loggingHandler in ConnectedHandlers)
                 loggingHandler.Fatal(messageProducer);
         }
 
         /// <inheritdoc/>
         public override void Flush()
         {
-            foreach (var loggingHandler in _loggingHandlers)
+            foreach (var loggingHandler in ConnectedHandlers)
                 loggingHandler.Flush();
         }
 
@@ -97,7 +97,7 @@ namespace MonkeyLoader.Logging
         {
             messageProducer = PreloadMessage(messageProducer);
 
-            foreach (var loggingHandler in _loggingHandlers)
+            foreach (var loggingHandler in ConnectedHandlers)
                 loggingHandler.Info(messageProducer);
         }
 
@@ -106,7 +106,7 @@ namespace MonkeyLoader.Logging
         {
             messageProducer = PreloadMessage(messageProducer);
 
-            foreach (var loggingHandler in _loggingHandlers)
+            foreach (var loggingHandler in ConnectedHandlers)
                 loggingHandler.Trace(messageProducer);
         }
 
@@ -115,7 +115,7 @@ namespace MonkeyLoader.Logging
         {
             messageProducer = PreloadMessage(messageProducer);
 
-            foreach (var loggingHandler in _loggingHandlers)
+            foreach (var loggingHandler in ConnectedHandlers)
                 loggingHandler.Warn(messageProducer);
         }
 

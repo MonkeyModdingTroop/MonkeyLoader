@@ -16,6 +16,8 @@ namespace MonkeyLoader.Logging
     {
         private static bool _hasConsole = false;
 
+        private static StreamWriter? _writer;
+
         /// <summary>
         /// Gets the instance of the <see cref="ConsoleLoggingHandler"/>.
         /// </summary>
@@ -44,9 +46,9 @@ namespace MonkeyLoader.Logging
                 _hasConsole = true;
 
                 var output = Console.OpenStandardOutput();
-                var writer = new StreamWriter(output) { AutoFlush = true };
+                _writer = new StreamWriter(output) { AutoFlush = true };
 
-                Console.SetOut(writer);
+                Console.SetOut(_writer);
             }
             catch
             {
@@ -93,6 +95,9 @@ namespace MonkeyLoader.Logging
         /// <param name="message">The message to write.</param>
         public void Log(string message)
         {
+            if (Console.Out != _writer)
+                Console.SetOut(_writer);
+
             Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss:ffff}] {message}");
             Console.ForegroundColor = ConsoleColor.Gray;
         }
