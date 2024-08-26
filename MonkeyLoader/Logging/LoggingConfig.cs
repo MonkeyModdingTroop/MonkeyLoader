@@ -16,9 +16,10 @@ namespace MonkeyLoader.Logging
         public const string FileSearchPattern = "*" + FileExtension;
         public const string TimestampFormat = "yyyy-MM-ddTHH-mm-ss";
 
-        public readonly DefiningConfigKey<string?> DirectoryPathKey = new("DirectoryPath", "The directory to write log files to. Changes will only take effect on restart.", () => "./MonkeyLoader/Logs");
-        public readonly DefiningConfigKey<int> FilesToPreserveKey = new("FilesToPreserve", "The number of recent log files to keep around. Set <1 to disable. Changes take effect on restart.", () => 16);
-        public readonly DefiningConfigKey<LoggingLevel> LevelKey = new("Level", "The logging level used to filter logging requests. May be ignored in the initial startup phase. Changes take effect immediately.", () => LoggingLevel.Info);
+        public readonly DefiningConfigKey<string?> DirectoryPathKey = new("DirectoryPath", "The directory to write log files to.\nChanges will only take effect on restart.", () => "./MonkeyLoader/Logs");
+        public readonly DefiningConfigKey<int> FilesToPreserveKey = new("FilesToPreserve", "The number of recent log files to keep around. Set <1 to disable.\nChanges take effect on restart.", () => 16);
+        public readonly DefiningConfigKey<LoggingLevel> LevelKey = new("Level", "The logging level used to filter logging requests. May be ignored in the initial startup phase.\nChanges take effect immediately.", () => LoggingLevel.Info);
+        public readonly DefiningConfigKey<bool> TryLoggingToConsoleKey = new("TryLoggingToConsole", "Whether to try logging to a console window.\nIf one isn't already present, it may be spawned. Spawning a console may only work on Windows and Wine or Proton.\nIf you close the console, Resonite will close too.\nThis may have some performance impact with high log levels.\nChanges take effect on restart.", () => false);
 
         private readonly Lazy<string?> _currentLogFilePath;
         private LoggingController _loggingController;
@@ -39,7 +40,7 @@ namespace MonkeyLoader.Logging
 
                 EnsureDirectory();
                 CleanLogDirectory();
-                SetupFileLogger();
+                SetupLoggers();
             }
         }
 
@@ -49,7 +50,6 @@ namespace MonkeyLoader.Logging
         public override string Description => "Contains the options for where and what to log.";
 
         public string? DirectoryPath => DirectoryPathKey;
-
         public int FilesToPreserve => FilesToPreserveKey;
 
         /// <inheritdoc/>
@@ -64,6 +64,8 @@ namespace MonkeyLoader.Logging
 
         [MemberNotNullWhen(true, nameof(DirectoryPath), nameof(CurrentLogFilePath))]
         public bool ShouldWriteLogFile => !string.IsNullOrWhiteSpace(DirectoryPathKey.GetValue());
+
+        public bool TryLoggingToConsole => TryLoggingToConsoleKey;
 
         /// <inheritdoc/>
         public override Version Version { get; } = new Version(1, 0, 0);
@@ -141,13 +143,17 @@ namespace MonkeyLoader.Logging
             }
         }
 
-        private void SetupFileLogger()
+        private void SetupLoggers()
         {
-            if (!ShouldWriteLogFile)
-                return;
+            LoggingHandler loggingHandlers = MissingLoggingHandler.Instance;
 
-            var fileLogger = new FileLoggingHandler(CurrentLogFilePath);
-            Controller.Handler += fileLogger;
+            if (TryLoggingToConsole && ConsoleLoggingHandler.Instance.Connected)
+                loggingHandlers += ConsoleLoggingHandler.Instance;
+
+            if (ShouldWriteLogFile)
+                loggingHandlers += new FileLoggingHandler(CurrentLogFilePath);
+
+            Controller.Handler += loggingHandlers;
         }
     }
 }

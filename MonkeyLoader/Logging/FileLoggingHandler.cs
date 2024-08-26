@@ -69,7 +69,7 @@ namespace MonkeyLoader.Logging
         public void Log(string message)
         {
             lock (_streamWriter)
-                _streamWriter.WriteLine($"[{DateTime.Now:HH:mm:ss.ffff}] {message}");
+                _streamWriter.WriteLine($"[{DateTime.UtcNow:HH:mm:ss.ffff}] {message}");
         }
 
         /// <summary>
