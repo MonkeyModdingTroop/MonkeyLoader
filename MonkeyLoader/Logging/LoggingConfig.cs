@@ -37,6 +37,7 @@ namespace MonkeyLoader.Logging
                     throw new InvalidOperationException("The logging controller must only be set once!");
 
                 _loggingController = value;
+                _loggingController.Level = LevelKey;
 
                 EnsureDirectory();
                 CleanLogDirectory();
@@ -55,8 +56,6 @@ namespace MonkeyLoader.Logging
         /// <inheritdoc/>
         public override string Id => "Logging";
 
-        public LoggingLevel Level => LevelKey;
-
         /// <inheritdoc/>
         public override int Priority => 30;
 
@@ -73,6 +72,8 @@ namespace MonkeyLoader.Logging
         public LoggingConfig()
         {
             _currentLogFilePath = new(() => ShouldWriteLogFile ? Path.Combine(DirectoryPath, $"{FileNamePrefix}{DateTime.UtcNow.ToString(TimestampFormat, CultureInfo.InvariantCulture)}{FileExtension}") : null);
+
+            LevelKey.Changed += LevelKeyChanged;
         }
 
         public static bool TryGetTimestamp(string logFile, [NotNullWhen(true)] out DateTime? timestamp)
@@ -141,6 +142,12 @@ namespace MonkeyLoader.Logging
             {
                 Config.Logger.Error(ex.LogFormat($"Exception while trying to create logging directory: {DirectoryPath}"));
             }
+        }
+
+        private void LevelKeyChanged(object sender, ConfigKeyChangedEventArgs<LoggingLevel> configKeyChangedEventArgs)
+        {
+            if (Controller is not null)
+                Controller.Level = configKeyChangedEventArgs.NewValue;
         }
 
         private void SetupLoggers()
