@@ -21,12 +21,12 @@ namespace MonkeyLoader.Configuration
     /// <remarks>
     /// Use your mod's <see cref="Configuration.Config"/> instance to <see cref="Config.LoadSection{TSection}()">load sections</see>.
     /// </remarks>
-    public abstract class ConfigSection : INestedIdentifiable<Config>, IIdentifiableOwner<ConfigSection, IDefiningConfigKey>
+    public abstract class ConfigSection : INestedIdentifiable<Config>, IIdentifiableOwner<ConfigSection, IDefiningConfigKey>, IPrioritizable
     {
         /// <summary>
         /// Stores the <see cref="IDefiningConfigKey"/>s tracked by this section.
         /// </summary>
-        protected readonly HashSet<IDefiningConfigKey> keys = new();
+        protected readonly HashSet<IDefiningConfigKey> keys = [];
 
         private readonly Lazy<string> _fullId;
 
@@ -83,6 +83,12 @@ namespace MonkeyLoader.Configuration
         IIdentifiable INestedIdentifiable.Parent => Config;
 
         Config INestedIdentifiable<Config>.Parent => Config;
+
+        /// <remarks>
+        /// Controls in which order the sections of a <see cref="Configuration.Config"/> are listed.
+        /// </remarks>
+        /// <inheritdoc/>
+        public virtual int Priority => 0;
 
         /// <summary>
         /// Gets whether this config section is allowed to be saved.<br/>

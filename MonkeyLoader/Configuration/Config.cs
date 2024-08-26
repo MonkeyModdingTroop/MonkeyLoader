@@ -29,7 +29,7 @@ namespace MonkeyLoader.Configuration
 
         private readonly JObject _loadedConfig;
 
-        private readonly HashSet<ConfigSection> _sections = new();
+        private readonly HashSet<ConfigSection> _sections = [];
 
         /// <summary>
         /// Gets the config keys defined in this configuration.
@@ -62,7 +62,7 @@ namespace MonkeyLoader.Configuration
         /// <summary>
         /// Gets all loaded sections of this config.
         /// </summary>
-        public IEnumerable<ConfigSection> Sections => _sections.AsSafeEnumerable();
+        public IEnumerable<ConfigSection> Sections => _sections.OrderByDescending(section => section.Priority).ThenBy(section => section.Name);
 
         /// <summary>
         /// Gets or sets a configuration value for the given key,

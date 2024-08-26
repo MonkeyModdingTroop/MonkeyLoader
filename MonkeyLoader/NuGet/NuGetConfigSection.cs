@@ -19,6 +19,9 @@ namespace MonkeyLoader.NuGet
         /// <inheritdoc/>
         public override string Description { get; } = "Contains definitions for how to use which NuGet feeds.";
 
+        /// <inheritdoc/>
+        public override string Id { get; } = "NuGet";
+
         /// <summary>
         /// Gets whether checking NuGet feeds to load mod's library dependencies is enabled.
         /// </summary>
@@ -36,9 +39,6 @@ namespace MonkeyLoader.NuGet
             get => Config.GetValue(EnableLoadingModsKey);
             set => Config.SetValue(EnableLoadingModsKey, value);
         }
-
-        /// <inheritdoc/>
-        public override string Id { get; } = "NuGet";
 
         /// <summary>
         /// Gets the NuGet feeds to check for game packs.
@@ -66,6 +66,9 @@ namespace MonkeyLoader.NuGet
             get => Config.GetValue(NuGetModSourcesKey);
             set => Config.SetValue(NuGetModSourcesKey, value);
         }
+
+        /// <inheritdoc/>
+        public override int Priority => 10;
 
         /// <inheritdoc/>
         public override Version Version { get; } = new Version(1, 0);

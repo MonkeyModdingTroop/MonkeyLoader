@@ -60,6 +60,9 @@ namespace MonkeyLoader.Meta
         }
 
         /// <inheritdoc/>
+        public override int Priority => 20;
+
+        /// <inheritdoc/>
         public override Version Version { get; } = new Version(1, 0);
 
         private static bool PathValidator(string? path)

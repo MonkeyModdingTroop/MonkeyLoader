@@ -56,6 +56,9 @@ namespace MonkeyLoader.Logging
 
         public LoggingLevel Level => LevelKey;
 
+        /// <inheritdoc/>
+        public override int Priority => 30;
+
         public bool ShouldCleanLogDirectory => ShouldWriteLogFile && FilesToPreserve > 0;
 
         [MemberNotNullWhen(true, nameof(DirectoryPath), nameof(CurrentLogFilePath))]
