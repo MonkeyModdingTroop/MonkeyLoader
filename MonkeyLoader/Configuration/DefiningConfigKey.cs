@@ -91,9 +91,13 @@ namespace MonkeyLoader.Configuration
 
         /// <inheritdoc/>
         /// <remarks>
-        /// Add a <see cref="IConfigKeyPriority">priority</see> component to this component to set a value.
+        /// Add a <see cref="IConfigKeyPriority">priority</see> component to this config key or set a value during initialization.
         /// </remarks>
-        public int Priority => Components.TryGet<IConfigKeyPriority>(out var priorityComponent) ? priorityComponent.Priority : 0;
+        public int Priority
+        {
+            get => Components.TryGet<IConfigKeyPriority>(out var priorityComponent) ? priorityComponent.Priority : 0;
+            init => Components.Add(new ConfigKeyPriority(value));
+        }
 
         /// <inheritdoc/>
         public ConfigSection Section

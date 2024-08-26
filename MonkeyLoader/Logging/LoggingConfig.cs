@@ -19,6 +19,7 @@ namespace MonkeyLoader.Logging
         public readonly DefiningConfigKey<string?> DirectoryPathKey = new("DirectoryPath", "The directory to write log files to. Changes will only take effect on restart.", () => "./MonkeyLoader/Logs");
         public readonly DefiningConfigKey<int> FilesToPreserveKey = new("FilesToPreserve", "The number of recent log files to keep around. Set <1 to disable. Changes take effect on restart.", () => 16);
         public readonly DefiningConfigKey<LoggingLevel> LevelKey = new("Level", "The logging level used to filter logging requests. May be ignored in the initial startup phase. Changes take effect immediately.", () => LoggingLevel.Info);
+
         private readonly Lazy<string?> _currentLogFilePath;
         private LoggingController _loggingController;
 
