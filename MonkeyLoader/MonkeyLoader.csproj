@@ -66,7 +66,7 @@
     </ItemGroup>
 
     <RemoveDir Directories="$(ZipCreationFolder)" />
-    <MakeDir Directories="$(ZipCreationFolder);$(ZipCreationFolder)/MonkeyLoader;$(ZipCreationFolder)/MonkeyLoader/Configs;$(ZipCreationFolder)/MonkeyLoader/GamePacks;$(ZipCreationFolder)/MonkeyLoader/Libs;$(ZipCreationFolder)/MonkeyLoader/Mods;$(ZipCreationFolder)/MonkeyLoader/PatchedAssemblies" />
+    <MakeDir Directories="$(ZipCreationFolder);$(ZipCreationFolder)/MonkeyLoader;$(ZipCreationFolder)/MonkeyLoader/Configs;$(ZipCreationFolder)/MonkeyLoader/GamePacks;$(ZipCreationFolder)/MonkeyLoader/Libs;$(ZipCreationFolder)/MonkeyLoader/Mods;$(ZipCreationFolder)/MonkeyLoader/PatchedAssemblies;$(ZipCreationFolder)/MonkeyLoader/Logs" />
     <Copy SourceFiles="@(ZipSourceFiles)" DestinationFolder="$(ZipCreationFolder)/MonkeyLoader/" />
     <Copy SourceFiles="@(ZipVendorFiles)" DestinationFolder="$(ZipCreationFolder)/%(RecursiveDir)" />
     <ZipDirectory SourceDirectory="$(ZipCreationFolder)" Overwrite="true" DestinationFile="$(BaseOutputPath)\MonkeyLoader-v$(Version)-$(Configuration).zip" />
@@ -89,6 +89,17 @@
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
     <PackageReference Include="Zio" Version="0.19.2" />
     <!--<ProjectReference Include="..\MonkeyLoader.CodeGenerators\MonkeyLoader.CodeGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />-->
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- -->
+    <ProjectReference Include="..\MonkeyLoader.ConsoleHost\MonkeyLoader.ConsoleHost.csproj">
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+      <DisableTransitiveProjectReferences>true</DisableTransitiveProjectReferences>
+      <SkipGetTargetFrameworkProperties>true</SkipGetTargetFrameworkProperties>
+      <Private>false</Private>
+      <ExcludeAssets>all</ExcludeAssets>
+    </ProjectReference>
   </ItemGroup>
 
   <!-- Remove `System.*` DLLs from the output folder -->
