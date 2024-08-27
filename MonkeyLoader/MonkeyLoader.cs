@@ -53,6 +53,16 @@ namespace MonkeyLoader
         private ExecutionPhase _phase;
 
         /// <summary>
+        /// Gets the path pointing of the directory containing the game's assemblies.
+        /// </summary>
+        public static string GameAssemblyPath { get; }
+
+        /// <summary>
+        /// Gets the name of the game (its executable).
+        /// </summary>
+        public static string GameName { get; }
+
+        /// <summary>
         /// Gets the config that this loader uses to load <see cref="ConfigSection"/>s.
         /// </summary>
         public Config Config { get; }
@@ -63,16 +73,6 @@ namespace MonkeyLoader
         public string ConfigPath { get; }
 
         string IIdentifiable.FullId => Id;
-
-        /// <summary>
-        /// Gets the path pointing of the directory containing the game's assemblies.
-        /// </summary>
-        public string GameAssemblyPath { get; }
-
-        /// <summary>
-        /// Gets the name of the game (its executable).
-        /// </summary>
-        public string GameName { get; }
 
         /// <summary>
         /// Gets all loaded game pack <see cref="Mod"/>s in topological order.
@@ -178,6 +178,13 @@ namespace MonkeyLoader
 
         static MonkeyLoader()
         {
+            var executablePath = Environment.GetCommandLineArgs()[0];
+            GameName = Path.GetFileNameWithoutExtension(executablePath);
+            GameAssemblyPath = Path.Combine(Path.GetDirectoryName(executablePath), $"{GameName}_Data", "Managed");
+
+            if (!Directory.Exists(GameAssemblyPath))
+                GameAssemblyPath = Path.GetDirectoryName(executablePath);
+
             var harmony = new Harmony("MonkeyLoader");
             harmony.PatchAll();
         }
@@ -232,13 +239,6 @@ namespace MonkeyLoader
             NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Lib.Harmony", new NuGetVersion(2, 3, 3)), NuGetHelper.Framework));
             NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Lib.Harmony.Thin", new NuGetVersion(2, 3, 3)), NuGetHelper.Framework));
             NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Zio", new NuGetVersion(0, 18, 0)), NuGetHelper.Framework));
-
-            var executablePath = Environment.GetCommandLineArgs()[0];
-            GameName = Path.GetFileNameWithoutExtension(executablePath);
-            GameAssemblyPath = Path.Combine(Path.GetDirectoryName(executablePath), $"{GameName}_Data", "Managed");
-
-            if (!Directory.Exists(GameAssemblyPath))
-                GameAssemblyPath = Path.GetDirectoryName(executablePath);
 
             GameAssemblyPool = new AssemblyPool(this, "GameAssemblyPool", () => Locations.PatchedAssemblies);
             GameAssemblyPool.AddSearchDirectory(GameAssemblyPath);

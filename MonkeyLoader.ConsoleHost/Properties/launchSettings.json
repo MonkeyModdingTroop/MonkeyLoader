@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MonkeyLoader.ConsoleHost": {
+      "commandName": "Project",
+      "commandLineArgs": "Resonite"
+    }
+  }
+}
