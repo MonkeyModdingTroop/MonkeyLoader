@@ -7,26 +7,35 @@ namespace MonkeyLoader.ConsoleHost
         private static void Main(string[] args)
         {
             var appName = args.FirstOrDefault() ?? "MonkeyLoader";
+            var pipeName = $"MonkeyLoader.ConsoleHost.{appName}";
 
-            using var pipeServer = new NamedPipeServerStream($"MonkeyLoader.ConsoleHost.{appName}", PipeDirection.In);
-            pipeServer.WaitForConnection();
-
+            using var pipeServer = new NamedPipeServerStream(pipeName, PipeDirection.In);
             var reader = new StreamReader(pipeServer);
 
-            try
-            {
-                var i = 0;
-                while (i >= 0)
-                {
-                    i = reader.Read();
+            Console.Title = $"{appName} - MonkeyLoader Console";
+            Console.WriteLine("Welcome to MonkeyLoader!");
+            Console.WriteLine($"Waiting for input on pipe: {pipeName}");
 
-                    if (i >= 0)
-                        Console.Write(Convert.ToChar(i));
-                }
-            }
-            catch (IOException)
+            while (true)
             {
-                //error handling code here
+                pipeServer.WaitForConnection();
+
+                try
+                {
+                    var i = 0;
+                    while (i >= 0)
+                    {
+                        i = reader.Read();
+
+                        if (i >= 0)
+                            Console.Write(Convert.ToChar(i));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+                    //error handling code here
+                }
             }
         }
     }

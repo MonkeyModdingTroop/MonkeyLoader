@@ -16,14 +16,6 @@ namespace Doorstop
             var loader = new MonkeyLoader.MonkeyLoader();
             var log = loader.Logger;
 
-            if (ConsoleLoggingHandler.Instance.Connected)
-            {
-                Console.Title = $"{loader.GameName} - MonkeyLoader Console";
-                Console.BackgroundColor = ConsoleColor.Black;
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.WriteLine("Welcome to MonkeyLoader!");
-            }
-
             try
             {
                 foreach (var file in Directory.EnumerateFiles("./"))

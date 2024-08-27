@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.IO.Pipes;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -14,9 +16,9 @@ namespace MonkeyLoader.Logging
     /// </summary>
     public sealed class ConsoleLoggingHandler : LoggingHandler
     {
-        private static bool _hasConsole = false;
+        private static readonly NamedPipeClientStream _pipeClient;
 
-        private static StreamWriter? _writer;
+        private static readonly StreamWriter _writer;
 
         /// <summary>
         /// Gets the instance of the <see cref="ConsoleLoggingHandler"/>.
@@ -27,54 +29,50 @@ namespace MonkeyLoader.Logging
         /// For this logger, that means that a <see cref="Console"/> is available.
         /// </remarks>
         /// <inheritdoc/>
-        public override bool Connected => _hasConsole;
+        public override bool Connected => _pipeClient.IsConnected;
 
-        private ConsoleLoggingHandler()
+        static ConsoleLoggingHandler()
         {
-            try
+            var startInfo = new ProcessStartInfo("S:\\Projects\\MonkeyLoader\\MonkeyLoader.ConsoleHost\\bin\\Release\\net8.0\\MonkeyLoader.ConsoleHost.exe", "Resonite");
+            var process = new Process() { StartInfo = startInfo };
+            process.Start();
+
+            while (true)
             {
-                // Probably doesn't work on Linux Native, should work on Wine/Proton?
-                if (GetConsoleWindow() != IntPtr.Zero)
+                try
                 {
-                    _hasConsole = true;
-                    return;
+                    _pipeClient = new(".", $"MonkeyLoader.ConsoleHost.{MonkeyLoader.GameName}", PipeDirection.Out, PipeOptions.None);
+                    _pipeClient.Connect();
+                    _writer = new(_pipeClient);
+                    break;
                 }
-
-                if (!AllocConsole())
-                    return;
-
-                _hasConsole = true;
-
-                var output = Console.OpenStandardOutput();
-                _writer = new StreamWriter(output) { AutoFlush = true };
-
-                Console.SetOut(_writer);
-            }
-            catch
-            {
-                _hasConsole = false;
-                return;
+                catch (Exception ex)
+                {
+                }
             }
         }
+
+        private ConsoleLoggingHandler()
+        { }
 
         /// <inheritdoc/>
         public override void Debug(Func<object> messageProducer)
         {
-            Console.ForegroundColor = ConsoleColor.Cyan;
+            //Console.ForegroundColor = ConsoleColor.Cyan;
             Log(messageProducer().ToString());
         }
 
         /// <inheritdoc/>
         public override void Error(Func<object> messageProducer)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
+            //Console.ForegroundColor = ConsoleColor.Red;
             Log(messageProducer().ToString());
         }
 
         /// <inheritdoc/>
         public override void Fatal(Func<object> messageProducer)
         {
-            Console.ForegroundColor = ConsoleColor.Red;
+            //Console.ForegroundColor = ConsoleColor.Red;
             Log(messageProducer().ToString());
         }
 
@@ -85,7 +83,7 @@ namespace MonkeyLoader.Logging
         /// <inheritdoc/>
         public override void Info(Func<object> messageProducer)
         {
-            Console.ForegroundColor = ConsoleColor.White;
+            //Console.ForegroundColor = ConsoleColor.White;
             Log(messageProducer().ToString());
         }
 
@@ -95,31 +93,23 @@ namespace MonkeyLoader.Logging
         /// <param name="message">The message to write.</param>
         public void Log(string message)
         {
-            if (Console.Out != _writer)
-                Console.SetOut(_writer);
-
-            Console.WriteLine($"[{DateTime.UtcNow:HH:mm:ss:ffff}] {message}");
-            Console.ForegroundColor = ConsoleColor.Gray;
+            _writer.WriteLine($"[{DateTime.UtcNow:HH:mm:ss:ffff}] {message}");
+            _writer.Flush();
+            //Console.ForegroundColor = ConsoleColor.Gray;
         }
 
         /// <inheritdoc/>
         public override void Trace(Func<object> messageProducer)
         {
-            Console.ForegroundColor = ConsoleColor.Cyan;
+            //Console.ForegroundColor = ConsoleColor.Cyan;
             Log(messageProducer().ToString());
         }
 
         /// <inheritdoc/>
         public override void Warn(Func<object> messageProducer)
         {
-            Console.ForegroundColor = ConsoleColor.Yellow;
+            //Console.ForegroundColor = ConsoleColor.Yellow;
             Log(messageProducer().ToString());
         }
-
-        [DllImport("kernel32.dll")]
-        private static extern bool AllocConsole();
-
-        [DllImport("kernel32.dll")]
-        private static extern IntPtr GetConsoleWindow();
     }
 }
