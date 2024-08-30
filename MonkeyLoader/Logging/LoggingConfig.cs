@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 
 namespace MonkeyLoader.Logging
 {
@@ -19,7 +20,7 @@ namespace MonkeyLoader.Logging
         public readonly DefiningConfigKey<string?> DirectoryPathKey = new("DirectoryPath", "The directory to write log files to.\nChanges will only take effect on restart.", () => "./MonkeyLoader/Logs");
         public readonly DefiningConfigKey<int> FilesToPreserveKey = new("FilesToPreserve", "The number of recent log files to keep around. Set <1 to disable.\nChanges take effect on restart.", () => 16);
         public readonly DefiningConfigKey<LoggingLevel> LevelKey = new("Level", "The logging level used to filter logging requests. May be ignored in the initial startup phase.\nChanges take effect immediately.", () => LoggingLevel.Info);
-        public readonly DefiningConfigKey<bool> TryLoggingToConsoleKey = new("TryLoggingToConsole", "Whether to try logging to a console window.\nIf one isn't already present, it may be spawned. Spawning a console may only work on Windows and Wine or Proton.\nIf you close the console, Resonite will close too.\nThis may have some performance impact with high log levels.\nChanges take effect on restart.", () => false);
+        public readonly DefiningConfigKey<bool> ShouldLogToConsoleKey = new("ShouldLogToConsole", "Whether to spawn a console window for logging.\nIf one isn't already present, it may be spawned.\nChanges take effect immediately.", () => false);
 
         private readonly Lazy<string?> _currentLogFilePath;
         private LoggingController _loggingController;
@@ -61,10 +62,10 @@ namespace MonkeyLoader.Logging
 
         public bool ShouldCleanLogDirectory => ShouldWriteLogFile && FilesToPreserve > 0;
 
+        public bool ShouldLogToConsole => ShouldLogToConsoleKey;
+
         [MemberNotNullWhen(true, nameof(DirectoryPath), nameof(CurrentLogFilePath))]
         public bool ShouldWriteLogFile => !string.IsNullOrWhiteSpace(DirectoryPathKey.GetValue());
-
-        public bool TryLoggingToConsole => TryLoggingToConsoleKey;
 
         /// <inheritdoc/>
         public override Version Version { get; } = new Version(1, 0, 0);
@@ -73,7 +74,8 @@ namespace MonkeyLoader.Logging
         {
             _currentLogFilePath = new(() => ShouldWriteLogFile ? Path.Combine(DirectoryPath, $"{FileNamePrefix}{DateTime.UtcNow.ToString(TimestampFormat, CultureInfo.InvariantCulture)}{FileExtension}") : null);
 
-            LevelKey.Changed += LevelKeyChanged;
+            LevelKey.Changed += LevelChanged;
+            ShouldLogToConsoleKey.Changed += ShouldLogToConsoleChanged;
         }
 
         public static bool TryGetTimestamp(string logFile, [NotNullWhen(true)] out DateTime? timestamp)
@@ -144,7 +146,7 @@ namespace MonkeyLoader.Logging
             }
         }
 
-        private void LevelKeyChanged(object sender, ConfigKeyChangedEventArgs<LoggingLevel> configKeyChangedEventArgs)
+        private void LevelChanged(object sender, ConfigKeyChangedEventArgs<LoggingLevel> configKeyChangedEventArgs)
         {
             if (Controller is not null)
                 Controller.Level = configKeyChangedEventArgs.NewValue;
@@ -154,13 +156,28 @@ namespace MonkeyLoader.Logging
         {
             LoggingHandler loggingHandlers = MissingLoggingHandler.Instance;
 
-            if (TryLoggingToConsole && ConsoleLoggingHandler.Instance.Connected)
-                loggingHandlers += ConsoleLoggingHandler.Instance;
-
             if (ShouldWriteLogFile)
                 loggingHandlers += new FileLoggingHandler(CurrentLogFilePath);
 
+            if (ShouldLogToConsole)
+            {
+                loggingHandlers += ConsoleLoggingHandler.Instance;
+
+                using var cts = new CancellationTokenSource();
+                cts.CancelAfter(10000);
+
+                ConsoleLoggingHandler.ConnectAsync(cts.Token).Wait();
+            }
+
             Controller.Handler += loggingHandlers;
+        }
+
+        private void ShouldLogToConsoleChanged(object sender, ConfigKeyChangedEventArgs<bool> configKeyChangedEventArgs)
+        {
+            if (configKeyChangedEventArgs.NewValue)
+                ConsoleLoggingHandler.TryConnect();
+            else
+                ConsoleLoggingHandler.Disconnect();
         }
     }
 }
