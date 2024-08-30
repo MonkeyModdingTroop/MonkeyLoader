@@ -16,6 +16,25 @@ namespace MonkeyLoader.ConsoleHost
             Console.WriteLine("Welcome to MonkeyLoader!");
             Console.WriteLine($"Waiting for input on pipe: {pipeName}");
 
+            //var NL = Environment.NewLine; // shortcut
+            //var NORMAL = Console.IsOutputRedirected ? "" : "\x1b[39m";
+            //var RED = Console.IsOutputRedirected ? "" : "\x1b[91m";
+            //var GREEN = Console.IsOutputRedirected ? "" : "\x1b[92m";
+            //var YELLOW = Console.IsOutputRedirected ? "" : "\x1b[93m";
+            //var BLUE = Console.IsOutputRedirected ? "" : "\x1b[94m";
+            //var MAGENTA = Console.IsOutputRedirected ? "" : "\x1b[95m";
+            //var CYAN = Console.IsOutputRedirected ? "" : "\x1b[96m";
+            //var GREY = Console.IsOutputRedirected ? "" : "\x1b[97m";
+            //var BOLD = Console.IsOutputRedirected ? "" : "\x1b[1m";
+            //var NOBOLD = Console.IsOutputRedirected ? "" : "\x1b[22m";
+            //var UNDERLINE = Console.IsOutputRedirected ? "" : "\x1b[4m";
+            //var NOUNDERLINE = Console.IsOutputRedirected ? "" : "\x1b[24m";
+            //var REVERSE = Console.IsOutputRedirected ? "" : "\x1b[7m";
+            //var NOREVERSE = Console.IsOutputRedirected ? "" : "\x1b[27m";
+
+            //Console.WriteLine($"This is {RED}Red{NORMAL}, {GREEN}Green{NORMAL}, {YELLOW}Yellow{NORMAL}, {BLUE}Blue{NORMAL}, {MAGENTA}Magenta{NORMAL}, {CYAN}Cyan{NORMAL}, {GREY}Grey{NORMAL}! ");
+            //Console.WriteLine($"This is {BOLD}Bold{NOBOLD}, {UNDERLINE}Underline{NOUNDERLINE}, {REVERSE}Reverse{NOREVERSE}! ");
+
             while (true)
             {
                 pipeServer.WaitForConnection();
