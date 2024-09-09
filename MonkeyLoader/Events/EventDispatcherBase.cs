@@ -1,24 +1,27 @@
 ﻿using EnumerableToolkit;
 using MonkeyLoader.Logging;
 using MonkeyLoader.Meta;
+using System;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace MonkeyLoader.Events
 {
     internal abstract class EventDispatcherBase<TSource, THandler> : IEventDispatcher
         where THandler : class, IPrioritizable
     {
+        protected readonly AnyMap eventDispatchers = new();
         protected readonly PrioritySortedCollection<THandler> handlers = [];
-
+        protected readonly Dictionary<Mod, Dictionary<Type, HashSet<TSource>>> sourcesByMod = [];
         private readonly Dictionary<Mod, HashSet<THandler>> _handlersByMod = [];
         private readonly EventManager _manager;
-        private readonly Dictionary<Mod, HashSet<TSource>> _sourcesByMod = [];
-
+        private readonly MethodInfo _removeSourceMethod;
         protected Logger Logger => _manager.Logger;
 
-        protected EventDispatcherBase(EventManager manager)
+        protected EventDispatcherBase(EventManager manager, MethodInfo removeSourceMethod)
         {
             _manager = manager;
+            _removeSourceMethod = removeSourceMethod;
         }
 
         public bool AddHandler(Mod mod, THandler handler)
@@ -26,17 +29,6 @@ namespace MonkeyLoader.Events
             if (_handlersByMod.GetOrCreateValue(mod).Add(handler))
             {
                 handlers.Add(handler);
-                return true;
-            }
-
-            return false;
-        }
-
-        public bool AddSource(Mod mod, TSource source)
-        {
-            if (_sourcesByMod.GetOrCreateValue(mod).Add(source))
-            {
-                AddSource(source);
                 return true;
             }
 
@@ -56,39 +48,37 @@ namespace MonkeyLoader.Events
             return false;
         }
 
-        public bool RemoveSource(Mod mod, TSource source)
+        public void UnregisterMod(Mod mod)
         {
-            if (_sourcesByMod.TryGetValue(mod, out var modSources))
+            if (sourcesByMod.TryGetValue(mod, out var modSourcesByType))
             {
-                modSources.Remove(source);
+                foreach (var typeModSources in modSourcesByType)
+                {
+                    var removeSource = _removeSourceMethod.MakeGenericMethod(typeModSources.Key);
+
+                    foreach (var source in typeModSources.Value)
+                        removeSource.Invoke(this, [mod, source]);
+                }
+            }
+
+            sourcesByMod.Remove(mod);
+            _handlersByMod.Remove(mod);
+        }
+
+        protected bool AddSource(Mod mod, Type eventType, TSource source)
+            => sourcesByMod.GetOrCreateValue(mod).GetOrCreateValue(eventType).Add(source);
+
+        protected bool RemoveSource(Mod mod, Type eventType, TSource source)
+        {
+            if (sourcesByMod.TryGetValue(mod, out var modSourcesByType))
+            {
+                if (modSourcesByType.TryGetValue(eventType, out var modTypeSources))
+                    modTypeSources.Remove(source);
                 return true;
             }
 
             return false;
         }
-
-        public void UnregisterMod(Mod mod)
-        {
-            if (_sourcesByMod.TryGetValue(mod, out var modSources))
-            {
-                foreach (var source in modSources)
-                    RemoveSource(source);
-            }
-
-            _sourcesByMod.Remove(mod);
-
-            if (_handlersByMod.TryGetValue(mod, out var modHandlers))
-            {
-                foreach (var handler in modHandlers)
-                    handlers.Remove(handler);
-            }
-
-            _handlersByMod.Remove(mod);
-        }
-
-        protected abstract void AddSource(TSource eventSource);
-
-        protected abstract void RemoveSource(TSource eventSource);
     }
 
     internal interface IEventDispatcher

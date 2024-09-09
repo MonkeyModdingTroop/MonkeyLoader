@@ -174,7 +174,7 @@ namespace MonkeyLoader.Events
         {
             ValidateLoader(mod);
 
-            if (_eventDispatchers.TryGetValue<EventDispatchers<TEvent>>(out var eventDispatcher))
+            if (_eventDispatchers.TryGetValue<EventDispatcher<TEvent>>(out var eventDispatcher))
                 return eventDispatcher!.RemoveHandler(mod, eventHandler);
 
             return false;
@@ -189,7 +189,7 @@ namespace MonkeyLoader.Events
         private CancelableEventDispatcher<TEvent> CreateCancelableDispatcher<TEvent>()
             where TEvent : CancelableSyncEvent => new(this);
 
-        private EventDispatchers<TEvent> CreateDispatcher<TEvent>()
+        private EventDispatcher<TEvent> CreateDispatcher<TEvent>()
             where TEvent : SyncEvent => new(this);
 
         private bool InvokeMethodForAllDispatchableEvents(Type concreteEventType, MethodInfo method, params object[] parameters)
@@ -205,35 +205,27 @@ namespace MonkeyLoader.Events
         }
 
         private bool RegisterAsyncEventSource<TConcreteType, TEvent>(Mod mod, IAsyncEventSource<TConcreteType> eventSource)
-            where TConcreteType : AsyncEvent, TEvent
+            where TConcreteType : TEvent
             where TEvent : AsyncEvent
-        {
-            return _eventDispatchers.GetOrCreateValue(CreateAsyncDispatcher<TEvent>).AddSource(mod, eventSource);
-        }
+            => _eventDispatchers.GetOrCreateValue(CreateAsyncDispatcher<TEvent>).AddSource(mod, eventSource);
 
         private bool RegisterCancelableAsyncEventSource<TConcreteType, TEvent>(Mod mod, ICancelableAsyncEventSource<TConcreteType> cancelableEventSource)
-            where TConcreteType : CancelableAsyncEvent, TEvent
+            where TConcreteType : TEvent
             where TEvent : CancelableAsyncEvent
-        {
-            return _eventDispatchers.GetOrCreateValue(CreateCancelableAsyncDispatcher<TEvent>).AddSource(mod, cancelableEventSource);
-        }
+            => _eventDispatchers.GetOrCreateValue(CreateCancelableAsyncDispatcher<TEvent>).AddSource(mod, cancelableEventSource);
 
         private bool RegisterCancelableSyncEventSource<TConcreteType, TEvent>(Mod mod, ICancelableEventSource<TConcreteType> cancelableEventSource)
-            where TConcreteType : CancelableSyncEvent, TEvent
+            where TConcreteType : TEvent
             where TEvent : CancelableSyncEvent
-        {
-            return _eventDispatchers.GetOrCreateValue(CreateCancelableDispatcher<TEvent>).AddSource(mod, cancelableEventSource);
-        }
+            => _eventDispatchers.GetOrCreateValue(CreateCancelableDispatcher<TEvent>).AddSource(mod, cancelableEventSource);
 
         private bool RegisterSyncEventSource<TConcreteType, TEvent>(Mod mod, IEventSource<TConcreteType> eventSource)
-            where TConcreteType : SyncEvent, TEvent
+            where TConcreteType : TEvent
             where TEvent : SyncEvent
-        {
-            return _eventDispatchers.GetOrCreateValue(CreateDispatcher<TEvent>).AddSource(mod, eventSource);
-        }
+            => _eventDispatchers.GetOrCreateValue(CreateDispatcher<TEvent>).AddSource(mod, eventSource);
 
         private bool UnregisterAsyncEventSource<TConcreteType, TEvent>(Mod mod, IAsyncEventSource<TConcreteType> eventSource)
-            where TConcreteType : AsyncEvent, TEvent
+            where TConcreteType : TEvent
             where TEvent : AsyncEvent
         {
             if (_eventDispatchers.TryGetValue<AsyncEventDispatcher<TEvent>>(out var eventDispatcher))
@@ -243,7 +235,7 @@ namespace MonkeyLoader.Events
         }
 
         private bool UnregisterCancelableAsyncEventSource<TConcreteType, TEvent>(Mod mod, ICancelableAsyncEventSource<TConcreteType> cancelableEventSource)
-            where TConcreteType : CancelableAsyncEvent, TEvent
+            where TConcreteType : TEvent
             where TEvent : CancelableAsyncEvent
         {
             if (_eventDispatchers.TryGetValue<CancelableAsyncEventDispatcher<TEvent>>(out var cancelableEventDispatcher))
@@ -253,7 +245,7 @@ namespace MonkeyLoader.Events
         }
 
         private bool UnregisterCancelableSyncEventSource<TConcreteType, TEvent>(Mod mod, ICancelableEventSource<TConcreteType> cancelableEventSource)
-            where TConcreteType : CancelableSyncEvent, TEvent
+            where TConcreteType : TEvent
             where TEvent : CancelableSyncEvent
         {
             if (_eventDispatchers.TryGetValue<CancelableEventDispatcher<TEvent>>(out var cancelableEventDispatcher))
@@ -263,10 +255,10 @@ namespace MonkeyLoader.Events
         }
 
         private bool UnregisterSyncEventSource<TConcreteType, TEvent>(Mod mod, IEventSource<TConcreteType> eventSource)
-            where TConcreteType : SyncEvent, TEvent
+            where TConcreteType : TEvent
             where TEvent : SyncEvent
         {
-            if (_eventDispatchers.TryGetValue<EventDispatchers<TEvent>>(out var eventDispatcher))
+            if (_eventDispatchers.TryGetValue<EventDispatcher<TEvent>>(out var eventDispatcher))
                 return eventDispatcher!.RemoveSource(mod, eventSource);
 
             return false;

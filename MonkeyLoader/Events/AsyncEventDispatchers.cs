@@ -1,4 +1,6 @@
-﻿using System;
+﻿using HarmonyLib;
+using MonkeyLoader.Meta;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,14 +12,33 @@ namespace MonkeyLoader.Events
             : EventDispatcherBase<IAsyncEventSource<TEvent>, IAsyncEventHandler<TEvent>>
         where TEvent : AsyncEvent
     {
-        public AsyncEventDispatcher(EventManager manager) : base(manager)
+        public AsyncEventDispatcher(EventManager manager)
+            : base(manager, AccessTools.DeclaredMethod(typeof(AsyncEventDispatcher<TEvent>), nameof(RemoveSource)))
         { }
 
-        protected override void AddSource(IAsyncEventSource<TEvent> eventSource)
-            => eventSource.Dispatching += DispatchEventsAsync;
+        public bool AddSource<TDerivedEvent>(Mod mod, IAsyncEventSource<TDerivedEvent> eventSource)
+            where TDerivedEvent : TEvent
+        {
+            if (!AddSource(mod, typeof(TDerivedEvent), eventSource))
+                return false;
 
-        protected override void RemoveSource(IAsyncEventSource<TEvent> eventSource)
-            => eventSource.Dispatching -= DispatchEventsAsync;
+            var eventDispatcher = eventDispatchers.GetOrCreateValue(MakeEventDispatcher<TDerivedEvent>);
+            eventSource.Dispatching += eventDispatcher;
+
+            return true;
+        }
+
+        public bool RemoveSource<TDerivedEvent>(Mod mod, IAsyncEventSource<TDerivedEvent> eventSource)
+            where TDerivedEvent : TEvent
+        {
+            if (!RemoveSource(mod, typeof(TDerivedEvent), eventSource))
+                return false;
+
+            var eventDispatcher = eventDispatchers.GetOrCreateValue(MakeEventDispatcher<TDerivedEvent>);
+            eventSource.Dispatching -= eventDispatcher;
+
+            return true;
+        }
 
         private async Task DispatchEventsAsync(TEvent eventArgs)
         {
@@ -33,20 +54,42 @@ namespace MonkeyLoader.Events
                 }
             }
         }
+
+        private AsyncEventDispatching<TDerivedEvent> MakeEventDispatcher<TDerivedEvent>()
+            where TDerivedEvent : TEvent => new(DispatchEventsAsync);
     }
 
     internal sealed class CancelableAsyncEventDispatcher<TEvent>
             : EventDispatcherBase<ICancelableAsyncEventSource<TEvent>, ICancelableAsyncEventHandler<TEvent>>
         where TEvent : CancelableAsyncEvent
     {
-        public CancelableAsyncEventDispatcher(EventManager manager) : base(manager)
+        public CancelableAsyncEventDispatcher(EventManager manager)
+            : base(manager, AccessTools.DeclaredMethod(typeof(CancelableAsyncEventDispatcher<TEvent>), nameof(RemoveSource)))
         { }
 
-        protected override void AddSource(ICancelableAsyncEventSource<TEvent> eventSource)
-            => eventSource.Dispatching += DispatchEventsAsync;
+        public bool AddSource<TDerivedEvent>(Mod mod, ICancelableAsyncEventSource<TDerivedEvent> eventSource)
+            where TDerivedEvent : TEvent
+        {
+            if (!AddSource(mod, typeof(TDerivedEvent), eventSource))
+                return false;
 
-        protected override void RemoveSource(ICancelableAsyncEventSource<TEvent> eventSource)
-            => eventSource.Dispatching -= DispatchEventsAsync;
+            var eventDispatcher = eventDispatchers.GetOrCreateValue(MakeEventDispatcher<TDerivedEvent>);
+            eventSource.Dispatching += eventDispatcher;
+
+            return true;
+        }
+
+        public bool RemoveSource<TDerivedEvent>(Mod mod, ICancelableAsyncEventSource<TDerivedEvent> eventSource)
+            where TDerivedEvent : TEvent
+        {
+            if (!RemoveSource(mod, typeof(TDerivedEvent), eventSource))
+                return false;
+
+            var eventDispatcher = eventDispatchers.GetOrCreateValue(MakeEventDispatcher<TDerivedEvent>);
+            eventSource.Dispatching -= eventDispatcher;
+
+            return true;
+        }
 
         private async Task DispatchEventsAsync(TEvent eventArgs)
         {
@@ -68,5 +111,8 @@ namespace MonkeyLoader.Events
                 }
             }
         }
+
+        private CancelableAsyncEventDispatching<TDerivedEvent> MakeEventDispatcher<TDerivedEvent>()
+            where TDerivedEvent : TEvent => new(DispatchEventsAsync);
     }
 }

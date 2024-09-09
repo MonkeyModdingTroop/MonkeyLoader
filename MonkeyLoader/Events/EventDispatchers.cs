@@ -1,6 +1,11 @@
-﻿using MonkeyLoader.Logging;
+﻿using EnumerableToolkit;
+using HarmonyLib;
+using MonkeyLoader.Logging;
+using MonkeyLoader.Meta;
+using Mono.Cecil;
 using System;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -10,14 +15,33 @@ namespace MonkeyLoader.Events
             : EventDispatcherBase<ICancelableEventSource<TEvent>, ICancelableEventHandler<TEvent>>
         where TEvent : CancelableSyncEvent
     {
-        public CancelableEventDispatcher(EventManager manager) : base(manager)
+        public CancelableEventDispatcher(EventManager manager)
+            : base(manager, AccessTools.DeclaredMethod(typeof(CancelableEventDispatcher<TEvent>), nameof(RemoveSource)))
         { }
 
-        protected override void AddSource(ICancelableEventSource<TEvent> eventSource)
-            => eventSource.Dispatching += DispatchEvents;
+        public bool AddSource<TDerivedEvent>(Mod mod, ICancelableEventSource<TDerivedEvent> eventSource)
+            where TDerivedEvent : TEvent
+        {
+            if (!AddSource(mod, typeof(TDerivedEvent), eventSource))
+                return false;
 
-        protected override void RemoveSource(ICancelableEventSource<TEvent> eventSource)
-            => eventSource.Dispatching -= DispatchEvents;
+            var eventDispatcher = eventDispatchers.GetOrCreateValue(MakeEventDispatcher<TDerivedEvent>);
+            eventSource.Dispatching += eventDispatcher;
+
+            return true;
+        }
+
+        public bool RemoveSource<TDerivedEvent>(Mod mod, ICancelableEventSource<TDerivedEvent> eventSource)
+            where TDerivedEvent : TEvent
+        {
+            if (!RemoveSource(mod, typeof(TDerivedEvent), eventSource))
+                return false;
+
+            var eventDispatcher = eventDispatchers.GetOrCreateValue(MakeEventDispatcher<TDerivedEvent>);
+            eventSource.Dispatching -= eventDispatcher;
+
+            return true;
+        }
 
         private void DispatchEvents(TEvent eventArgs)
         {
@@ -39,20 +63,42 @@ namespace MonkeyLoader.Events
                 }
             }
         }
+
+        private CancelableEventDispatching<TDerivedEvent> MakeEventDispatcher<TDerivedEvent>()
+            where TDerivedEvent : TEvent => new(DispatchEvents);
     }
 
-    internal sealed class EventDispatchers<TEvent>
+    internal sealed class EventDispatcher<TEvent>
             : EventDispatcherBase<IEventSource<TEvent>, IEventHandler<TEvent>>
         where TEvent : SyncEvent
     {
-        public EventDispatchers(EventManager manager) : base(manager)
+        public EventDispatcher(EventManager manager)
+            : base(manager, AccessTools.DeclaredMethod(typeof(EventDispatcher<TEvent>), nameof(RemoveSource)))
         { }
 
-        protected override void AddSource(IEventSource<TEvent> eventSource)
-            => eventSource.Dispatching += DispatchEvents;
+        public bool AddSource<TDerivedEvent>(Mod mod, IEventSource<TDerivedEvent> eventSource)
+            where TDerivedEvent : TEvent
+        {
+            if (!AddSource(mod, typeof(TDerivedEvent), eventSource))
+                return false;
 
-        protected override void RemoveSource(IEventSource<TEvent> eventSource)
-            => eventSource.Dispatching -= DispatchEvents;
+            var eventDispatcher = eventDispatchers.GetOrCreateValue(MakeEventDispatcher<TDerivedEvent>);
+            eventSource.Dispatching += eventDispatcher;
+
+            return true;
+        }
+
+        public bool RemoveSource<TDerivedEvent>(Mod mod, IEventSource<TDerivedEvent> eventSource)
+            where TDerivedEvent : TEvent
+        {
+            if (!RemoveSource(mod, typeof(TDerivedEvent), eventSource))
+                return false;
+
+            var eventDispatcher = eventDispatchers.GetOrCreateValue(MakeEventDispatcher<TDerivedEvent>);
+            eventSource.Dispatching -= eventDispatcher;
+
+            return true;
+        }
 
         private void DispatchEvents(TEvent eventArgs)
         {
@@ -68,5 +114,8 @@ namespace MonkeyLoader.Events
                 }
             }
         }
+
+        private EventDispatching<TDerivedEvent> MakeEventDispatcher<TDerivedEvent>()
+            where TDerivedEvent : TEvent => new(DispatchEvents);
     }
 }
