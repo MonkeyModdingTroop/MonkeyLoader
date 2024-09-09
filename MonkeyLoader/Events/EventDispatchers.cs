@@ -1,8 +1,6 @@
-﻿using EnumerableToolkit;
-using HarmonyLib;
+﻿using HarmonyLib;
 using MonkeyLoader.Logging;
 using MonkeyLoader.Meta;
-using Mono.Cecil;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -25,6 +23,8 @@ namespace MonkeyLoader.Events
             if (!AddSource(mod, typeof(TDerivedEvent), eventSource))
                 return false;
 
+            // Have to wrap the DispatchEvents method in the correct delegate type,
+            // otherwise the event will throw when adding it, despite being compatible
             var eventDispatcher = eventDispatchers.GetOrCreateValue(MakeEventDispatcher<TDerivedEvent>);
             eventSource.Dispatching += eventDispatcher;
 
@@ -82,6 +82,8 @@ namespace MonkeyLoader.Events
             if (!AddSource(mod, typeof(TDerivedEvent), eventSource))
                 return false;
 
+            // Have to wrap the DispatchEvents method in the correct delegate type,
+            // otherwise the event will throw when adding it, despite being compatible
             var eventDispatcher = eventDispatchers.GetOrCreateValue(MakeEventDispatcher<TDerivedEvent>);
             eventSource.Dispatching += eventDispatcher;
 
