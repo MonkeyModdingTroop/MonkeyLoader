@@ -178,9 +178,15 @@ namespace MonkeyLoader.Logging
                 return;
 
             if (configKeyChangedEventArgs.NewValue)
+            {
                 ConsoleLoggingHandler.TryConnect();
+                Controller.Handler += ConsoleLoggingHandler.Instance;
+            }
             else
+            {
                 ConsoleLoggingHandler.Disconnect();
+                Controller.Handler -= ConsoleLoggingHandler.Instance;
+            }
         }
     }
 }
