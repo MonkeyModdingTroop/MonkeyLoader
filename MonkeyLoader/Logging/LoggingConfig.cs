@@ -174,6 +174,9 @@ namespace MonkeyLoader.Logging
 
         private void ShouldLogToConsoleChanged(object sender, ConfigKeyChangedEventArgs<bool> configKeyChangedEventArgs)
         {
+            if (_loggingController is null)
+                return;
+
             if (configKeyChangedEventArgs.NewValue)
                 ConsoleLoggingHandler.TryConnect();
             else

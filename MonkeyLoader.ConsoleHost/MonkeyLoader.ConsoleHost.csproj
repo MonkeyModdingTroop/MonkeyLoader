@@ -9,6 +9,7 @@
     <ProduceReferenceAssembly>False</ProduceReferenceAssembly>
     <GenerateDocumentationFile>False</GenerateDocumentationFile>
     <OutDir>../MonkeyLoader/vendor/MonkeyLoader/Tools/ConsoleHost</OutDir>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
 </Project>

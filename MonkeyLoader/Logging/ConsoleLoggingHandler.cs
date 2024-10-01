@@ -31,6 +31,7 @@ namespace MonkeyLoader.Logging
         public const string REVERSE = "\x1b[7m";
         public const string UNDERLINE = "\x1b[4m";
         public const string YELLOW = "\x1b[93m";
+
         private static Process? _consoleHostProcess;
         private static NamedPipeClientStream? _pipeClient;
 
