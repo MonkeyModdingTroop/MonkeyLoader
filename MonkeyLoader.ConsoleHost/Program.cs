@@ -4,6 +4,8 @@ namespace MonkeyLoader.ConsoleHost
 {
     internal class Program
     {
+        private const char ESC = '\x1b';
+
         private static void Main(string[] args)
         {
             var appName = args.FirstOrDefault() ?? "MonkeyLoader";
@@ -11,6 +13,8 @@ namespace MonkeyLoader.ConsoleHost
 
             using var pipeServer = new NamedPipeServerStream(pipeName, PipeDirection.In);
             var reader = new StreamReader(pipeServer);
+
+            ConsoleMode.EnsureTerminalProcessing();
 
             Console.Title = $"{appName} - MonkeyLoader Console";
             Console.WriteLine("Welcome to MonkeyLoader!");
@@ -42,12 +46,33 @@ namespace MonkeyLoader.ConsoleHost
                 try
                 {
                     var i = 0;
-                    while (i >= 0)
+                    var isTermSeq = false;
+
+                    while (true)
                     {
                         i = reader.Read();
 
-                        if (i >= 0)
-                            Console.Write(Convert.ToChar(i));
+                        if (i < 0)
+                            break;
+
+                        var c = Convert.ToChar(i);
+
+                        if (!ConsoleMode.IsTerminal)
+                        {
+                            if (c is ESC)
+                            {
+                                isTermSeq = true;
+                                continue;
+                            }
+
+                            if (isTermSeq && c is 'm')
+                            {
+                                isTermSeq = false;
+                                continue;
+                            }
+                        }
+
+                        Console.Write(Convert.ToChar(i));
                     }
                 }
                 catch (Exception ex)
