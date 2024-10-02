@@ -114,6 +114,7 @@ namespace MonkeyLoader.Logging
                     _consoleHostProcess = process;
                     _pipeClient = pipeClient;
                     _writer = new(_pipeClient);
+                    _writer.AutoFlush = true;
 
                     return true;
                 }
@@ -202,8 +203,8 @@ namespace MonkeyLoader.Logging
             if (!Connected)
                 return;
 
-            _writer.WriteLine($"{NORMAL + GRAY}[{DateTime.UtcNow:HH:mm:ss:ffff}]{textHighlight} {message}{NORMAL + GRAY}");
-            _writer.Flush();
+            lock (_writer)
+                _writer.WriteLine($"{NORMAL + GRAY}[{DateTime.UtcNow:HH:mm:ss:ffff}]{textHighlight} {message}{NORMAL + GRAY}");
         }
 
         /// <inheritdoc/>

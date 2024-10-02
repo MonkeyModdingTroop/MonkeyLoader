@@ -122,9 +122,12 @@ namespace MonkeyLoader.Logging
             if (!ShouldLog(level))
                 return;
 
-            LogLevelToLogger(level)(MakeMessageProducer(level, identifier, messageProducer));
+            Task.Run(() =>
+            {
+                LogLevelToLogger(level)(MakeMessageProducer(level, identifier, messageProducer));
 
-            HandleAutoFlush(level);
+                HandleAutoFlush(level);
+            });
         }
 
         internal void LogInternal(LoggingLevel level, string identifier, IEnumerable<Func<object>> messageProducers)
@@ -132,12 +135,15 @@ namespace MonkeyLoader.Logging
             if (!ShouldLog(level))
                 return;
 
-            var logger = LogLevelToLogger(level);
+            Task.Run(() =>
+            {
+                var logger = LogLevelToLogger(level);
 
-            foreach (var messageProducer in messageProducers)
-                logger(MakeMessageProducer(level, identifier, messageProducer));
+                foreach (var messageProducer in messageProducers)
+                    logger(MakeMessageProducer(level, identifier, messageProducer));
 
-            HandleAutoFlush(level);
+                HandleAutoFlush(level);
+            });
         }
 
         internal void LogInternal(LoggingLevel level, string identifier, IEnumerable<object> messages)
@@ -145,12 +151,15 @@ namespace MonkeyLoader.Logging
             if (!ShouldLog(level))
                 return;
 
-            var logger = LogLevelToLogger(level);
+            Task.Run(() =>
+            {
+                var logger = LogLevelToLogger(level);
 
-            foreach (var message in messages)
-                logger(MakeMessageProducer(level, identifier, message));
+                foreach (var message in messages)
+                    logger(MakeMessageProducer(level, identifier, message));
 
-            HandleAutoFlush(level);
+                HandleAutoFlush(level);
+            });
         }
 
         private static string LogLevelToString(LoggingLevel level) => level switch
