@@ -228,7 +228,7 @@ namespace MonkeyLoader.Patching
         /// <summary>
         /// Gets the impacts this (pre-)patcher has on certain features.
         /// </summary>
-        protected abstract IEnumerable<IFeaturePatch> GetFeaturePatches();
+        protected virtual IEnumerable<IFeaturePatch> GetFeaturePatches() => [];
 
         /// <summary>
         /// Lets this monkey react to being disabled at runtime.<br/>
