@@ -47,30 +47,56 @@ namespace MonkeyLoader
             return parentIdentifiable;
         }
 
+        /// <param name="identifiableCollection">The identifiable collection to start from.</param>
+        /// <inheritdoc cref="Get{TOwner, TIdentifiable}(IIdentifiableOwner{TOwner, TIdentifiable})"/>
         public static IIdentifiableSearch<TIdentifiable> Get<TIdentifiable>(this IIdentifiableCollection<TIdentifiable> identifiableCollection)
             where TIdentifiable : IIdentifiable
             => new IdentifiableSearch<TIdentifiable>(identifiableCollection.Items);
 
+        /// <param name="nestedIdentifiableCollection">The nested identifiable collection to start from.</param>
+        /// <inheritdoc cref="Get{TOwner, TIdentifiable}(IIdentifiableOwner{TOwner, TIdentifiable})"/>
         public static INestedIdentifiableSearch<TIdentifiable> Get<TIdentifiable>(this INestedIdentifiableCollection<TIdentifiable> nestedIdentifiableCollection)
             where TIdentifiable : INestedIdentifiable
             => new NestedIdentifiableSearch<TIdentifiable>(nestedIdentifiableCollection.Items);
 
+        /// <summary>
+        /// Starts a search for a child <typeparamref name="TIdentifiable"/> from this object.
+        /// </summary>
+        /// <typeparam name="TOwner">The type of the identifiable owner to start from.</typeparam>
+        /// <typeparam name="TIdentifiable">The type of the nested <see cref="IIdentifiable"/> to find.</typeparam>
+        /// <param name="identifiableOwner">The identifiable owner to start from.</param>
+        /// <returns>The search object for it.</returns>
         public static IIdentifiableOwnerSearch<TIdentifiable> Get<TOwner, TIdentifiable>(this IIdentifiableOwner<TOwner, TIdentifiable> identifiableOwner)
             where TOwner : IIdentifiableOwner<TOwner, TIdentifiable>
             where TIdentifiable : INestedIdentifiable<TOwner>
             => new NestedIdentifiableSearch<TIdentifiable>(identifiableOwner.Items, identifiableOwner.FullId);
 
+        /// <inheritdoc cref="Get{TOwner, TIdentifiable}(IIdentifiableOwner{TOwner, TIdentifiable})"/>
         public static IIdentifiableOwnerSearch<TIdentifiable> Get<TIdentifiable>(this IIdentifiableOwner<TIdentifiable> identifiableOwner)
             where TIdentifiable : INestedIdentifiable
             => new NestedIdentifiableSearch<TIdentifiable>(identifiableOwner.Items, identifiableOwner.FullId);
 
+        /// <param name="nestedIdentifiableOwner">The nested identifiable owner to start from.</param>
+        /// <inheritdoc cref="Get{TOwner, TIdentifiable}(IIdentifiableOwner{TOwner, TIdentifiable})"/>
         public static INestedIdentifiableOwnerSearch<TIdentifiable> Get<TIdentifiable>(this INestedIdentifiableOwner<TIdentifiable> nestedIdentifiableOwner)
             where TIdentifiable : INestedIdentifiable
             => new NestedIdentifiableSearch<TIdentifiable>(nestedIdentifiableOwner.Items, nestedIdentifiableOwner.FullId);
 
+        /// <param name="nestedIdentifiableCollection">The nested identifiable collection to start from.</param>
+        /// <inheritdoc cref="GetAll{TIdentifiable}(IIdentifiableCollection{TIdentifiable})"/>
         public static IEnumerable<TIdentifiable> GetAll<TIdentifiable>(this INestedIdentifiableCollection<TIdentifiable> nestedIdentifiableCollection)
             where TIdentifiable : INestedIdentifiable
             => nestedIdentifiableCollection.Items;
+
+        /// <summary>
+        /// Gets an enumerable of all child <typeparamref name="TIdentifiable"/> from this object.
+        /// </summary>
+        /// <typeparam name="TIdentifiable">The type of the nested <see cref="IIdentifiable"/>s to enumerate.</typeparam>
+        /// <param name="identifiableCollection">The identifiable collection to start from.</param>
+        /// <returns>An enumerable of all child <typeparamref name="TIdentifiable"/>.</returns>
+        public static IEnumerable<TIdentifiable> GetAll<TIdentifiable>(this IIdentifiableCollection<TIdentifiable> identifiableCollection)
+            where TIdentifiable : IIdentifiable
+            => identifiableCollection.Items;
 
         /// <summary>
         /// Tries to find the nearest <typeparamref name="TParentIdentifiable"/> parent of this <paramref name="identifiable"/>
@@ -123,23 +149,35 @@ namespace MonkeyLoader
             return false;
         }
 
+        /// <param name="nestedIdentifiableOwner">The nested identifiable owner to start from.</param>
+        /// <inheritdoc cref="TryGet{TOwner, TIdentifiable}(IIdentifiableOwner{TOwner, TIdentifiable})"/>
         public static INestedIdentifiableOwnerTrySearch<TIdentifiable> TryGet<TIdentifiable>(this INestedIdentifiableOwner<TIdentifiable> nestedIdentifiableOwner)
             where TIdentifiable : INestedIdentifiable
             => new NestedIdentifiableSearch<TIdentifiable>(nestedIdentifiableOwner.Items, nestedIdentifiableOwner.FullId);
 
+        /// <summary>
+        /// Starts a try-search for a child <typeparamref name="TIdentifiable"/> from this object.
+        /// </summary>
+        /// <returns>The try-search object for it.</returns>
+        /// <inheritdoc cref="Get{TOwner, TIdentifiable}(IIdentifiableOwner{TOwner, TIdentifiable})"/>
         public static IIdentifiableOwnerTrySearch<TIdentifiable> TryGet<TOwner, TIdentifiable>(this IIdentifiableOwner<TOwner, TIdentifiable> identifiableOwner)
             where TOwner : IIdentifiableOwner<TOwner, TIdentifiable>
             where TIdentifiable : INestedIdentifiable<TOwner>
             => new NestedIdentifiableSearch<TIdentifiable>(identifiableOwner.Items, identifiableOwner.FullId);
 
+        /// <inheritdoc cref="TryGet{TOwner, TIdentifiable}(IIdentifiableOwner{TOwner, TIdentifiable})"/>
         public static IIdentifiableOwnerTrySearch<TIdentifiable> TryGet<TIdentifiable>(this IIdentifiableOwner<TIdentifiable> identifiableOwner)
             where TIdentifiable : INestedIdentifiable
             => new NestedIdentifiableSearch<TIdentifiable>(identifiableOwner.Items, identifiableOwner.FullId);
 
+        /// <param name="identifiableCollection">The identifiable collection to start from.</param>
+        /// <inheritdoc cref="TryGet{TOwner, TIdentifiable}(IIdentifiableOwner{TOwner, TIdentifiable})"/>
         public static IIdentifiableTrySearch<TIdentifiable> TryGet<TIdentifiable>(this IIdentifiableCollection<TIdentifiable> identifiableCollection)
             where TIdentifiable : IIdentifiable
             => new IdentifiableSearch<TIdentifiable>(identifiableCollection.Items);
 
+        /// <param name="nestedIdentifiableCollection">The nested identifiable collection to start from.</param>
+        /// <inheritdoc cref="TryGet{TOwner, TIdentifiable}(IIdentifiableOwner{TOwner, TIdentifiable})"/>
         public static INestedIdentifiableTrySearch<TIdentifiable> TryGet<TIdentifiable>(this INestedIdentifiableCollection<TIdentifiable> nestedIdentifiableCollection)
             where TIdentifiable : INestedIdentifiable
             => new NestedIdentifiableSearch<TIdentifiable>(nestedIdentifiableCollection.Items);
