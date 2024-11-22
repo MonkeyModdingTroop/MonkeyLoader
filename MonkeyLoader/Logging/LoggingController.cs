@@ -18,8 +18,8 @@ namespace MonkeyLoader.Logging
 
         private readonly Timer _flushTimer;
         private bool _autoFlush = true;
-
         private LoggingHandler _handler = MissingLoggingHandler.Instance;
+        private Task _lastLogTask = Task.CompletedTask;
 
         /// <summary>
         /// Gets or sets whether this logger will automatically trigger <see cref="Flush()">flushing</see> of messages.
@@ -122,7 +122,7 @@ namespace MonkeyLoader.Logging
             if (!ShouldLog(level))
                 return;
 
-            Task.Run(() =>
+            QueueLogging(() =>
             {
                 LogLevelToLogger(level)(MakeMessageProducer(level, identifier, messageProducer));
 
@@ -135,7 +135,7 @@ namespace MonkeyLoader.Logging
             if (!ShouldLog(level))
                 return;
 
-            Task.Run(() =>
+            QueueLogging(() =>
             {
                 var logger = LogLevelToLogger(level);
 
@@ -151,7 +151,7 @@ namespace MonkeyLoader.Logging
             if (!ShouldLog(level))
                 return;
 
-            Task.Run(() =>
+            QueueLogging(() =>
             {
                 var logger = LogLevelToLogger(level);
 
@@ -235,6 +235,15 @@ namespace MonkeyLoader.Logging
 
         private Func<object> MakeMessageProducer(LoggingLevel level, string identifier, object message)
             => () => $"{LogLevelToString(level)} [{identifier}] {message}";
+
+        private void QueueLogging(Action handleLogging)
+        {
+            lock (this)
+            {
+                _lastLogTask = _lastLogTask.ContinueWith(_ => handleLogging(),
+                    TaskContinuationOptions.RunContinuationsAsynchronously);
+            }
+        }
 
         private sealed class DeferredMessage
         {
