@@ -106,14 +106,14 @@ namespace MonkeyLoader.Patching
                     Failed = true;
                     Logger.Warn(() => "OnLoaded failed!");
                 }
-
-                LogPatches();
             }
             catch (Exception ex)
             {
                 Failed = true;
                 Logger.Error(ex.LogFormat("OnLoaded threw an Exception:"));
             }
+
+            LogPatches();
 
             return !Failed;
         }
@@ -124,8 +124,16 @@ namespace MonkeyLoader.Patching
         /// </summary>
         protected void LogPatches()
         {
+            var patchedMethods = Harmony.GetPatchedMethods();
+
+            if (!patchedMethods.Any())
+            {
+                Logger.Debug(() => "Did not patch any methods!");
+                return;
+            }
+
             Logger.Debug(() => "Patched the following methods:");
-            Logger.Debug(Harmony.GetPatchedMethods().Select(GeneralExtensions.FullDescription));
+            Logger.Debug(patchedMethods.Select(GeneralExtensions.FullDescription));
         }
 
         /// <summary>
