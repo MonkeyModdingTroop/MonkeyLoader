@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 
 namespace MonkeyLoader.Patching
 {
@@ -130,7 +131,23 @@ namespace MonkeyLoader.Patching
         {
             Harmony.PatchCategory(Type.Assembly, Type.Name);
 
+            LogPatches();
+
             return true;
+        }
+
+        /// <summary>
+        /// Debug log the patches of this Monkey
+        /// </summary>
+        private void LogPatches()
+        {
+            IEnumerable<MethodBase> patchedMethods = Harmony.GetPatchedMethods();
+            foreach (MethodBase patchedMethod in patchedMethods)
+            {
+                Patches patches = Harmony.GetPatchInfo(patchedMethod);
+                string owner = patches.Owners.FirstOrDefault();
+                Logger.Debug(() => $"Method \"{patchedMethod.FullDescription()}\" has been patched by \"{owner}\"");
+            }
         }
     }
 }
