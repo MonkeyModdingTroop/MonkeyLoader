@@ -620,6 +620,8 @@ namespace MonkeyLoader
         /// </summary>
         public void LogPotentialConflicts()
         {
+            Logger.Info(() => "Looking for potentially conflicting Harmony patches!");
+
             foreach (var patchedMethod in Harmony.GetAllPatchedMethods())
             {
                 var patches = Harmony.GetPatchInfo(patchedMethod);
@@ -752,7 +754,14 @@ namespace MonkeyLoader
             var sw = Stopwatch.StartNew();
 
             foreach (var monkey in monkeys)
-                monkey.Run();
+            {
+                if (monkey.Run())
+                    continue;
+
+                Logger.Warn(() => "Monkey failed to run, letting it shut down!");
+
+                monkey.Shutdown(false);
+            }
 
             Logger.Info(() => $"Done running monkeys in {sw.ElapsedMilliseconds}ms!");
 
