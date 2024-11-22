@@ -43,6 +43,9 @@ namespace MonkeyLoader
         INestedIdentifiableCollection<IMonkey>, INestedIdentifiableCollection<IEarlyMonkey>,
         INestedIdentifiableCollection<Config>, INestedIdentifiableCollection<ConfigSection>, INestedIdentifiableCollection<IDefiningConfigKey>
     {
+        /// <summary>
+        /// The default path for the MonkeyLoader config file.
+        /// </summary>
         public const string DefaultConfigPath = "MonkeyLoader/MonkeyLoader.json";
 
         /// <summary>
@@ -612,6 +615,25 @@ namespace MonkeyLoader
         }
 
         /// <summary>
+        /// <see cref="Logger.Warn(Func{object})">Warn</see>-logs all
+        /// potentially conflicting <see cref="Harmony">Harmony</see> patches.
+        /// </summary>
+        public void LogPotentialConflicts()
+        {
+            foreach (var patchedMethod in Harmony.GetAllPatchedMethods())
+            {
+                var patches = Harmony.GetPatchInfo(patchedMethod);
+                var owners = patches.Owners.ToHashSet();
+
+                if (owners.Count <= 1)
+                    continue;
+
+                Logger.Warn(() => $"Method \"{patchedMethod.FullDescription()}\" has been patched by the following:");
+                Logger.Warn(owners.Select(owner => $"\n    \"{owner}\" ({TypesForOwner(patches, owner)})"));
+            }
+        }
+
+        /// <summary>
         /// Runs every given <see cref="Mod"/>'s loaded
         /// <see cref="Mod.EarlyMonkeys">early monkeys'</see> <see cref="MonkeyBase.Run">Run</see>() method.
         /// </summary>
@@ -734,33 +756,7 @@ namespace MonkeyLoader
 
             Logger.Info(() => $"Done running monkeys in {sw.ElapsedMilliseconds}ms!");
 
-            // Log potential conflicts
-            IEnumerable<MethodBase> patchedMethods = Harmony.GetAllPatchedMethods();
-            foreach (MethodBase patchedMethod in patchedMethods)
-            {
-                Patches patches = Harmony.GetPatchInfo(patchedMethod);
-                HashSet<string> owners = new(patches.Owners);
-                if (owners.Count > 1)
-                {
-                    string warnString = "";
-                    warnString += $"Method \"{patchedMethod.FullDescription()}\" has been patched by the following:";
-                    foreach (string owner in owners)
-                    {
-                        warnString += $"\n    \"{owner}\" ({TypesForOwner(patches, owner)})";
-                    }
-                    Logger.Warn(() => warnString);
-                }
-            }
-        }
-
-        private static string TypesForOwner(Patches patches, string owner)
-        {
-            bool OwnerEquals(Patch patch) => Equals(patch.owner, owner);
-            int prefixCount = patches.Prefixes.Where(OwnerEquals).Count();
-            int postfixCount = patches.Postfixes.Where(OwnerEquals).Count();
-            int transpilerCount = patches.Transpilers.Where(OwnerEquals).Count();
-            int finalizerCount = patches.Finalizers.Where(OwnerEquals).Count();
-            return $"prefix={prefixCount}; postfix={postfixCount}; transpiler={transpilerCount}; finalizer={finalizerCount}";
+            LogPotentialConflicts();
         }
 
         /// <summary>
@@ -1040,6 +1036,16 @@ namespace MonkeyLoader
 
         private static string GetId(string configPath)
                                                                                                                                                                                                                                                                                                                                                                     => Path.GetFileNameWithoutExtension(configPath);
+
+        private static string TypesForOwner(Patches patches, string owner)
+        {
+            bool OwnerEquals(Patch patch) => Equals(patch.owner, owner);
+            int prefixCount = patches.Prefixes.Where(OwnerEquals).Count();
+            int postfixCount = patches.Postfixes.Where(OwnerEquals).Count();
+            int transpilerCount = patches.Transpilers.Where(OwnerEquals).Count();
+            int finalizerCount = patches.Finalizers.Where(OwnerEquals).Count();
+            return $"prefix={prefixCount}; postfix={postfixCount}; transpiler={transpilerCount}; finalizer={finalizerCount}";
+        }
 
         private bool FilterInvalidPresentMod(Mod mod)
             => mod.Loader != this || mod.ShutdownRan || !_allMods.Contains(mod);
