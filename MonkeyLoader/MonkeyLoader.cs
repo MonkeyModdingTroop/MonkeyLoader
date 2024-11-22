@@ -733,6 +733,34 @@ namespace MonkeyLoader
                 monkey.Run();
 
             Logger.Info(() => $"Done running monkeys in {sw.ElapsedMilliseconds}ms!");
+
+            // Log potential conflicts
+            IEnumerable<MethodBase> patchedMethods = Harmony.GetAllPatchedMethods();
+            foreach (MethodBase patchedMethod in patchedMethods)
+            {
+                Patches patches = Harmony.GetPatchInfo(patchedMethod);
+                HashSet<string> owners = new(patches.Owners);
+                if (owners.Count > 1)
+                {
+                    string warnString = "";
+                    warnString += $"Method \"{patchedMethod.FullDescription()}\" has been patched by the following:";
+                    foreach (string owner in owners)
+                    {
+                        warnString += $"\n    \"{owner}\" ({TypesForOwner(patches, owner)})";
+                    }
+                    Logger.Warn(() => warnString);
+                }
+            }
+        }
+
+        private static string TypesForOwner(Patches patches, string owner)
+        {
+            bool OwnerEquals(Patch patch) => Equals(patch.owner, owner);
+            int prefixCount = patches.Prefixes.Where(OwnerEquals).Count();
+            int postfixCount = patches.Postfixes.Where(OwnerEquals).Count();
+            int transpilerCount = patches.Transpilers.Where(OwnerEquals).Count();
+            int finalizerCount = patches.Finalizers.Where(OwnerEquals).Count();
+            return $"prefix={prefixCount}; postfix={postfixCount}; transpiler={transpilerCount}; finalizer={finalizerCount}";
         }
 
         /// <summary>
