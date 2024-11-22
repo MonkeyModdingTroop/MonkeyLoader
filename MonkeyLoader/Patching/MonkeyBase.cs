@@ -209,9 +209,10 @@ namespace MonkeyLoader.Patching
 
         /// <inheritdoc/>
         /// <remarks>
-        /// <i>Format:</i> <c>{<see cref="Mod">Mod</see>.<see cref="Mod.Title">Title</see>}/{<see cref="Name">Name</see>}</c>
+        /// <i>Format:</i> <c>{<see cref="Mod">Mod</see>.<see cref="Mod.Title">Title</see>}/{<see cref="Name">Name</see>}
+        /// ({(<see cref="Ran">Ran</see> ? (<see cref="ShutdownRan">ShutdownRan</see> ? "Ended" : (<see cref="Enabled">Enabled</see> ? "Active" : "Inactive")) : "Pending")})</c>
         /// </remarks>
-        public override string ToString() => $"{Mod.Title}/{Name}";
+        public override string ToString() => $"{Mod.Title}/{Name} ({(Ran ? (ShutdownRan ? "Ended" : (Enabled ? "Active" : "Inactive")) : "Pending")})";
 
         internal static TMonkey GetInstance<TMonkey>(Type type, Mod mod) where TMonkey : IMonkey
         {

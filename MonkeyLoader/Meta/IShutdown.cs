@@ -23,6 +23,9 @@ namespace MonkeyLoader.Meta
         /// Calls the <see cref="IShutdown.Shutdown"/> method on all elements of the collection,
         /// aggregating their success state as an 'all'.
         /// </summary>
+        /// <remarks>
+        /// Already <see cref="IShutdown.ShutdownRan">shut down</see> elements are ignored.
+        /// </remarks>
         /// <param name="shutdowns">The <see cref="IShutdown"/> instances to process.</param>
         /// <param name="applicationExiting">Whether the shutdown was caused by the application exiting.</param>
         /// <returns><c>true</c> if all instances successfully shut down, <c>false</c> otherwise.</returns>
@@ -30,7 +33,7 @@ namespace MonkeyLoader.Meta
         {
             var success = true;
 
-            foreach (var shutdown in shutdowns)
+            foreach (var shutdown in shutdowns.Where(shutdown => !shutdown.ShutdownRan))
                 success &= shutdown.Shutdown(applicationExiting);
 
             return success;
