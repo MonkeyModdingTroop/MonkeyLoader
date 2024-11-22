@@ -620,7 +620,7 @@ namespace MonkeyLoader
         /// </summary>
         public void LogPotentialConflicts()
         {
-            Logger.Info(() => "Looking for potentially conflicting Harmony patches!");
+            Logger.Info(() => "Checking for potentially conflicting Harmony patches!");
 
             foreach (var patchedMethod in Harmony.GetAllPatchedMethods())
             {
@@ -631,7 +631,16 @@ namespace MonkeyLoader
                     continue;
 
                 Logger.Warn(() => $"Method \"{patchedMethod.FullDescription()}\" has been patched by the following:");
-                Logger.Warn(owners.Select(owner => $"    \"{owner}\" ({TypesForOwner(patches, owner)})"));
+
+                Logger.Warn(owners.Select(owner =>
+                {
+                    var name = owner;
+
+                    if (this.TryGet<IMonkey>().ByFullId(owner, out var monkey))
+                        name = monkey.ToString();
+
+                    return $"[{name}] ({TypesForOwner(patches, owner)})";
+                }));
             }
         }
 
@@ -1044,15 +1053,17 @@ namespace MonkeyLoader
         }
 
         private static string GetId(string configPath)
-                                                                                                                                                                                                                                                                                                                                                                    => Path.GetFileNameWithoutExtension(configPath);
+            => Path.GetFileNameWithoutExtension(configPath);
 
         private static string TypesForOwner(Patches patches, string owner)
         {
             bool OwnerEquals(Patch patch) => Equals(patch.owner, owner);
-            int prefixCount = patches.Prefixes.Where(OwnerEquals).Count();
-            int postfixCount = patches.Postfixes.Where(OwnerEquals).Count();
-            int transpilerCount = patches.Transpilers.Where(OwnerEquals).Count();
-            int finalizerCount = patches.Finalizers.Where(OwnerEquals).Count();
+
+            var prefixCount = patches.Prefixes.Where(OwnerEquals).Count();
+            var postfixCount = patches.Postfixes.Where(OwnerEquals).Count();
+            var transpilerCount = patches.Transpilers.Where(OwnerEquals).Count();
+            var finalizerCount = patches.Finalizers.Where(OwnerEquals).Count();
+
             return $"prefix={prefixCount}; postfix={postfixCount}; transpiler={transpilerCount}; finalizer={finalizerCount}";
         }
 
