@@ -631,7 +631,7 @@ namespace MonkeyLoader
                     continue;
 
                 Logger.Warn(() => $"Method \"{patchedMethod.FullDescription()}\" has been patched by the following:");
-                Logger.Warn(owners.Select(owner => $"\n    \"{owner}\" ({TypesForOwner(patches, owner)})"));
+                Logger.Warn(owners.Select(owner => $"    \"{owner}\" ({TypesForOwner(patches, owner)})"));
             }
         }
 
