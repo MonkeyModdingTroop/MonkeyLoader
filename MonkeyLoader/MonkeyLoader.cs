@@ -639,7 +639,7 @@ namespace MonkeyLoader
                     if (this.TryGet<IMonkey>().ByFullId(owner, out var monkey))
                         name = monkey.ToString();
 
-                    return $"[{name}] ({TypesForOwner(patches, owner)})";
+                    return $"    [{name}] ({TypesForOwner(patches, owner)})";
                 }));
             }
         }
