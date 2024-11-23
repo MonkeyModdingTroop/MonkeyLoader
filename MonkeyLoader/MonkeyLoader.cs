@@ -636,7 +636,7 @@ namespace MonkeyLoader
                     if (this.TryGet<IMonkey>().ByFullId(harmonyOwner, out var monkey))
                         name = monkey.ToString();
 
-                    return $"[{name}] ({PatchTypesForOwner(patches, harmonyOwner)})";
+                    return $"    [{name}] ({PatchTypesForOwner(patches, harmonyOwner)})";
                 }
 
                 // Not sure if this can happen, but just to be sure
