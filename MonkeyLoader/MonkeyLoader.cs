@@ -615,32 +615,43 @@ namespace MonkeyLoader
         }
 
         /// <summary>
-        /// <see cref="Logger.Warn(Func{object})">Warn</see>-logs all
-        /// potentially conflicting <see cref="Harmony">Harmony</see> patches.
+        /// <see cref="Logger.Warn(IEnumerable{object})">Warn</see>-logs all
+        /// potentially conflicting <see cref="Harmony">Harmony</see> patches.<br/>
+        /// Single source patches are <see cref="Logger.Trace(Func{object})">Trace</see>-logged.
         /// </summary>
         public void LogPotentialConflicts()
         {
             Logger.Info(() => "Checking for potentially conflicting Harmony patches!");
+            Logger.Trace(() => "Including all patched methods!");
 
             foreach (var patchedMethod in Harmony.GetAllPatchedMethods())
             {
                 var patches = Harmony.GetPatchInfo(patchedMethod);
                 var owners = patches.Owners.ToHashSet();
 
-                if (owners.Count <= 1)
-                    continue;
-
-                Logger.Warn(() => $"Method \"{patchedMethod.FullDescription()}\" has been patched by the following:");
-
-                Logger.Warn(owners.Select(owner =>
+                string GetLogLine(string harmonyOwner)
                 {
-                    var name = owner;
+                    var name = harmonyOwner;
 
-                    if (this.TryGet<IMonkey>().ByFullId(owner, out var monkey))
+                    if (this.TryGet<IMonkey>().ByFullId(harmonyOwner, out var monkey))
                         name = monkey.ToString();
 
-                    return $"[{name}] ({TypesForOwner(patches, owner)})";
-                }));
+                    return $"[{name}] ({PatchTypesForOwner(patches, harmonyOwner)})";
+                }
+
+                // Not sure if this can happen, but just to be sure
+                if (owners.Count == 0)
+                    continue;
+
+                if (owners.Count == 1)
+                {
+                    Logger.Trace(() => $"Method \"{patchedMethod.FullDescription()}\" was patched by {GetLogLine(owners.First())}");
+                    continue;
+                }
+
+                Logger.Warn(() => $"Method \"{patchedMethod.FullDescription()}\" was patched by the following:");
+
+                Logger.Warn(owners.Select(GetLogLine));
             }
         }
 
@@ -1055,7 +1066,7 @@ namespace MonkeyLoader
         private static string GetId(string configPath)
             => Path.GetFileNameWithoutExtension(configPath);
 
-        private static string TypesForOwner(Patches patches, string owner)
+        private static string PatchTypesForOwner(Patches patches, string owner)
         {
             bool OwnerEquals(Patch patch) => Equals(patch.owner, owner);
 
