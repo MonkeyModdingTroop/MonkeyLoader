@@ -20,9 +20,7 @@ namespace MonkeyLoader.Patching
         private readonly Lazy<string> _fullId;
 
         private readonly Lazy<Harmony> _harmony;
-
         private Mod _mod = null!;
-        private IDefiningConfigKey<bool>? _shouldBeEnabledKey;
 
         /// <inheritdoc/>
         public AssemblyName AssemblyName { get; }
@@ -31,7 +29,7 @@ namespace MonkeyLoader.Patching
         /// <remarks>
         /// <i>By default</i>: <c>false</c>.
         /// </remarks>
-        [MemberNotNullWhen(true, nameof(_shouldBeEnabledKey))]
+        [MemberNotNullWhen(true, nameof(EnabledToggle), nameof(EnabledToggle))]
         public virtual bool CanBeDisabled => false;
 
         /// <inheritdoc/>
@@ -40,20 +38,22 @@ namespace MonkeyLoader.Patching
         /// <inheritdoc/>
         public bool Enabled
         {
-            get => !CanBeDisabled || _shouldBeEnabledKey.GetValue();
+            get => !CanBeDisabled || EnabledToggle.GetValue();
             set
             {
-                if (!CanBeDisabled)
+                if (CanBeDisabled)
                 {
-                    if (!value)
-                        throw new NotSupportedException("This monkey can't be disabled!");
-                    else
-                        return;
+                    EnabledToggle.SetValue(value, "SetMonkeyEnabled");
+                    return;
                 }
 
-                _shouldBeEnabledKey.SetValue(value, "SetMonkeyEnabled");
+                if (!value)
+                    throw new NotSupportedException("This monkey can't be disabled!");
             }
         }
+
+        /// <inheritdoc/>
+        public IDefiningConfigKey<bool>? EnabledToggle { get; private set; }
 
         /// <summary>
         /// Gets whether this monkey's <see cref="Run">Run</see>() method failed when it was called.
@@ -109,8 +109,8 @@ namespace MonkeyLoader.Patching
                 if (!CanBeDisabled)
                     return;
 
-                _shouldBeEnabledKey = _mod.MonkeyToggles.GetToggle(this);
-                _shouldBeEnabledKey.Changed += OnActiveStateChanged;
+                EnabledToggle = _mod.MonkeyToggles.GetToggle(this);
+                EnabledToggle.Changed += OnActiveStateChanged;
             }
         }
 

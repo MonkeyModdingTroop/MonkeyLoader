@@ -4,6 +4,7 @@ using MonkeyLoader.Logging;
 using MonkeyLoader.Patching;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MonkeyLoader.Meta
 {
@@ -43,11 +44,13 @@ namespace MonkeyLoader.Meta
 
         /// <summary>
         /// Gets whether this monkey can be disabled, that is, whether it's
-        /// permitted to set <see cref="Enabled">Enabled</see> to <c>false.</c>
+        /// permitted to set <see cref="Enabled">Enabled</see> to <c>false</c>,
+        /// and there is an <see cref="EnabledToggle">EnabledToggle</see>.
         /// </summary>
         /// <value>
         /// <c>true</c> if this monkey respects the <see cref="Mod.MonkeyToggles"/> config.
         /// </value>
+        [MemberNotNullWhen(true, nameof(EnabledToggle))]
         public bool CanBeDisabled { get; }
 
         /// <summary>
@@ -63,6 +66,13 @@ namespace MonkeyLoader.Meta
         /// supports <see cref="CanBeDisabled">being disabled</see>.
         /// </remarks>
         public bool Enabled { get; set; }
+
+        /// <summary>
+        /// Gets the this monkey's <see cref="MonkeyTogglesConfigSection.GetToggle">toggle</see>
+        /// if it <see cref="CanBeDisabled">can be disabled</see>.
+        /// </summary>
+        /// <value>The toggle config item if this monkey <see cref="CanBeDisabled">can be disabled</see>; otherwise, <c>null</c>.</value>
+        public IDefiningConfigKey<bool>? EnabledToggle { get; }
 
         /// <summary>
         /// Gets the impacts this (pre-)patcher has on certain features ordered by descending impact.
