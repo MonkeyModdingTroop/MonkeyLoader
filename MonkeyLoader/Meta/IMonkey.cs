@@ -35,7 +35,7 @@ namespace MonkeyLoader.Meta
     /// Defines the interface for all (<see cref="EarlyMonkey{TMonkey}">early</see>)
     /// <see cref="Monkey{TMonkey}">monkeys</see>.
     /// </summary>
-    public interface IMonkey : IRun, IShutdown, IComparable<IMonkey>, INestedIdentifiable<Mod>
+    public interface IMonkey : IRun, IShutdown, IComparable<IMonkey>, INestedIdentifiable<Mod>, IAuthorable
     {
         /// <summary>
         /// Gets the name of the assembly this monkey is defined in.

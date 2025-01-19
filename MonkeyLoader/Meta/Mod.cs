@@ -20,7 +20,7 @@ namespace MonkeyLoader.Meta
     /// </summary>
     public abstract partial class Mod : IConfigOwner, IShutdown, ILoadedNuGetPackage, IComparable<Mod>,
         INestedIdentifiableOwner<ConfigSection>, INestedIdentifiableOwner<IDefiningConfigKey>,
-        IIdentifiableOwner<Mod, IMonkey>, IIdentifiableOwner<Mod, IEarlyMonkey>
+        IIdentifiableOwner<Mod, IMonkey>, IIdentifiableOwner<Mod, IEarlyMonkey>, IAuthorable
 
     {
         /// <summary>
@@ -41,7 +41,7 @@ namespace MonkeyLoader.Meta
         /// <summary>
         /// Stores the paths to the mod's content files inside the mod's <see cref="FileSystem">FileSystem</see>.
         /// </summary>
-        protected readonly SortedSet<UPath> contentPaths = new();
+        protected readonly SortedSet<UPath> contentPaths = [];
 
         /// <summary>
         /// Stores the dependencies of this mod.
@@ -328,11 +328,12 @@ namespace MonkeyLoader.Meta
         public bool DependsOn(ILoadedNuGetPackage otherPackage) => DependsOn(otherPackage.Identity.Id);
 
         /// <summary>
-        /// Efficiently checks, whether a given name is listed as an author for this mod.
+        /// Efficiently  determines whether the given
+        /// <paramref name="name"/> is listed as an author for this mod.
         /// </summary>
-        /// <param name="author">The name to check for.</param>
-        /// <returns><c>true</c> if the given name is listed as an author for this mod.</returns>
-        public bool HasAuthor(string author) => authors.Contains(author);
+        /// <param name="name">The name to check for.</param>
+        /// <returns><c>true</c> if the given <paramref name="name"/> is listed as an author for this mod.</returns>
+        public bool HasAuthor(string name) => authors.Contains(name);
 
         /// <summary>
         /// Efficiently checks, whether a given tag is listed for this mod.
