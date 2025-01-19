@@ -1,5 +1,4 @@
 ﻿using MonkeyLoader;
-using MonkeyLoader.Logging;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -7,7 +6,10 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
+#pragma warning disable IDE0130 // Namespace does not match folder structure
+
 namespace Doorstop
+#pragma warning restore IDE0130 // Namespace does not match folder structure
 {
     internal static class Entrypoint
     {

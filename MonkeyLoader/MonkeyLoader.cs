@@ -401,7 +401,7 @@ namespace MonkeyLoader
             catch (Exception ex)
             {
                 Logger.Error(ex.LogFormat($"Exception while searching files at location {Locations.GamePacks}:"));
-                return Enumerable.Empty<NuGetPackageMod>();
+                return [];
             }
         }
 
@@ -452,7 +452,7 @@ namespace MonkeyLoader
                     Logger.Error(ex.LogFormat($"Exception while searching files at location {location}:"));
                 }
 
-                return Enumerable.Empty<string>();
+                return [];
             })
             .TrySelect<string, NuGetPackageMod>(TryLoadMod)
             .ToArray();
