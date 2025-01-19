@@ -25,6 +25,15 @@ namespace MonkeyLoader.Patching
         /// <inheritdoc/>
         public AssemblyName AssemblyName { get; }
 
+        /// <summary>
+        /// Gets the names of the authors of this particular monkey,
+        /// which may differ from the <see cref="Mod.Authors"/>.
+        /// </summary>
+        /// <remarks>
+        /// <i>By default</i>: <c><see cref="Mod">Mod</see>.<see cref="Mod.Authors">Authors</see></c>.
+        /// </remarks>
+        public virtual IEnumerable<string> Authors => _mod.Authors;
+
         /// <inheritdoc/>
         /// <remarks>
         /// <i>By default</i>: <c>false</c>.
@@ -164,6 +173,10 @@ namespace MonkeyLoader.Patching
 
         /// <inheritdoc/>
         public int CompareTo(IMonkey other) => Monkey.AscendingComparer.Compare(this, other);
+
+        /// <inheritdoc/>
+        public bool HasAuthor(string name)
+            => Authors.Any(author => author.Equals(name, StringComparison.InvariantCultureIgnoreCase));
 
         /// <summary>
         /// Runs this monkey to let it patch.<br/>
