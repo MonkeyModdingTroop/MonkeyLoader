@@ -201,7 +201,7 @@ namespace MonkeyLoader.Configuration
         /// <inheritdoc/>
         public T? GetValue()
         {
-            TryGetValue(out T? value);
+            TryGetValue(out var value);
             return value;
         }
 
@@ -236,7 +236,7 @@ namespace MonkeyLoader.Configuration
         /// <inheritdoc/>
         bool IDefiningConfigKey.TryComputeDefault(out object? defaultValue)
         {
-            var success = TryComputeDefault(out T? defaultTypedValue);
+            var success = TryComputeDefault(out var defaultTypedValue);
             defaultValue = defaultTypedValue;
 
             return success;
@@ -284,7 +284,7 @@ namespace MonkeyLoader.Configuration
 
         bool IDefiningConfigKey.TryGetValue(out object? value)
         {
-            var success = TryGetValue(out T? typedValue);
+            var success = TryGetValue(out var typedValue);
             value = typedValue;
 
             return success;

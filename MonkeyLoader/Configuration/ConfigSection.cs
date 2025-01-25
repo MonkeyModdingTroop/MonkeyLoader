@@ -259,7 +259,8 @@ namespace MonkeyLoader.Configuration
                     throw new ConfigLoadException($"Error loading version for section [{Id}]!", ex);
                 }
 
-                ValidateCompatibility(serializedVersion);
+                if (!ValidateCompatibility(serializedVersion))
+                    return;
             }
 
             OnLoad(source, jsonSerializer);
@@ -276,8 +277,7 @@ namespace MonkeyLoader.Configuration
             if (!Saveable)
                 return null;
 
-            var result = new JObject();
-            result["Version"] = Version.ToString();
+            var result = new JObject { ["Version"] = Version.ToString() };
 
             // Any exceptions get handled by the Config.Save method
             OnSave(result, jsonSerializer);
@@ -414,25 +414,31 @@ namespace MonkeyLoader.Configuration
             return true;
         }
 
-        private void ValidateCompatibility(Version serializedVersion)
+        /// <summary>
+        /// Validate what to do to load this config section.
+        /// </summary>
+        /// <param name="serializedVersion">The version from the config file.</param>
+        /// <returns><c>true</c> if the saved config should be loaded; otherwise, <c>false</c>.</returns>
+        private bool ValidateCompatibility(Version serializedVersion)
         {
-            if (!AreVersionsCompatible(serializedVersion, Version))
+            if (AreVersionsCompatible(serializedVersion, Version))
+                return true;
+
+            switch (IncompatibilityHandling)
             {
-                switch (IncompatibilityHandling)
-                {
-                    case IncompatibleConfigHandling.Clobber:
-                        Logger.Warn(() => $"Saved section [{Id}] version [{serializedVersion}] is incompatible with mod's version [{Version}]. Clobbering old config and starting fresh.");
-                        return;
+                case IncompatibleConfigHandling.Clobber:
+                    Logger.Warn(() => $"Saved section [{Id}] version [{serializedVersion}] is incompatible with mod's version [{Version}]. Clobbering old config and starting fresh.");
+                    return false;
 
-                    case IncompatibleConfigHandling.ForceLoad:
-                        // continue processing
-                        break;
+                case IncompatibleConfigHandling.ForceLoad:
+                    Logger.Warn(() => $"Saved section [{Id}] version [{serializedVersion}] is incompatible with mod's version [{Version}]. Loading and using old config anyways.");
+                    return true;
 
-                    case IncompatibleConfigHandling.Error: // fall through to default
-                    default:
-                        Saveable = false;
-                        throw new ConfigLoadException($"Saved section [{Id}] version [{serializedVersion}] is incompatible with mod's version [{Version}]!");
-                }
+                case IncompatibleConfigHandling.Error: // fall through to default
+                default:
+                    Saveable = false;
+                    Logger.Error(() => $"Saved section [{Id}] version [{serializedVersion}] is incompatible with mod's version [{Version}]. Loading old config but not allowing saving.");
+                    return true;
             }
         }
 
