@@ -79,7 +79,7 @@ namespace MonkeyLoader.Sync
             set
             {
                 var oldValue = _value;
-                _value = value;
+                _value = value!;
 
                 OnChanged(oldValue);
             }
