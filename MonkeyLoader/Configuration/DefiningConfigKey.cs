@@ -35,7 +35,10 @@ namespace MonkeyLoader.Configuration
         private ConfigSection? _configSection;
         private bool _hasChanges;
         private ConfigKeyChangedEventHandler? _untypedChanged;
+        private ValueChangedEventHandler? _untypedValueChanged;
         private T? _value;
+
+        private ValueChangedEventHandler<T>? _valueChanged;
 
         /// <inheritdoc/>
         public IConfigKey AsUntyped { get; }
@@ -367,27 +370,34 @@ namespace MonkeyLoader.Configuration
         /// <param name="changedCollection">The collection change arguments for the value.</param>
         private void OnChanged(bool hadValue, T? oldValue, string? eventLabel, string? changedProperty = null, NotifyCollectionChangedEventArgs? changedCollection = null)
         {
-            // Add notify changed integration
-            if (hadValue)
-            {
-                if (oldValue is INotifyPropertyChanged oldPropertyChanged)
-                    oldPropertyChanged.PropertyChanged -= ValuePropertyChanged;
+            var sameReferences = ReferenceEquals(oldValue, _value);
 
-                if (oldValue is INotifyCollectionChanged oldCollectionChanged)
-                    oldCollectionChanged.CollectionChanged -= ValueCollectionChanged;
+            if (!sameReferences)
+            {
+                // Remove NotifyChanged integration from old value
+                if (hadValue)
+                {
+                    if (oldValue is INotifyPropertyChanged oldPropertyChanged)
+                        oldPropertyChanged.PropertyChanged -= ValuePropertyChanged;
+
+                    if (oldValue is INotifyCollectionChanged oldCollectionChanged)
+                        oldCollectionChanged.CollectionChanged -= ValueCollectionChanged;
+                }
+
+                // Add NotifyChanged integration to new value
+                if (HasValue)
+                {
+                    if (_value is INotifyPropertyChanged newPropertyChanged)
+                        newPropertyChanged.PropertyChanged += ValuePropertyChanged;
+
+                    if (_value is INotifyCollectionChanged newCollectionChanged)
+                        newCollectionChanged.CollectionChanged += ValueCollectionChanged;
+                }
             }
 
-            if (HasValue)
-            {
-                if (_value is INotifyPropertyChanged newPropertyChanged)
-                    newPropertyChanged.PropertyChanged += ValuePropertyChanged;
-
-                if (_value is INotifyCollectionChanged newCollectionChanged)
-                    newCollectionChanged.CollectionChanged += ValueCollectionChanged;
-            }
-
-            // Don't fire event if value didn't change
-            if (ReferenceEquals(oldValue, _value) || (oldValue is not null && _value is not null && _value.Equals(oldValue)))
+            // Don't fire event if it wasn't triggered by event and the value didn't change
+            if ((sameReferences && changedProperty is null && changedCollection is null)
+             || (oldValue is not null && _value is not null && _value.Equals(oldValue)))
                 return;
 
             HasChanges = true;
@@ -411,6 +421,24 @@ namespace MonkeyLoader.Configuration
                 Logger.Error(ex.LogFormat($"Some untyped {nameof(Changed)} event subscriber(s) of key [{Id}] threw an exception:"));
             }
 
+            try
+            {
+                _valueChanged?.TryInvokeAll(this, eventArgs);
+            }
+            catch (AggregateException ex)
+            {
+                Logger.Error(ex.LogFormat($"Some typed {nameof(INotifyValueChanged)}<T>.{nameof(Changed)} event subscriber(s) of key [{Id}] threw an exception:"));
+            }
+
+            try
+            {
+                _untypedValueChanged?.TryInvokeAll(this, eventArgs);
+            }
+            catch (AggregateException ex)
+            {
+                Logger.Error(ex.LogFormat($"Some untyped {nameof(INotifyValueChanged)}<T>.{nameof(Changed)} event subscriber(s) of key [{Id}] threw an exception:"));
+            }
+
             Section.OnItemChanged(eventArgs);
         }
 
@@ -431,13 +459,25 @@ namespace MonkeyLoader.Configuration
             add => _untypedChanged += value;
             remove => _untypedChanged -= value;
         }
+
+        event ValueChangedEventHandler? INotifyValueChanged.Changed
+        {
+            add => _untypedValueChanged += value;
+            remove => _untypedValueChanged -= value;
+        }
+
+        event ValueChangedEventHandler<T>? INotifyValueChanged<T>.Changed
+        {
+            add => _valueChanged += value;
+            remove => _valueChanged -= value;
+        }
     }
 
     /// <summary>
     /// Defines the definition for a config item.
     /// </summary>
     public interface IDefiningConfigKey : ITypedConfigKey, IEntity<IDefiningConfigKey>,
-        INestedIdentifiable<ConfigSection>, IPrioritizable
+        INestedIdentifiable<ConfigSection>, IPrioritizable, INotifyValueChanged
     {
         /// <summary>
         /// Gets the config this item belongs to.
@@ -541,14 +581,15 @@ namespace MonkeyLoader.Configuration
         /// <summary>
         /// Triggered when the internal value of this config item changes.
         /// </summary>
-        public event ConfigKeyChangedEventHandler? Changed;
+        public new event ConfigKeyChangedEventHandler? Changed;
     }
 
     /// <summary>
     /// Defines the typed definition for a config item.
     /// </summary>
     /// <typeparam name="T">The type of the config item's value.</typeparam>
-    public interface IDefiningConfigKey<T> : IDefiningConfigKey, ITypedConfigKey<T>, IEntity<IDefiningConfigKey<T>>
+    public interface IDefiningConfigKey<T> : IDefiningConfigKey, ITypedConfigKey<T>,
+        IEntity<IDefiningConfigKey<T>>, INotifyValueChanged<T>
     {
         /// <summary>
         /// Gets this config item's set value, falling back to the <see cref="TryComputeDefault">computed default</see>.
