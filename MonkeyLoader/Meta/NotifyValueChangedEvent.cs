@@ -35,7 +35,7 @@ namespace MonkeyLoader.Meta
         /// <summary>
         /// Triggered when the internal value wrapped by this object changes.
         /// </summary>
-        public new event ConfigKeyChangedEventHandler<T>? Changed;
+        public new event ValueChangedEventHandler<T>? Changed;
     }
 
     /// <summary>
@@ -114,12 +114,6 @@ namespace MonkeyLoader.Meta
 
         /// <inheritdoc/>
         public string? ChangedProperty { get; }
-
-        /// <inheritdoc/>
-        public bool HadValue { get; }
-
-        /// <inheritdoc/>
-        public bool HasValue { get; }
 
         /// <inheritdoc/>
         [MemberNotNullWhen(true, nameof(ChangedCollection))]
