@@ -18,6 +18,12 @@ namespace MonkeyLoader.Sync
         /// Gets or sets the internal value of this sync value.
         /// </summary>
         public object? Value { get; set; }
+
+        /// <summary>
+        /// Gets the concrete <see cref="Type"/> of
+        /// the wrapped <see cref="Value">Value</see>.
+        /// </summary>
+        public Type ValueType { get; }
     }
 
     /// <summary>
@@ -67,6 +73,8 @@ namespace MonkeyLoader.Sync
     /// <typeparam name="T">The type of the <see cref="Value">Value</see>.</typeparam>
     public class MonkeySyncValue<T> : IMonkeySyncValue<T>
     {
+        private static readonly Type _valueType = typeof(T);
+
         private ValueChangedEventHandler? _untypedChanged;
         private T _value;
 
@@ -91,6 +99,9 @@ namespace MonkeyLoader.Sync
             set => Value = (T)value!;
         }
 
+        /// <inheritdoc/>
+        public Type ValueType => _valueType;
+
         /// <summary>
         /// Creates a new sync object instance that wraps the given <paramref name="value"/>.
         /// </summary>
@@ -111,6 +122,9 @@ namespace MonkeyLoader.Sync
         /// </summary>
         /// <param name="syncValue">The sync object to unwrap.</param>
         public static implicit operator T(MonkeySyncValue<T> syncValue) => syncValue.Value;
+
+        /// <inheritdoc/>
+        public override string ToString() => Value?.ToString() ?? "";
 
         /// <summary>
         /// Handles the value of this config item potentially having changed.
