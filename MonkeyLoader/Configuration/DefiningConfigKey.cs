@@ -29,15 +29,15 @@ namespace MonkeyLoader.Configuration
     /// <typeparam name="T">The type of the config item's value.</typeparam>
     public sealed class DefiningConfigKey<T> : Entity<DefiningConfigKey<T>>, IDefiningConfigKey<T>
     {
-        private readonly bool _canAlwaysHaveChanges;
+        private static readonly Type _valueType = typeof(T);
 
+        private readonly bool _canAlwaysHaveChanges;
         private readonly Lazy<string> _fullId;
         private ConfigSection? _configSection;
         private bool _hasChanges;
         private ConfigKeyChangedEventHandler? _untypedChanged;
         private ValueChangedEventHandler? _untypedValueChanged;
         private T? _value;
-
         private ValueChangedEventHandler<T>? _valueChanged;
 
         /// <inheritdoc/>
@@ -120,7 +120,7 @@ namespace MonkeyLoader.Configuration
         IDefiningConfigKey<T> IEntity<IDefiningConfigKey<T>>.Self => this;
 
         /// <inheritdoc/>
-        public Type ValueType { get; } = typeof(T);
+        public Type ValueType => _valueType;
 
         /// <summary>
         /// Gets the logger of the config this item belongs to.
