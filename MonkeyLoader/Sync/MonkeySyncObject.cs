@@ -28,7 +28,6 @@ namespace MonkeyLoader.Sync
         /// <summary>
         /// Gets the link object used by this sync object.
         /// </summary>
-        [MaybeNull]
         public object LinkObject { get; }
     }
 
@@ -41,7 +40,6 @@ namespace MonkeyLoader.Sync
         where TLink : class
     {
         /// <inheritdoc cref="IMonkeySyncObject.LinkObject"/>
-        [MaybeNull]
         public new TLink LinkObject { get; }
     }
 
@@ -77,10 +75,8 @@ namespace MonkeyLoader.Sync
         public abstract bool IsLinkValid { get; }
 
         /// <inheritdoc/>
-        [MaybeNull]
-        public TLink LinkObject { get; private set; }
+        public TLink LinkObject { get; private set; } = null!;
 
-        [MaybeNull]
         object IMonkeySyncObject.LinkObject => LinkObject;
 
         static MonkeySyncObject()
