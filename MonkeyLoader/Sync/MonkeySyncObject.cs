@@ -11,6 +11,15 @@ using System.Text;
 namespace MonkeyLoader.Sync
 {
     /// <summary>
+    /// Represents the method that will create new instances
+    /// of sync objects linking via <typeparamref name="TLink"/>.
+    /// </summary>
+    /// <typeparam name="TLink">The type of the link object used by the sync object.</typeparam>
+    /// <returns>The created but not yet linked sync object.</returns>
+    public delegate IUnlinkedMonkeySyncObject<TLink> SyncObjectFactory<TLink>()
+        where TLink : class;
+
+    /// <summary>
     /// Defines the generic interface for <see cref="MonkeySyncObject{TSyncObject,
     /// TSyncValues, TLink}">MonkeySync objects</see> that have been linked.
     /// </summary>
@@ -321,7 +330,7 @@ namespace MonkeyLoader.Sync
         /// event raised when <see cref="IsLinkValid">IsLinkValid</see> becomes <c>false</c>
         /// and it could not be <see cref="TryRestoreLink">restored</see>.
         /// </summary>
-        /// <param name="syncObject"></param>
+        /// <param name="syncObject">The sync object that got invalidated.</param>
         public delegate void InvalidatedHandler(TSyncObject syncObject);
 
         /// <inheritdoc/>
