@@ -9,7 +9,7 @@ namespace MonkeyLoader.Sync
     /// <see cref="MonkeySyncObject{TSyncObject, TSyncValue, TLink}">MonkeySync object</see> types.
     /// </summary>
     /// <typeparam name="TLink">The type of the link object used by the sync object.</typeparam>
-    public sealed class RegisteredSyncObject<TLink>
+    public sealed class MonkeySyncObjectRegistration<TLink>
         where TLink : class
     {
         private readonly SyncObjectFactory<TLink> _createSyncObject;
@@ -33,7 +33,7 @@ namespace MonkeyLoader.Sync
         /// <param name="name">The <typeparamref name="TLink"/>-unique name for the sync object type.</param>
         /// <param name="syncObjectType">The type of the sync object.</param>
         /// <param name="createSyncObject">A factory method that creates new instances of this sync object type.</param>
-        public RegisteredSyncObject(string name, Type syncObjectType, SyncObjectFactory<TLink> createSyncObject)
+        public MonkeySyncObjectRegistration(string name, Type syncObjectType, SyncObjectFactory<TLink> createSyncObject)
         {
             Name = name;
             SyncObjectType = syncObjectType;
