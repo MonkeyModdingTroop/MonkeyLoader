@@ -1,6 +1,7 @@
 ﻿using EnumerableToolkit;
 using HarmonyLib;
 using MonkeyLoader.Meta;
+using MonkeyLoader.Patching;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -125,6 +126,18 @@ namespace MonkeyLoader.Sync
 
             foreach (var method in syncMethods)
                 methodsByName.Add(method.Name, (TSyncObject instance) => method.Invoke(instance, null));
+        }
+
+        /// <summary>
+        /// Initializes a new instance of this MonkeySync object.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">
+        /// When <typeparamref name="TSyncObject"/> is not the type being instantiated.
+        /// </exception>
+        protected MonkeySyncObject()
+        {
+            if (GetType() != typeof(TSyncObject))
+                throw new InvalidOperationException("TSyncObject must be the concrete Type being instantiated!");
         }
 
         /// <summary>
