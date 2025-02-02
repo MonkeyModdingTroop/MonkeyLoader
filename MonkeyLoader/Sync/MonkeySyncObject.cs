@@ -191,6 +191,10 @@ namespace MonkeyLoader.Sync
         /// for every readable <typeparamref name="TSyncValue"/> instance property and
         /// <see cref="EstablishLinkFor(string, TSyncValue, bool)">its overload</see> for every
         /// <see cref="MonkeySyncMethodAttribute">MonkeySync method</see> on <typeparamref name="TSyncObject"/>.<br/>
+        /// If the link is successfully created, this linked sync object will be
+        /// <see cref="MonkeySyncRegistry.RegisterLinkedSyncObject{TLink}">added</see>
+        /// to the <see cref="MonkeySyncRegistry"/> automatically.
+        /// </para><para>
         /// The detected properties are stored in <see cref="propertyAccessorsByName">propertyAccessorsByName</see>,
         /// while the detected methods are stored in <see cref="methodsByName">methodsByName</see>.
         /// </para><para>
@@ -218,6 +222,9 @@ namespace MonkeyLoader.Sync
             foreach (var syncMethod in methodsByName)
                 success &= EstablishLinkFor(syncMethod.Key, syncMethod.Value, fromRemote);
 
+            if (success)
+                MonkeySyncRegistry.RegisterLinkedSyncObject(this);
+
             return success;
         }
 
@@ -235,7 +242,7 @@ namespace MonkeyLoader.Sync
 
         /// <summary>
         /// Cleans up any unmanaged resources as part of
-        /// <see cref="Dispose()">disposing</see> or <see cref="~MonkeySyncObject()"/>finalization.
+        /// <see cref="Dispose()">disposing</see> or finalization.
         /// </summary>
         protected virtual void OnFinalizing()
         { }

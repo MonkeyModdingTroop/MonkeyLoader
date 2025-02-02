@@ -79,7 +79,7 @@ namespace MonkeyLoader.Sync
         private T _value;
 
         /// <inheritdoc/>
-        public T Value
+        public virtual T Value
         {
             get => _value;
 
