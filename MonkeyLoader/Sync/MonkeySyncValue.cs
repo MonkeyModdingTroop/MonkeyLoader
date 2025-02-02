@@ -10,10 +10,21 @@ using System.Text;
 namespace MonkeyLoader.Sync
 {
     /// <summary>
-    /// Defines the non-generic interface for <see cref="IMonkeySyncValue"/>s.
+    /// Defines the non-generic interface for <see cref="ILinkedMonkeySyncValue{TLink, T}"/>s.
     /// </summary>
-    public interface IMonkeySyncValue : INotifyValueChanged
+    /// <inheritdoc cref="ILinkedMonkeySyncValue{TLink, T}"/>
+    public interface ILinkedMonkeySyncValue<out TLink> : INotifyValueChanged
     {
+        /// <summary>
+        /// Gets the property name of this sync value.
+        /// </summary>
+        public string Name { get; }
+
+        /// <summary>
+        /// Gets the sync object that this value belongs to.
+        /// </summary>
+        public ILinkedMonkeySyncObject<TLink> SyncObject { get; }
+
         /// <summary>
         /// Gets or sets the internal value of this sync value.
         /// </summary>
@@ -27,24 +38,25 @@ namespace MonkeyLoader.Sync
     }
 
     /// <summary>
-    /// Defines the generic interface for <see cref="IMonkeySyncValue"/>s.
+    /// Defines the generic interface for linked <see cref="MonkeySyncValue{TLink, T}"/>s.
     /// </summary>
-    /// <typeparam name="T">The type of the <see cref="Value">Value</see>.</typeparam>
-    public interface IMonkeySyncValue<T> : INotifyValueChanged<T>,
-        IReadOnlyMonkeySyncValue<T>, IWriteOnlyMonkeySyncValue<T>
+    /// <typeparam name="TLink">The type of the link object used by the sync object.</typeparam>
+    /// <typeparam name="T">The type of the <see cref="ILinkedMonkeySyncValue{T}.Value">Value</see>.</typeparam>
+    public interface ILinkedMonkeySyncValue<out TLink, T> : INotifyValueChanged<T>,
+        IReadOnlyMonkeySyncValue<TLink, T>, IWriteOnlyMonkeySyncValue<TLink, T>
     {
-        /// <inheritdoc cref="IMonkeySyncValue.Value"/>
+        /// <inheritdoc cref="ILinkedMonkeySyncValue{TLink}.Value"/>
         public new T Value { get; set; }
     }
 
     /// <summary>
-    /// Defines the interface for readonly <see cref="IMonkeySyncValue"/>s.
+    /// Defines the interface for readonly <see cref="ILinkedMonkeySyncValue{TLink}"/>s.
     /// </summary>
     /// <remarks>
     /// This interface exists purely to facilitate keeping a covariant list of sync values.
     /// </remarks>
-    /// <typeparam name="T">The type of the <see cref="Value">Value</see>.</typeparam>
-    public interface IReadOnlyMonkeySyncValue<out T> : IMonkeySyncValue
+    /// <inheritdoc cref="ILinkedMonkeySyncValue{TLink, T}"/>
+    public interface IReadOnlyMonkeySyncValue<out TLink, out T> : ILinkedMonkeySyncValue<TLink>
     {
         /// <summary>
         /// Gets the internal value of this sync value.
@@ -53,13 +65,29 @@ namespace MonkeyLoader.Sync
     }
 
     /// <summary>
-    /// Defines the interface for writeonly <see cref="IMonkeySyncValue"/>s.
+    /// Defines the interface for not yet linked <see cref="MonkeySyncValue{TLink, T}"/>s.
+    /// </summary>
+    /// <inheritdoc cref="ILinkedMonkeySyncValue{TLink, T}"/>
+    public interface IUnlinkedMonkeySyncValue<TLink> : ILinkedMonkeySyncValue<TLink>
+    {
+        /// <summary>
+        /// Establishes this sync value's association and link through the given sync object.
+        /// </summary>
+        /// <param name="syncObject">The sync object that this value belongs to.</param>
+        /// <param name="propertyName">The property name of this sync value.</param>
+        /// <param name="fromRemote">Whether the link is being established from the remote side.</param>
+        /// <returns><c>true</c> if the established link is valid; otherwise, <c>false</c>.</returns>
+        public bool EstablishLinkFor(ILinkedMonkeySyncObject<TLink> syncObject, string propertyName, bool fromRemote);
+    }
+
+    /// <summary>
+    /// Defines the interface for writeonly <see cref="ILinkedMonkeySyncValue{TLink}"/>s.
     /// </summary>
     /// <remarks>
     /// This interface exists purely to facilitate keeping a contravariant list of sync values.
     /// </remarks>
-    /// <typeparam name="T">The type of the <see cref="Value">Value</see>.</typeparam>
-    public interface IWriteOnlyMonkeySyncValue<in T> : IMonkeySyncValue
+    /// <inheritdoc cref="ILinkedMonkeySyncValue{TLink, T}"/>
+    public interface IWriteOnlyMonkeySyncValue<out TLink, in T> : ILinkedMonkeySyncValue<TLink>
     {
         /// <summary>
         /// Sets the internal value of this sync value.
@@ -68,15 +96,21 @@ namespace MonkeyLoader.Sync
     }
 
     /// <summary>
-    /// Implements a basic version of an <see cref="IMonkeySyncValue{T}"/>.
+    /// Implements an abstract base for <see cref="ILinkedMonkeySyncValue{TLink, T}"/>s.
     /// </summary>
-    /// <typeparam name="T">The type of the <see cref="Value">Value</see>.</typeparam>
-    public class MonkeySyncValue<T> : IMonkeySyncValue<T>
+    /// <inheritdoc cref="ILinkedMonkeySyncValue{TLink, T}"/>
+    public abstract class MonkeySyncValue<TLink, T> : IUnlinkedMonkeySyncValue<TLink>, ILinkedMonkeySyncValue<TLink, T>
     {
         private static readonly Type _valueType = typeof(T);
 
         private ValueChangedEventHandler? _untypedChanged;
         private T _value;
+
+        /// <inheritdoc/>
+        public string Name { get; private set; } = null!;
+
+        /// <inheritdoc/>
+        public ILinkedMonkeySyncObject<TLink> SyncObject { get; private set; } = null!;
 
         /// <inheritdoc/>
         public virtual T Value
@@ -93,7 +127,7 @@ namespace MonkeyLoader.Sync
             }
         }
 
-        object? IMonkeySyncValue.Value
+        object? ILinkedMonkeySyncValue<TLink>.Value
         {
             get => Value;
             set => Value = (T)value!;
@@ -112,19 +146,34 @@ namespace MonkeyLoader.Sync
         }
 
         /// <summary>
-        /// Wraps the given <paramref name="value"/> into a sync object.
-        /// </summary>
-        /// <param name="value">The value to wrap.</param>
-        public static implicit operator MonkeySyncValue<T>(T value) => new(value);
-
-        /// <summary>
         /// Unwraps the <see cref="Value">Value</see> from the given sync object.
         /// </summary>
         /// <param name="syncValue">The sync object to unwrap.</param>
-        public static implicit operator T(MonkeySyncValue<T> syncValue) => syncValue.Value;
+        public static implicit operator T(MonkeySyncValue<TLink, T> syncValue) => syncValue.Value;
+
+        /// <remarks>
+        /// Sets this sync value's <see cref="SyncObject">SyncObject</see>
+        /// and <see cref="Name">Name</see> to the ones provided.<br/>
+        /// Then calls the <see cref="EstablishLinkForInternal">internal link method</see>.
+        /// </remarks>
+        /// <inheritdoc/>
+        public bool EstablishLinkFor(ILinkedMonkeySyncObject<TLink> syncObject, string propertyName, bool fromRemote)
+        {
+            SyncObject = syncObject;
+            Name = propertyName;
+
+            return EstablishLinkForInternal(syncObject, propertyName, fromRemote);
+        }
 
         /// <inheritdoc/>
         public override string ToString() => Value?.ToString() ?? "";
+
+        /// <remarks>
+        /// Handles the aspects of establishing a link that are
+        /// particular to <typeparamref name="TLink"/>s as a link object.
+        /// </remarks>
+        /// <inheritdoc cref="IUnlinkedMonkeySyncValue{TLink}.EstablishLinkFor"/>
+        protected abstract bool EstablishLinkForInternal(ILinkedMonkeySyncObject<TLink> syncObject, string propertyName, bool fromRemote);
 
         /// <summary>
         /// Handles the value of this config item potentially having changed.

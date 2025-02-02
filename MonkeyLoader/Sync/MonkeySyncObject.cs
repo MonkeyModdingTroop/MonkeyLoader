@@ -79,13 +79,13 @@ namespace MonkeyLoader.Sync
     /// </summary>
     /// <typeparam name="TSyncObject">The concrete type of the MonkeySync object.</typeparam>
     /// <typeparam name="TSyncValue">
-    /// The <see cref="IMonkeySyncValue"/>-derived interface
+    /// The <see cref="IUnlinkedMonkeySyncValue{TLink}"/>-derived interface
     /// that the MonkeySync values of this object must implement.
     /// </typeparam>
     /// <typeparam name="TLink">The type of the link object used by the sync object.</typeparam>
     public abstract class MonkeySyncObject<TSyncObject, TSyncValue, TLink> : IUnlinkedMonkeySyncObject<TLink>
         where TSyncObject : MonkeySyncObject<TSyncObject, TSyncValue, TLink>
-        where TSyncValue : IMonkeySyncValue
+        where TSyncValue : IUnlinkedMonkeySyncValue<TLink>
         where TLink : class
     {
         /// <summary>
@@ -115,13 +115,13 @@ namespace MonkeyLoader.Sync
         static MonkeySyncObject()
         {
             var syncValueType = typeof(TSyncValue);
-            var syncValueProperties = AccessTools.GetDeclaredProperties(typeof(TSyncObject))
+            var syncValueProperties = typeof(TSyncObject).GetProperties(AccessTools.all)
                 .Where(property => syncValueType.IsAssignableFrom(property.PropertyType) && (!(property.GetGetMethod()?.IsStatic ?? true)));
 
             foreach (var property in syncValueProperties)
                 propertyAccessorsByName.Add(property.Name, (TSyncObject instance) => (TSyncValue)property.GetValue(instance));
 
-            var syncMethods = AccessTools.GetDeclaredMethods(typeof(TSyncObject))
+            var syncMethods = typeof(TSyncObject).GetMethods(AccessTools.all)
                 .Where(method => !method.IsStatic && !method.ContainsGenericParameters && method.ReturnType == typeof(void) && method.GetParameters().Length == 0);
 
             foreach (var method in syncMethods)
@@ -170,11 +170,16 @@ namespace MonkeyLoader.Sync
         /// <summary>
         /// Creates a link for the given sync value of the given name.
         /// </summary>
+        /// <remarks>
+        /// <i>By default:</i> Calls
+        /// <c><paramref name="syncValue"/>.<see cref="IUnlinkedMonkeySyncValue{TLink}.EstablishLinkFor">EstablishLinkFor</see>()</c>.
+        /// </remarks>
         /// <param name="propertyName">The name of the sync value to link.</param>
         /// <param name="syncValue">The sync value to link.</param>
         /// <param name="fromRemote">Whether the link is being established from the remote side.</param>
         /// <returns><c>true</c> if the link was successfully created; otherwise, <c>false</c>.</returns>
-        protected abstract bool EstablishLinkFor(string propertyName, TSyncValue syncValue, bool fromRemote);
+        protected virtual bool EstablishLinkFor(string propertyName, TSyncValue syncValue, bool fromRemote)
+            => syncValue.EstablishLinkFor(this, propertyName, fromRemote);
 
         /// <summary>
         /// Creates a link for the given sync method of the given name.
@@ -214,7 +219,7 @@ namespace MonkeyLoader.Sync
                 var syncValue = syncValueProperty.Value((TSyncObject)this);
 
                 syncValue.Changed += (sender, changedArgs)
-                    => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(syncValueProperty.Key));
+                    => OnPropertyChanged(syncValueProperty.Key);
 
                 success &= EstablishLinkFor(syncValueProperty.Key, syncValue, fromRemote);
             }
@@ -271,12 +276,11 @@ namespace MonkeyLoader.Sync
         /// event with the given <paramref name="propertyName"/>.
         /// </summary>
         /// <remarks>
-        /// This is automatically called for any <see cref="MonkeySyncValue{T}"/> properties.
+        /// This is automatically called for any <typeparamref name="TSyncValue"/> properties.
         /// </remarks>
         /// <param name="propertyName">The name of the property that changed.</param>
         protected void OnPropertyChanged(string propertyName)
         {
-            // Still needs to be hooked up somewhere
             var eventData = new PropertyChangedEventArgs(propertyName);
 
             PropertyChanged?.Invoke(this, eventData);
