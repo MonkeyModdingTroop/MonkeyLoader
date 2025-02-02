@@ -154,7 +154,7 @@ namespace MonkeyLoader.Sync
         /// <remarks>
         /// Sets this sync value's <see cref="SyncObject">SyncObject</see>
         /// and <see cref="Name">Name</see> to the ones provided.<br/>
-        /// Then calls the <see cref="EstablishLinkForInternal">internal link method</see>.
+        /// Then calls the <see cref="EstablishLinkInternal">internal link method</see>.
         /// </remarks>
         /// <inheritdoc/>
         public bool EstablishLinkFor(ILinkedMonkeySyncObject<TLink> syncObject, string propertyName, bool fromRemote)
@@ -162,7 +162,7 @@ namespace MonkeyLoader.Sync
             SyncObject = syncObject;
             Name = propertyName;
 
-            return EstablishLinkForInternal(syncObject, propertyName, fromRemote);
+            return EstablishLinkInternal(fromRemote);
         }
 
         /// <inheritdoc/>
@@ -170,10 +170,13 @@ namespace MonkeyLoader.Sync
 
         /// <remarks>
         /// Handles the aspects of establishing a link that are
-        /// particular to <typeparamref name="TLink"/>s as a link object.
+        /// particular to <typeparamref name="TLink"/>s as a link object.<br/>
+        /// The <see cref="SyncObject">SyncObject</see> and <see cref="Name">Name</see>
+        /// have already been assigned by the <see cref="EstablishLinkFor">EstablishLinkFor</see>
+        /// method that calls this.
         /// </remarks>
         /// <inheritdoc cref="IUnlinkedMonkeySyncValue{TLink}.EstablishLinkFor"/>
-        protected abstract bool EstablishLinkForInternal(ILinkedMonkeySyncObject<TLink> syncObject, string propertyName, bool fromRemote);
+        protected abstract bool EstablishLinkInternal(bool fromRemote);
 
         /// <summary>
         /// Handles the value of this config item potentially having changed.
