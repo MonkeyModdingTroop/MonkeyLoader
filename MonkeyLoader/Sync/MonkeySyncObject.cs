@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 
 namespace MonkeyLoader.Sync
@@ -122,7 +123,7 @@ namespace MonkeyLoader.Sync
                 propertyAccessorsByName.Add(property.Name, (TSyncObject instance) => (TSyncValue)property.GetValue(instance));
 
             var syncMethods = typeof(TSyncObject).GetMethods(AccessTools.all)
-                .Where(method => !method.IsStatic && !method.ContainsGenericParameters && method.ReturnType == typeof(void) && method.GetParameters().Length == 0);
+                .Where(method => !method.IsStatic && !method.ContainsGenericParameters && method.ReturnType == typeof(void) && method.GetParameters().Length == 0 && method.GetCustomAttribute<MonkeySyncMethodAttribute>() is not null);
 
             foreach (var method in syncMethods)
                 methodsByName.Add(method.Name, (TSyncObject instance) => method.Invoke(instance, null));
