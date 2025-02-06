@@ -45,6 +45,12 @@ namespace MonkeyLoader.Sync
     public interface ILinkedMonkeySyncValue<out TLink, T> : INotifyValueChanged<T>,
         IReadOnlyMonkeySyncValue<TLink, T>, IWriteOnlyMonkeySyncValue<TLink, T>
     {
+        /// <summary>
+        /// Gets the <see cref="MonkeySyncObject{TSyncObject, TSyncValue, TLink}.LinkObject">LinkObject</see>
+        /// of the <see cref="ILinkedMonkeySyncValue{TLink}.SyncObject">SyncObject</see> that this value belongs to.
+        /// </summary>
+        public TLink LinkObject { get; }
+
         /// <inheritdoc cref="ILinkedMonkeySyncValue{TLink}.Value"/>
         public new T Value { get; set; }
     }
@@ -105,6 +111,9 @@ namespace MonkeyLoader.Sync
 
         private ValueChangedEventHandler? _untypedChanged;
         private T _value;
+
+        /// <inheritdoc/>
+        public TLink LinkObject => SyncObject.LinkObject;
 
         /// <inheritdoc/>
         public string Name { get; private set; } = null!;

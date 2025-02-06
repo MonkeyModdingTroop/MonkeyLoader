@@ -47,6 +47,7 @@ namespace MonkeyLoader.Sync
         /// <summary>
         /// Gets whether this sync object has a valid link.
         /// </summary>
+        [MemberNotNullWhen(true, nameof(LinkObject))]
         public bool IsLinkValid { get; }
 
         /// <summary>
@@ -106,6 +107,7 @@ namespace MonkeyLoader.Sync
         public bool HasLinkObject => LinkObject is not null;
 
         /// <inheritdoc/>
+        [MemberNotNullWhen(true, nameof(LinkObject))]
         public abstract bool IsLinkValid { get; }
 
         /// <inheritdoc/>
@@ -165,37 +167,14 @@ namespace MonkeyLoader.Sync
 
             LinkObject = linkObject;
 
-            return EstablishLinkWith(linkObject, fromRemote);
+            return EstablishLink(fromRemote);
         }
-
-        /// <summary>
-        /// Creates a link for the given sync value of the given name.
-        /// </summary>
-        /// <remarks>
-        /// <i>By default:</i> Calls
-        /// <c><paramref name="syncValue"/>.<see cref="IUnlinkedMonkeySyncValue{TLink}.EstablishLinkFor">EstablishLinkFor</see>()</c>.
-        /// </remarks>
-        /// <param name="propertyName">The name of the sync value to link.</param>
-        /// <param name="syncValue">The sync value to link.</param>
-        /// <param name="fromRemote">Whether the link is being established from the remote side.</param>
-        /// <returns><c>true</c> if the link was successfully created; otherwise, <c>false</c>.</returns>
-        protected virtual bool EstablishLinkFor(string propertyName, TSyncValue syncValue, bool fromRemote)
-            => syncValue.EstablishLinkFor(this, propertyName, fromRemote);
-
-        /// <summary>
-        /// Creates a link for the given sync method of the given name.
-        /// </summary>
-        /// <param name="methodName">The name of the sync method to link.</param>
-        /// <param name="syncMethod">The sync method to link.</param>
-        /// <param name="fromRemote">Whether the link is being established from the remote side.</param>
-        /// <returns><c>true</c> if the link was successfully created; otherwise, <c>false</c>.</returns>
-        protected abstract bool EstablishLinkFor(string methodName, Action<TSyncObject> syncMethod, bool fromRemote);
 
         /// <remarks><para>
         /// <i>By default:</i> Sets up the <see cref="INotifyValueChanged.Changed"/> event handlers
-        /// and calls <see cref="EstablishLinkFor(string, TSyncValue, bool)">EstablishLinkFor</see>
+        /// and calls <see cref="EstablishLinkFor(TSyncValue, string, bool)">EstablishLinkFor</see>
         /// for every readable <typeparamref name="TSyncValue"/> instance property and
-        /// <see cref="EstablishLinkFor(string, TSyncValue, bool)">its overload</see> for every
+        /// <see cref="EstablishLinkFor(TSyncValue, string, bool)">its overload</see> for every
         /// <see cref="MonkeySyncMethodAttribute">MonkeySync method</see> on <typeparamref name="TSyncObject"/>.<br/>
         /// If the link is successfully created, this linked sync object will be
         /// <see cref="MonkeySyncRegistry.RegisterLinkedSyncObject{TLink}">added</see>
@@ -211,7 +190,7 @@ namespace MonkeyLoader.Sync
         /// </para>
         /// </remarks>
         /// <inheritdoc cref="LinkWith"/>
-        protected virtual bool EstablishLinkWith(TLink linkObject, bool fromRemote)
+        protected virtual bool EstablishLink(bool fromRemote)
         {
             var success = true;
 
@@ -222,17 +201,40 @@ namespace MonkeyLoader.Sync
                 syncValue.Changed += (sender, changedArgs)
                     => OnPropertyChanged(syncValueProperty.Key);
 
-                success &= EstablishLinkFor(syncValueProperty.Key, syncValue, fromRemote);
+                success &= EstablishLinkFor(syncValue, syncValueProperty.Key, fromRemote);
             }
 
             foreach (var syncMethod in methodsByName)
-                success &= EstablishLinkFor(syncMethod.Key, syncMethod.Value, fromRemote);
+                success &= EstablishLinkFor(syncMethod.Value, syncMethod.Key, fromRemote);
 
             if (success)
                 MonkeySyncRegistry.RegisterLinkedSyncObject(this);
 
             return success;
         }
+
+        /// <summary>
+        /// Creates a link for the given sync value of the given name.
+        /// </summary>
+        /// <remarks>
+        /// <i>By default:</i> Calls
+        /// <c><paramref name="syncValue"/>.<see cref="IUnlinkedMonkeySyncValue{TLink}.EstablishLinkFor">EstablishLinkFor</see>()</c>.
+        /// </remarks>
+        /// <param name="syncValue">The sync value to link.</param>
+        /// <param name="propertyName">The name of the sync value to link.</param>
+        /// <param name="fromRemote">Whether the link is being established from the remote side.</param>
+        /// <returns><c>true</c> if the link was successfully created; otherwise, <c>false</c>.</returns>
+        protected virtual bool EstablishLinkFor(TSyncValue syncValue, string propertyName, bool fromRemote)
+            => syncValue.EstablishLinkFor(this, propertyName, fromRemote);
+
+        /// <summary>
+        /// Creates a link for the given sync method of the given name.
+        /// </summary>
+        /// <param name="syncMethod">The sync method to link.</param>
+        /// <param name="methodName">The name of the sync method to link.</param>
+        /// <param name="fromRemote">Whether the link is being established from the remote side.</param>
+        /// <returns><c>true</c> if the link was successfully created; otherwise, <c>false</c>.</returns>
+        protected abstract bool EstablishLinkFor(Action<TSyncObject> syncMethod, string methodName, bool fromRemote);
 
         /// <summary>
         /// Cleans up any managed resources as part of <see cref="Dispose()">disposing</see>.
@@ -267,7 +269,11 @@ namespace MonkeyLoader.Sync
             if (!IsLinkValid && TryRestoreLink() && IsLinkValid)
                 return;
 
-            Invalidated.TryInvokeAll();
+            try
+            {
+                Invalidated.TryInvokeAll();
+            }
+            catch { }
 
             Dispose();
         }
@@ -288,9 +294,9 @@ namespace MonkeyLoader.Sync
         }
 
         /// <remarks><para>
-        /// <i>By default:</i> Calls <see cref="TryRestoreLinkFor(string, TSyncValue)">TryRestoreLinkFor</see>
+        /// <i>By default:</i> Calls <see cref="TryRestoreLinkFor(TSyncValue, string)">TryRestoreLinkFor</see>
         /// for every readable <typeparamref name="TSyncValue"/> instance property and
-        /// <see cref="TryRestoreLinkFor(string, TSyncValue)">its overload</see> for every
+        /// <see cref="TryRestoreLinkFor(TSyncValue, string)">its overload</see> for every
         /// <see cref="MonkeySyncMethodAttribute">MonkeySync method</see> on <typeparamref name="TSyncObject"/>.<br/>
         /// The detected properties are stored in <see cref="propertyAccessorsByName">propertyAccessorsByName</see>,
         /// while the detected methods are stored in <see cref="methodsByName">methodsByName</see>.
@@ -307,29 +313,31 @@ namespace MonkeyLoader.Sync
             var success = true;
 
             foreach (var syncValueProperty in propertyAccessorsByName)
-                success &= TryRestoreLinkFor(syncValueProperty.Key, syncValueProperty.Value((TSyncObject)this));
+                success &= TryRestoreLinkFor(syncValueProperty.Value((TSyncObject)this), syncValueProperty.Key);
 
             foreach (var syncMethod in methodsByName)
-                success &= TryRestoreLinkFor(syncMethod.Key, syncMethod.Value);
+                success &= TryRestoreLinkFor(syncMethod.Value, syncMethod.Key);
 
             return success;
         }
 
+        // Implement the sync value one through a method on sync values
+
         /// <summary>
         /// Tries to restore the link for the given sync value of the given name.
         /// </summary>
-        /// <param name="propertyName">The name of the sync value to link.</param>
         /// <param name="syncValue">The sync value to link.</param>
+        /// <param name="propertyName">The name of the sync value to link.</param>
         /// <returns><c>true</c> if the link was successfully restored; otherwise, <c>false</c>.</returns>
-        protected abstract bool TryRestoreLinkFor(string propertyName, TSyncValue syncValue);
+        protected abstract bool TryRestoreLinkFor(TSyncValue syncValue, string propertyName);
 
         /// <summary>
         /// Tries to restore the link for the given sync method of the given name.
         /// </summary>
-        /// <param name="methodName">The name of the sync method to link.</param>
         /// <param name="syncMethod">The sync method to link.</param>
+        /// <param name="methodName">The name of the sync method to link.</param>
         /// <returns><c>true</c> if the link was successfully restored; otherwise, <c>false</c>.</returns>
-        protected abstract bool TryRestoreLinkFor(string methodName, Action<TSyncObject> syncMethod);
+        protected abstract bool TryRestoreLinkFor(Action<TSyncObject> syncMethod, string methodName);
 
         private void Dispose(bool disposing)
         {
