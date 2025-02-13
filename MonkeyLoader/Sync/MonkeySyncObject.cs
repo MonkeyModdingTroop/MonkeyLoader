@@ -1,7 +1,6 @@
 ﻿using EnumerableToolkit;
 using HarmonyLib;
 using MonkeyLoader.Meta;
-using MonkeyLoader.Patching;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -99,6 +98,11 @@ namespace MonkeyLoader.Sync
         /// The getters for the detected <typeparamref name="TSyncValue"/> instance properties by their name.
         /// </summary>
         protected static readonly Dictionary<string, Func<TSyncObject, TSyncValue>> propertyAccessorsByName = new(StringComparer.Ordinal);
+
+        /// <summary>
+        /// The <typeparamref name="TSyncValue"/> instances associated with this sync object.
+        /// </summary>
+        protected readonly HashSet<TSyncValue> syncValues = [];
 
         private bool _disposedValue;
 
@@ -217,19 +221,26 @@ namespace MonkeyLoader.Sync
         /// Creates a link for the given sync value of the given name.
         /// </summary>
         /// <remarks>
-        /// <i>By default:</i> Calls
-        /// <c><paramref name="syncValue"/>.<see cref="IUnlinkedMonkeySyncValue{TLink}.EstablishLinkFor">EstablishLinkFor</see>()</c>.
+        /// <i>By default:</i> Adds the given sync value to the <see cref="syncValues">set of instances</see> and calls
+        /// <c><paramref name="syncValue"/>.<see cref="IUnlinkedMonkeySyncValue{TLink}.EstablishLinkFor">EstablishLinkFor</see>(…)</c>.
         /// </remarks>
         /// <param name="syncValue">The sync value to link.</param>
         /// <param name="propertyName">The name of the sync value to link.</param>
         /// <param name="fromRemote">Whether the link is being established from the remote side.</param>
         /// <returns><c>true</c> if the link was successfully created; otherwise, <c>false</c>.</returns>
         protected virtual bool EstablishLinkFor(TSyncValue syncValue, string propertyName, bool fromRemote)
-            => syncValue.EstablishLinkFor(this, propertyName, fromRemote);
+        {
+            syncValues.Add(syncValue);
+            return syncValue.EstablishLinkFor(this, propertyName, fromRemote);
+        }
 
         /// <summary>
         /// Creates a link for the given sync method of the given name.
         /// </summary>
+        /// <remarks>
+        /// Any <typeparamref name="TSyncValue"/>s created for this
+        /// must be added to the <see cref="syncValues">set of instances</see>.
+        /// </remarks>
         /// <param name="syncMethod">The sync method to link.</param>
         /// <param name="methodName">The name of the sync method to link.</param>
         /// <param name="fromRemote">Whether the link is being established from the remote side.</param>
@@ -240,10 +251,15 @@ namespace MonkeyLoader.Sync
         /// Cleans up any managed resources as part of <see cref="Dispose()">disposing</see>.
         /// </summary>
         /// <remarks>
-        /// <i>By default:</i> Disposes the <see cref="LinkObject">LinkObject</see> if it's <see cref="IDisposable"/>.
+        /// <i>By default:</i> Disposes all <typeparamref name="TSyncValue"/> instances
+        /// that were added to the <see cref="syncValues">set of instances</see>,
+        /// and the <see cref="LinkObject">LinkObject</see> if it's <see cref="IDisposable"/>.
         /// </remarks>
         protected virtual void OnDisposing()
         {
+            foreach (var syncValue in syncValues)
+                syncValue.Dispose();
+
             if (LinkObject is IDisposable disposable)
                 disposable.Dispose();
         }
@@ -294,9 +310,9 @@ namespace MonkeyLoader.Sync
         }
 
         /// <remarks><para>
-        /// <i>By default:</i> Calls <see cref="TryRestoreLinkFor(TSyncValue, string)">TryRestoreLinkFor</see>
+        /// <i>By default:</i> Calls <see cref="TryRestoreLinkFor(TSyncValue)">TryRestoreLinkFor</see>
         /// for every readable <typeparamref name="TSyncValue"/> instance property and
-        /// <see cref="TryRestoreLinkFor(TSyncValue, string)">its overload</see> for every
+        /// <see cref="TryRestoreLinkFor(Action{TSyncObject}, string)">its overload</see> for every
         /// <see cref="MonkeySyncMethodAttribute">MonkeySync method</see> on <typeparamref name="TSyncObject"/>.<br/>
         /// The detected properties are stored in <see cref="propertyAccessorsByName">propertyAccessorsByName</see>,
         /// while the detected methods are stored in <see cref="methodsByName">methodsByName</see>.
@@ -312,8 +328,8 @@ namespace MonkeyLoader.Sync
         {
             var success = true;
 
-            foreach (var syncValueProperty in propertyAccessorsByName)
-                success &= TryRestoreLinkFor(syncValueProperty.Value((TSyncObject)this), syncValueProperty.Key);
+            foreach (var syncValues in propertyAccessorsByName.Values)
+                success &= TryRestoreLinkFor(syncValues((TSyncObject)this));
 
             foreach (var syncMethod in methodsByName)
                 success &= TryRestoreLinkFor(syncMethod.Value, syncMethod.Key);
@@ -321,15 +337,17 @@ namespace MonkeyLoader.Sync
             return success;
         }
 
-        // Implement the sync value one through a method on sync values
-
         /// <summary>
-        /// Tries to restore the link for the given sync value of the given name.
+        /// Tries to restore the link for the given sync value.
         /// </summary>
+        /// <remarks>
+        /// <i>By default:</i> Calls
+        /// <c><paramref name="syncValue"/>.<see cref="ILinkedMonkeySyncValue{TLink}.TryRestoreLink">TryRestoreLink</see>()</c>.
+        /// </remarks>
         /// <param name="syncValue">The sync value to link.</param>
-        /// <param name="propertyName">The name of the sync value to link.</param>
         /// <returns><c>true</c> if the link was successfully restored; otherwise, <c>false</c>.</returns>
-        protected abstract bool TryRestoreLinkFor(TSyncValue syncValue, string propertyName);
+        protected virtual bool TryRestoreLinkFor(TSyncValue syncValue)
+            => syncValue.TryRestoreLink();
 
         /// <summary>
         /// Tries to restore the link for the given sync method of the given name.

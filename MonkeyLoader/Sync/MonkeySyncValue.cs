@@ -13,8 +13,14 @@ namespace MonkeyLoader.Sync
     /// Defines the non-generic interface for <see cref="ILinkedMonkeySyncValue{TLink, T}"/>s.
     /// </summary>
     /// <inheritdoc cref="ILinkedMonkeySyncValue{TLink, T}"/>
-    public interface ILinkedMonkeySyncValue<out TLink> : INotifyValueChanged
+    public interface ILinkedMonkeySyncValue<out TLink> : INotifyValueChanged, IDisposable
     {
+        /// <summary>
+        /// Gets the <see cref="MonkeySyncObject{TSyncObject, TSyncValue, TLink}.LinkObject">LinkObject</see>
+        /// of the <see cref="ILinkedMonkeySyncValue{TLink}.SyncObject">SyncObject</see> that this value belongs to.
+        /// </summary>
+        public TLink LinkObject { get; }
+
         /// <summary>
         /// Gets the property name of this sync value.
         /// </summary>
@@ -35,6 +41,12 @@ namespace MonkeyLoader.Sync
         /// the wrapped <see cref="Value">Value</see>.
         /// </summary>
         public Type ValueType { get; }
+
+        /// <summary>
+        /// Tries to restore the link of this sync value.
+        /// </summary>
+        /// <returns><c>true</c> if the link was successfully restored; otherwise, <c>false</c>.</returns>
+        public bool TryRestoreLink();
     }
 
     /// <summary>
@@ -45,12 +57,6 @@ namespace MonkeyLoader.Sync
     public interface ILinkedMonkeySyncValue<out TLink, T> : INotifyValueChanged<T>,
         IReadOnlyMonkeySyncValue<TLink, T>, IWriteOnlyMonkeySyncValue<TLink, T>
     {
-        /// <summary>
-        /// Gets the <see cref="MonkeySyncObject{TSyncObject, TSyncValue, TLink}.LinkObject">LinkObject</see>
-        /// of the <see cref="ILinkedMonkeySyncValue{TLink}.SyncObject">SyncObject</see> that this value belongs to.
-        /// </summary>
-        public TLink LinkObject { get; }
-
         /// <inheritdoc cref="ILinkedMonkeySyncValue{TLink}.Value"/>
         public new T Value { get; set; }
     }
@@ -109,6 +115,7 @@ namespace MonkeyLoader.Sync
     {
         private static readonly Type _valueType = typeof(T);
 
+        private bool _disposedValue;
         private ValueChangedEventHandler? _untypedChanged;
         private T _value;
 
@@ -155,10 +162,26 @@ namespace MonkeyLoader.Sync
         }
 
         /// <summary>
+        /// Ensures any unmanaged resources are <see cref="Dispose(bool)">disposed</see>.
+        /// </summary>
+        ~MonkeySyncValue()
+        {
+            Dispose(false);
+        }
+
+        /// <summary>
         /// Unwraps the <see cref="Value">Value</see> from the given sync object.
         /// </summary>
         /// <param name="syncValue">The sync object to unwrap.</param>
         public static implicit operator T(MonkeySyncValue<TLink, T> syncValue) => syncValue.Value;
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in the 'OnDisposing()' or 'OnFinalizing()' methods
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
 
         /// <remarks>
         /// Sets this sync value's <see cref="SyncObject">SyncObject</see>
@@ -177,6 +200,9 @@ namespace MonkeyLoader.Sync
         /// <inheritdoc/>
         public override string ToString() => Value?.ToString() ?? "";
 
+        /// <inheritdoc/>
+        public abstract bool TryRestoreLink();
+
         /// <remarks>
         /// Handles the aspects of establishing a link that are
         /// particular to <typeparamref name="TLink"/>s as a link object.<br/>
@@ -186,6 +212,39 @@ namespace MonkeyLoader.Sync
         /// </remarks>
         /// <inheritdoc cref="IUnlinkedMonkeySyncValue{TLink}.EstablishLinkFor"/>
         protected abstract bool EstablishLinkInternal(bool fromRemote);
+
+        /// <summary>
+        /// Cleans up any managed resources as part of <see cref="Dispose()">disposing</see>.
+        /// </summary>
+        /// <remarks>
+        /// <i>By default:</i> Sets the <see cref="SyncObject">SyncObject</see> to <c>null</c>
+        /// and the internal <see cref="Value">value</see> to its <c>default</c>.
+        /// </remarks>
+        protected virtual void OnDisposing()
+        {
+            SyncObject = null!;
+            _value = default!;
+        }
+
+        /// <summary>
+        /// Cleans up any unmanaged resources as part of
+        /// <see cref="Dispose()">disposing</see> or finalization.
+        /// </summary>
+        protected virtual void OnFinalizing()
+        { }
+
+        private void Dispose(bool disposing)
+        {
+            if (_disposedValue)
+                return;
+
+            if (disposing)
+                OnDisposing();
+
+            OnFinalizing();
+
+            _disposedValue = true;
+        }
 
         /// <summary>
         /// Handles the value of this config item potentially having changed.
