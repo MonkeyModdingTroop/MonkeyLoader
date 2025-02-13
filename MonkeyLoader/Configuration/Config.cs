@@ -21,8 +21,11 @@ namespace MonkeyLoader.Configuration
     public sealed class Config : INestedIdentifiable<IConfigOwner>,
         IIdentifiableOwner<Config, ConfigSection>, INestedIdentifiableOwner<IDefiningConfigKey>
     {
+        private const string BackupExtension = ".backup.json";
+        private const string BrokenExtension = ".broken.json";
         private const string OwnerKey = "Owner";
         private const string SectionsKey = "Sections";
+        private const string TempExtension = ".temp.json";
 
         // this is a ridiculous hack because HashSet.TryGetValue doesn't exist in .NET 4.6.2
         private readonly Dictionary<IConfigKey, IDefiningConfigKey> _configurationItemDefinitionsSelfMap = new(ConfigKey.EqualityComparer);
@@ -88,6 +91,10 @@ namespace MonkeyLoader.Configuration
             Logger = new Logger(owner.Logger, "Config");
 
             _loadedConfig = LoadConfig();
+
+            // Throwing an exception for this but not for malformed json,
+            // because we don't want to muddle with someone else's config.
+            // Should never happen without the user messing around anyways.
             if (_loadedConfig[OwnerKey]?.ToObject<string>() != Owner.Id)
                 throw new ConfigLoadException("Config malformed! Recorded owner must match the loading owner!");
 
@@ -222,7 +229,7 @@ namespace MonkeyLoader.Configuration
 
                 try
                 {
-                    var tempPath = Path.ChangeExtension(Owner.ConfigPath, ".temp.json");
+                    var tempPath = Path.ChangeExtension(Owner.ConfigPath, TempExtension);
 
                     using (var file = File.Open(tempPath, FileMode.Create, FileAccess.Write, FileShare.Read))
                     {
@@ -233,7 +240,7 @@ namespace MonkeyLoader.Configuration
                         jsonTextWriter.Flush();
                     }
 
-                    File.Replace(tempPath, Owner.ConfigPath, Path.ChangeExtension(Owner.ConfigPath, ".backup.json"));
+                    MoveOrReplace(tempPath, Owner.ConfigPath, Path.ChangeExtension(Owner.ConfigPath, BackupExtension));
 
                     Logger.Info(() => $"Saved config in {stopwatch.ElapsedMilliseconds}ms!");
 
@@ -276,7 +283,7 @@ namespace MonkeyLoader.Configuration
         /// <exception cref="ArgumentException">The new value is not valid for the given key.</exception>
         public void SetValue(IConfigKey key, object? value, string? eventLabel = null)
         {
-            if (!TryGetDefiningKey(key, out IDefiningConfigKey? definingKey))
+            if (!TryGetDefiningKey(key, out var definingKey))
                 ThrowKeyNotFound(key);
 
             definingKey.SetValue(value, eventLabel);
@@ -392,10 +399,20 @@ namespace MonkeyLoader.Configuration
             }
         }
 
+        private static void MoveOrReplace(string sourceFileName, string destinationFileName, string? backupFileName)
+        {
+            if (File.Exists(destinationFileName))
+                File.Replace(sourceFileName, destinationFileName, backupFileName);
+            else
+                File.Move(sourceFileName, destinationFileName);
+        }
+
         private JObject LoadConfig()
         {
             if (File.Exists(Owner.ConfigPath))
             {
+                Logger.Info(() => $"Loading config file: {Owner.ConfigPath}");
+
                 try
                 {
                     using var file = File.OpenText(Owner.ConfigPath);
@@ -405,10 +422,54 @@ namespace MonkeyLoader.Configuration
                 }
                 catch (Exception ex)
                 {
-                    // I know not what exceptions the JSON library will throw, but they must be contained
-                    throw new ConfigLoadException($"Error loading config!", ex);
+                    Logger.Warn(ex.LogFormat("Error loading config!"));
+
+                    try
+                    {
+                        var brokenPath = Path.ChangeExtension(Owner.ConfigPath, BrokenExtension);
+
+                        MoveOrReplace(Owner.ConfigPath, brokenPath, null);
+                        Logger.Info(() => $"Moved broken config file to: {brokenPath}");
+                    }
+                    catch (Exception ex2)
+                    {
+                        Logger.Warn(ex2.LogFormat("Error cleaning up broken config file!"));
+                    }
                 }
             }
+
+            var backupPath = Path.ChangeExtension(Owner.ConfigPath, BackupExtension);
+
+            if (File.Exists(backupPath))
+            {
+                Logger.Info(() => $"Loading backup config file: {backupPath}");
+
+                try
+                {
+                    using var file = File.OpenText(backupPath);
+                    using var reader = new JsonTextReader(file);
+
+                    return JObject.Load(reader);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warn(ex.LogFormat("Error loading backup config!"));
+
+                    try
+                    {
+                        var brokenPath = Path.ChangeExtension(backupPath, BrokenExtension);
+
+                        MoveOrReplace(backupPath, brokenPath, null);
+                        Logger.Info(() => $"Moved broken backup config file to: {brokenPath}");
+                    }
+                    catch (Exception ex2)
+                    {
+                        Logger.Warn(ex2.LogFormat("Error cleaning up broken config file!"));
+                    }
+                }
+            }
+
+            Logger.Info(() => "Falling back to clean config!");
 
             return new JObject()
             {
