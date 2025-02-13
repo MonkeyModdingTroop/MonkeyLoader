@@ -222,15 +222,18 @@ namespace MonkeyLoader.Configuration
 
                 try
                 {
-                    using var file = File.OpenWrite(Owner.ConfigPath);
-                    using var streamWriter = new StreamWriter(file);
-                    using var jsonTextWriter = new JsonTextWriter(streamWriter);
-                    jsonTextWriter.Formatting = Formatting.Indented;
-                    _loadedConfig.WriteTo(jsonTextWriter);
+                    var tempPath = Path.ChangeExtension(Owner.ConfigPath, ".temp.json");
 
-                    // I actually cannot believe I have to truncate the file myself
-                    file.SetLength(file.Position);
-                    jsonTextWriter.Flush();
+                    using (var file = File.Open(tempPath, FileMode.Create, FileAccess.Write, FileShare.Read))
+                    {
+                        using var streamWriter = new StreamWriter(file);
+                        using var jsonTextWriter = new JsonTextWriter(streamWriter) { Formatting = Formatting.Indented };
+
+                        _loadedConfig.WriteTo(jsonTextWriter);
+                        jsonTextWriter.Flush();
+                    }
+
+                    File.Replace(tempPath, Owner.ConfigPath, Path.ChangeExtension(Owner.ConfigPath, ".backup.json"));
 
                     Logger.Info(() => $"Saved config in {stopwatch.ElapsedMilliseconds}ms!");
 
