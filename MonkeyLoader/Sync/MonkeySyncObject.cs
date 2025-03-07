@@ -64,7 +64,10 @@ namespace MonkeyLoader.Sync
         where TLink : class
     {
         /// <summary>
-        /// Establishes this sync object's link with the given object.
+        /// Establishes this sync object's link with the given object.<br/>
+        /// If the link is successfully created, the now linked sync object will be
+        /// <see cref="MonkeySyncRegistry.RegisterLinkedSyncObject{TLink}">added</see>
+        /// to the <see cref="MonkeySyncRegistry"/>.
         /// </summary>
         /// <remarks>
         /// If the link fails or gets broken, a new instance has to be created.
@@ -135,6 +138,8 @@ namespace MonkeyLoader.Sync
             foreach (var property in syncValueProperties)
                 propertyAccessorsByName.Add(property.Name, (TSyncObject instance) => (TSyncValue)property.GetValue(instance));
 
+            // Replace this with a special MonkeySyncMethod type that takes an action as the target
+            // The invoke method can then be overridden to for example set the user field that triggers the method.
             var syncMethods = typeof(TSyncObject).GetMethods(AccessTools.all)
                 .Where(MonkeySyncMethodAttribute.IsValid);
 
@@ -181,7 +186,11 @@ namespace MonkeyLoader.Sync
 
             LinkObject = linkObject;
 
-            return EstablishLink(fromRemote);
+            if (!EstablishLink(fromRemote))
+                return false;
+
+            MonkeySyncRegistry.RegisterLinkedSyncObject(this);
+            return true;
         }
 
         /// <remarks><para>
@@ -189,10 +198,7 @@ namespace MonkeyLoader.Sync
         /// and calls <see cref="EstablishLinkFor(TSyncValue, string, bool)">EstablishLinkFor</see>
         /// for every readable <typeparamref name="TSyncValue"/> instance property and
         /// <see cref="EstablishLinkFor(TSyncValue, string, bool)">its overload</see> for every
-        /// <see cref="MonkeySyncMethodAttribute">MonkeySync method</see> on <typeparamref name="TSyncObject"/>.<br/>
-        /// If the link is successfully created, this linked sync object will be
-        /// <see cref="MonkeySyncRegistry.RegisterLinkedSyncObject{TLink}">added</see>
-        /// to the <see cref="MonkeySyncRegistry"/> automatically.
+        /// <see cref="MonkeySyncMethodAttribute">MonkeySync method</see> on <typeparamref name="TSyncObject"/>.
         /// </para><para>
         /// The detected properties are stored in <see cref="propertyAccessorsByName">propertyAccessorsByName</see>,
         /// while the detected methods are stored in <see cref="methodInfosByName">methodsByName</see>.
@@ -220,9 +226,6 @@ namespace MonkeyLoader.Sync
 
             foreach (var syncMethod in methodsByName)
                 success &= EstablishLinkFor(syncMethod.Value, syncMethod.Key, fromRemote);
-
-            if (success)
-                MonkeySyncRegistry.RegisterLinkedSyncObject(this);
 
             return success;
         }
