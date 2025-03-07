@@ -90,14 +90,21 @@ namespace MonkeyLoader.Sync
         where TLink : class
     {
         /// <summary>
-        /// The detected <see cref="MonkeySyncMethodAttribute">MonkeySync nethods</see> by their name.
+        /// The <see cref="MethodInfo"/>s of the detected <see cref="MonkeySyncMethodAttribute">MonkeySync
+        /// methods</see> of this type by their name.
         /// </summary>
-        protected static readonly Dictionary<string, Action<TSyncObject>> methodsByName = new(StringComparer.Ordinal);
+        protected static readonly Dictionary<string, MethodInfo> methodInfosByName = new(StringComparer.Ordinal);
 
         /// <summary>
         /// The getters for the detected <typeparamref name="TSyncValue"/> instance properties by their name.
         /// </summary>
         protected static readonly Dictionary<string, Func<TSyncObject, TSyncValue>> propertyAccessorsByName = new(StringComparer.Ordinal);
+
+        /// <summary>
+        /// The <see cref="Action"/>s to invoke the detected <see cref="MonkeySyncMethodAttribute">MonkeySync
+        /// methods</see> of this type by their name.
+        /// </summary>
+        protected readonly Dictionary<string, Action> methodsByName = new(StringComparer.Ordinal);
 
         /// <summary>
         /// The <typeparamref name="TSyncValue"/> instances associated with this sync object.
@@ -129,10 +136,10 @@ namespace MonkeyLoader.Sync
                 propertyAccessorsByName.Add(property.Name, (TSyncObject instance) => (TSyncValue)property.GetValue(instance));
 
             var syncMethods = typeof(TSyncObject).GetMethods(AccessTools.all)
-                .Where(method => !method.IsStatic && !method.ContainsGenericParameters && method.ReturnType == typeof(void) && method.GetParameters().Length == 0 && method.GetCustomAttribute<MonkeySyncMethodAttribute>() is not null);
+                .Where(MonkeySyncMethodAttribute.IsValid);
 
             foreach (var method in syncMethods)
-                methodsByName.Add(method.Name, (TSyncObject instance) => method.Invoke(instance, null));
+                methodInfosByName.Add(method.Name, method);
         }
 
         /// <summary>
@@ -145,6 +152,9 @@ namespace MonkeyLoader.Sync
         {
             if (GetType() != typeof(TSyncObject))
                 throw new InvalidOperationException("TSyncObject must be the concrete Type being instantiated!");
+
+            foreach (var methodEntry in methodInfosByName)
+                methodsByName.Add(methodEntry.Key, AccessTools.MethodDelegate<Action>(methodEntry.Value, this));
         }
 
         /// <summary>
@@ -185,7 +195,7 @@ namespace MonkeyLoader.Sync
         /// to the <see cref="MonkeySyncRegistry"/> automatically.
         /// </para><para>
         /// The detected properties are stored in <see cref="propertyAccessorsByName">propertyAccessorsByName</see>,
-        /// while the detected methods are stored in <see cref="methodsByName">methodsByName</see>.
+        /// while the detected methods are stored in <see cref="methodInfosByName">methodsByName</see>.
         /// </para><para>
         /// This method is called by <see cref="LinkWith">LinkWith</see>
         /// after the <see cref="LinkObject">LinkObject</see> has been assigned.<br/>
@@ -245,7 +255,7 @@ namespace MonkeyLoader.Sync
         /// <param name="methodName">The name of the sync method to link.</param>
         /// <param name="fromRemote">Whether the link is being established from the remote side.</param>
         /// <returns><c>true</c> if the link was successfully created; otherwise, <c>false</c>.</returns>
-        protected abstract bool EstablishLinkFor(Action<TSyncObject> syncMethod, string methodName, bool fromRemote);
+        protected abstract bool EstablishLinkFor(Action syncMethod, string methodName, bool fromRemote);
 
         /// <summary>
         /// Cleans up any managed resources as part of <see cref="Dispose()">disposing</see>.
@@ -312,10 +322,10 @@ namespace MonkeyLoader.Sync
         /// <remarks><para>
         /// <i>By default:</i> Calls <see cref="TryRestoreLinkFor(TSyncValue)">TryRestoreLinkFor</see>
         /// for every readable <typeparamref name="TSyncValue"/> instance property and
-        /// <see cref="TryRestoreLinkFor(Action{TSyncObject}, string)">its overload</see> for every
+        /// <see cref="TryRestoreLinkFor(Action, string)">its overload</see> for every
         /// <see cref="MonkeySyncMethodAttribute">MonkeySync method</see> on <typeparamref name="TSyncObject"/>.<br/>
         /// The detected properties are stored in <see cref="propertyAccessorsByName">propertyAccessorsByName</see>,
-        /// while the detected methods are stored in <see cref="methodsByName">methodsByName</see>.
+        /// while the detected methods are stored in <see cref="methodInfosByName">methodsByName</see>.
         /// </para><para>
         /// This method is called by <see cref="OnLinkInvalidated">OnLinkInvalidated</see>
         /// if <see cref="IsLinkValid">IsLinkValid</see> has become <c>false</c>.<br/>
@@ -355,7 +365,7 @@ namespace MonkeyLoader.Sync
         /// <param name="syncMethod">The sync method to link.</param>
         /// <param name="methodName">The name of the sync method to link.</param>
         /// <returns><c>true</c> if the link was successfully restored; otherwise, <c>false</c>.</returns>
-        protected abstract bool TryRestoreLinkFor(Action<TSyncObject> syncMethod, string methodName);
+        protected abstract bool TryRestoreLinkFor(Action syncMethod, string methodName);
 
         private void Dispose(bool disposing)
         {
