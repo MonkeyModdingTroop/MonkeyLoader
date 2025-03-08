@@ -90,13 +90,13 @@ namespace MonkeyLoader.Sync
     /// </remarks>
     /// <typeparam name="TSyncObject">The concrete type of the MonkeySync object.</typeparam>
     /// <typeparam name="TSyncValue">
-    /// The <see cref="IUnlinkedMonkeySyncValue{TLink}"/>-derived interface
+    /// The <see cref="IUnlinkedMonkeySyncValue{TLink, TSyncObject}"/>-derived interface
     /// that the MonkeySync values of this object must implement.
     /// </typeparam>
     /// <typeparam name="TLink">The type of the link object used by the sync object.</typeparam>
     public abstract class MonkeySyncObject<TSyncObject, TSyncValue, TLink> : IUnlinkedMonkeySyncObject<TLink>
         where TSyncObject : MonkeySyncObject<TSyncObject, TSyncValue, TLink>
-        where TSyncValue : IUnlinkedMonkeySyncValue<TLink>
+        where TSyncValue : IUnlinkedMonkeySyncValue<TLink, TSyncObject>
         where TLink : class
     {
         /// <summary>
@@ -241,7 +241,7 @@ namespace MonkeyLoader.Sync
         /// </summary>
         /// <remarks>
         /// <i>By default:</i> Adds the given sync value to the <see cref="syncValues">set of instances</see> and calls
-        /// <c><paramref name="syncValue"/>.<see cref="IUnlinkedMonkeySyncValue{TLink}.EstablishLinkFor">EstablishLinkFor</see>(…)</c>.
+        /// <c><paramref name="syncValue"/>.<see cref="IUnlinkedMonkeySyncValue{TLink, TSyncObject}.EstablishLinkFor">EstablishLinkFor</see>(…)</c>.
         /// </remarks>
         /// <param name="syncValue">The sync value to link.</param>
         /// <param name="propertyName">The name of the sync value to link.</param>
@@ -250,7 +250,7 @@ namespace MonkeyLoader.Sync
         protected virtual bool EstablishLinkFor(TSyncValue syncValue, string propertyName, bool fromRemote)
         {
             syncValues.Add(syncValue);
-            return syncValue.EstablishLinkFor(this, propertyName, fromRemote);
+            return syncValue.EstablishLinkFor((TSyncObject)this, propertyName, fromRemote);
         }
 
         /// <summary>
@@ -355,7 +355,7 @@ namespace MonkeyLoader.Sync
         /// </summary>
         /// <remarks>
         /// <i>By default:</i> Calls
-        /// <c><paramref name="syncValue"/>.<see cref="ILinkedMonkeySyncValue{TLink}.TryRestoreLink">TryRestoreLink</see>()</c>.
+        /// <c><paramref name="syncValue"/>.<see cref="ILinkedMonkeySyncValue{TLink, TSyncObject}.TryRestoreLink">TryRestoreLink</see>()</c>.
         /// </remarks>
         /// <param name="syncValue">The sync value to link.</param>
         /// <returns><c>true</c> if the link was successfully restored; otherwise, <c>false</c>.</returns>

@@ -20,16 +20,19 @@ namespace MonkeyLoader.Sync
     /// Defines the non-generic interface for <see cref="ILinkedMonkeySyncMethod{TLink, T}"/>s.
     /// </summary>
     /// <inheritdoc cref="ILinkedMonkeySyncMethod{TLink, T}"/>
-    public interface ILinkedMonkeySyncMethod<out TLink> : ILinkedMonkeySyncValue<TLink>
+    public interface ILinkedMonkeySyncMethod<out TLink, out TSyncObject> : ILinkedMonkeySyncValue<TLink, TSyncObject>
+        where TSyncObject : ILinkedMonkeySyncObject<TLink>
     {
     }
 
     /// <summary>
-    /// Defines the generic interface for linked <see cref="MonkeySyncMethod{TLink, T}"/>s.
+    /// Defines the generic interface for linked <see cref="MonkeySyncMethod{TLink, TSyncObject, T}"/>s.
     /// </summary>
     /// <typeparam name="TLink">The type of the link object used by the sync object that this sync value links to.</typeparam>
-    /// <typeparam name="T">The type of the <see cref="ILinkedMonkeySyncValue{T}.Value">Value</see> that can trigger this sync method.</typeparam>
-    public interface ILinkedMonkeySyncMethod<out TLink, T> : ILinkedMonkeySyncMethod<TLink>, ILinkedMonkeySyncValue<TLink, T>
+    /// <typeparam name="TSyncObject">The type of the sync object that may contain this sync value.</typeparam>
+    /// <typeparam name="T">The type of the <see cref="ILinkedMonkeySyncValue{T, TSyncObject}.Value">Value</see> that can trigger this sync method.</typeparam>
+    public interface ILinkedMonkeySyncMethod<out TLink, out TSyncObject, T> : ILinkedMonkeySyncMethod<TLink, TSyncObject>, ILinkedMonkeySyncValue<TLink, TSyncObject, T>
+        where TSyncObject : ILinkedMonkeySyncObject<TLink>
     {
         /// <summary>
         /// Gets the delegate that can be triggered by this sync method.
@@ -38,10 +41,11 @@ namespace MonkeyLoader.Sync
     }
 
     /// <summary>
-    /// Defines the interface for not yet linked <see cref="MonkeySyncMethod{TLink, T}"/>s.
+    /// Defines the interface for not yet linked <see cref="MonkeySyncMethod{TLink, TSyncObject, T}"/>s.
     /// </summary>
     /// <inheritdoc cref="ILinkedMonkeySyncMethod{TLink, T}"/>
-    public interface IUnlinkedMonkeySyncMethod<TLink> : ILinkedMonkeySyncMethod<TLink>, IUnlinkedMonkeySyncValue<TLink>
+    public interface IUnlinkedMonkeySyncMethod<TLink, TSyncObject> : ILinkedMonkeySyncMethod<TLink, TSyncObject>, IUnlinkedMonkeySyncValue<TLink, TSyncObject>
+        where TSyncObject : ILinkedMonkeySyncObject<TLink>
     { }
 
     /// <summary>
@@ -52,8 +56,9 @@ namespace MonkeyLoader.Sync
     /// It mainly serves as an example for how an implementation could look.
     /// </remarks>
     /// <inheritdoc cref="ILinkedMonkeySyncMethod{TLink, T}"/>
-    public abstract class MonkeySyncMethod<TLink, T> : MonkeySyncValue<TLink, T>,
-        IUnlinkedMonkeySyncMethod<TLink>, ILinkedMonkeySyncMethod<TLink, T>
+    public abstract class MonkeySyncMethod<TLink, TSyncObject, T> : MonkeySyncValue<TLink, TSyncObject, T>,
+            IUnlinkedMonkeySyncMethod<TLink, TSyncObject>, ILinkedMonkeySyncMethod<TLink, TSyncObject, T>
+        where TSyncObject : class, ILinkedMonkeySyncObject<TLink>
     {
         /// <inheritdoc/>
         public MonkeySyncFunc<T> Function { get; }
