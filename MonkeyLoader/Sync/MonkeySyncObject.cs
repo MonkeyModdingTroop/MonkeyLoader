@@ -83,36 +83,41 @@ namespace MonkeyLoader.Sync
     /// </summary>
     /// <remarks>
     /// Automatically detects any instance fields / properties containing
-    /// MonkeySync values or methods compatible with <typeparamref name="TSyncValue"/>.<br/>
+    /// MonkeySync values or methods compatible with <typeparamref name="TUnlinkedSyncValue"/>.<br/>
     /// Property names take precedence over their backing fields.<br/>
     /// Use the <see cref="IgnoreSyncValueAttribute"/> to mark fields / properties that should be ignored.
     /// If a property is marked, its backing field will be ignored too.
     /// </remarks>
     /// <typeparam name="TSyncObject">The concrete type of the MonkeySync object.</typeparam>
-    /// <typeparam name="TSyncValue">
-    /// The <see cref="IUnlinkedMonkeySyncValue{TLink, TSyncObject}"/>-derived interface
-    /// that the MonkeySync values of this object must implement.
+    /// <typeparam name="TUnlinkedSyncValue">
+    /// The <see cref="IUnlinkedMonkeySyncValue{TLink, TSyncObject, TLinkedSyncValue}"/>-derived interface
+    /// that the unlinked MonkeySync values of this object must implement.
+    /// </typeparam>
+    /// <typeparam name="TLinkedSyncValue">
+    /// The <see cref="ILinkedMonkeySyncValue{TLink, TSyncObject}"/>-derived interface
+    /// that the linked MonkeySync values of this object must implement.
     /// </typeparam>
     /// <typeparam name="TLink">The type of the link object used by the sync object.</typeparam>
-    public abstract class MonkeySyncObject<TSyncObject, TSyncValue, TLink> : IUnlinkedMonkeySyncObject<TLink>
-        where TSyncObject : MonkeySyncObject<TSyncObject, TSyncValue, TLink>
-        where TSyncValue : IUnlinkedMonkeySyncValue<TLink, TSyncObject>
+    public abstract class MonkeySyncObject<TSyncObject, TUnlinkedSyncValue, TLinkedSyncValue, TLink> : IUnlinkedMonkeySyncObject<TLink>
+        where TSyncObject : MonkeySyncObject<TSyncObject, TUnlinkedSyncValue, TLinkedSyncValue, TLink>
+        where TLinkedSyncValue : ILinkedMonkeySyncValue<TLink, TSyncObject>
+        where TUnlinkedSyncValue : IUnlinkedMonkeySyncValue<TLink, TSyncObject, TLinkedSyncValue>
         where TLink : class
     {
         /// <summary>
-        /// The getters for the automatically detected <typeparamref name="TSyncValue"/> instance fields / properties by their name.
+        /// The getters for the automatically detected <typeparamref name="TUnlinkedSyncValue"/> instance fields / properties by their name.
         /// </summary>
         /// <remarks>
         /// Property names take precedence over their backing fields.<br/>
         /// Use the <see cref="IgnoreSyncValueAttribute"/> to mark fields / properties that should be ignored.
         /// If a property is marked, its backing field will be ignored too.
         /// </remarks>
-        protected static readonly Dictionary<string, Func<TSyncObject, TSyncValue>> syncValueAccessorsByName = new(StringComparer.Ordinal);
+        protected static readonly Dictionary<string, Func<TSyncObject, TUnlinkedSyncValue>> syncValueAccessorsByName = new(StringComparer.Ordinal);
 
         /// <summary>
-        /// The <typeparamref name="TSyncValue"/> instances associated with this sync object.
+        /// The <typeparamref name="TUnlinkedSyncValue"/> instances associated with this sync object.
         /// </summary>
-        protected readonly HashSet<TSyncValue> syncValues = [];
+        protected readonly HashSet<TLinkedSyncValue> syncValues = [];
 
         private bool _disposedValue;
 
@@ -131,7 +136,7 @@ namespace MonkeyLoader.Sync
 
         static MonkeySyncObject()
         {
-            var syncValueType = typeof(TSyncValue);
+            var syncValueType = typeof(TUnlinkedSyncValue);
             var syncValueFields = typeof(TSyncObject).GetFields(AccessTools.all)
                 .Where(field => !field.IsStatic && syncValueType.IsAssignableFrom(field.FieldType) && field.GetCustomAttribute<IgnoreSyncValueAttribute>() is null);
 
@@ -139,7 +144,7 @@ namespace MonkeyLoader.Sync
                 .Where(property => syncValueType.IsAssignableFrom(property.PropertyType) && (!(property.GetGetMethod()?.IsStatic ?? true)));
 
             foreach (var field in syncValueFields)
-                syncValueAccessorsByName.Add(field.Name, (TSyncObject instance) => (TSyncValue)field.GetValue(instance));
+                syncValueAccessorsByName.Add(field.Name, (TSyncObject instance) => (TUnlinkedSyncValue)field.GetValue(instance));
 
             foreach (var property in syncValueProperties)
             {
@@ -158,7 +163,7 @@ namespace MonkeyLoader.Sync
                 }
 
                 if (!hasIgnoreAttribute)
-                    syncValueAccessorsByName.Add(property.Name, (TSyncObject instance) => (TSyncValue)property.GetValue(instance));
+                    syncValueAccessorsByName.Add(property.Name, (TSyncObject instance) => (TUnlinkedSyncValue)property.GetValue(instance));
             }
         }
 
@@ -207,8 +212,8 @@ namespace MonkeyLoader.Sync
 
         /// <remarks><para>
         /// <i>By default:</i> Sets up the <see cref="INotifyValueChanged.Changed"/> event handlers
-        /// and calls <see cref="EstablishLinkFor(TSyncValue, string, bool)">EstablishLinkFor</see>
-        /// for every <typeparamref name="TSyncValue"/> instance field / property on <typeparamref name="TSyncObject"/>.
+        /// and calls <see cref="EstablishLinkFor">EstablishLinkFor</see>
+        /// for every <typeparamref name="TUnlinkedSyncValue"/> instance field / property on <typeparamref name="TSyncObject"/>.
         /// </para><para>
         /// The detected fields / properties are stored in <see cref="syncValueAccessorsByName">syncValueAccessorsByName</see>.
         /// </para><para>
@@ -223,14 +228,11 @@ namespace MonkeyLoader.Sync
         {
             var success = true;
 
-            foreach (var syncValueProperty in syncValueAccessorsByName)
+            foreach (var syncValueAccessor in syncValueAccessorsByName)
             {
-                var syncValue = syncValueProperty.Value((TSyncObject)this);
+                var syncValue = syncValueAccessor.Value((TSyncObject)this);
 
-                syncValue.Changed += (sender, changedArgs)
-                    => OnPropertyChanged(syncValueProperty.Key);
-
-                success &= EstablishLinkFor(syncValue, syncValueProperty.Key, fromRemote);
+                success &= EstablishLinkFor(syncValue, syncValueAccessor.Key, fromRemote);
             }
 
             return success;
@@ -241,36 +243,33 @@ namespace MonkeyLoader.Sync
         /// </summary>
         /// <remarks>
         /// <i>By default:</i> Adds the given sync value to the <see cref="syncValues">set of instances</see> and calls
-        /// <c><paramref name="syncValue"/>.<see cref="IUnlinkedMonkeySyncValue{TLink, TSyncObject}.EstablishLinkFor">EstablishLinkFor</see>(…)</c>.
+        /// <c><paramref name="unlinkedSyncValue"/>.<see cref="IUnlinkedMonkeySyncValue{TLink, TSyncObject, TLinkedSyncValue}.EstablishLinkFor">EstablishLinkFor</see>(…)</c>.<br/>
+        /// If successful, the <see cref="OnPropertyChanged"/> handler is subscribed to
+        /// the <see cref="INotifyValueChanged.Changed"/> event of the linked value as well.
         /// </remarks>
-        /// <param name="syncValue">The sync value to link.</param>
+        /// <param name="unlinkedSyncValue">The sync value to link.</param>
         /// <param name="propertyName">The name of the sync value to link.</param>
         /// <param name="fromRemote">Whether the link is being established from the remote side.</param>
         /// <returns><c>true</c> if the link was successfully created; otherwise, <c>false</c>.</returns>
-        protected virtual bool EstablishLinkFor(TSyncValue syncValue, string propertyName, bool fromRemote)
+        protected virtual bool EstablishLinkFor(TUnlinkedSyncValue unlinkedSyncValue, string propertyName, bool fromRemote)
         {
-            syncValues.Add(syncValue);
-            return syncValue.EstablishLinkFor((TSyncObject)this, propertyName, fromRemote);
-        }
+            var linkedValue = unlinkedSyncValue.EstablishLinkFor((TSyncObject)this, propertyName, fromRemote);
 
-        /// <summary>
-        /// Creates a link for the given sync method of the given name.
-        /// </summary>
-        /// <remarks>
-        /// Any <typeparamref name="TSyncValue"/>s created for this
-        /// must be added to the <see cref="syncValues">set of instances</see>.
-        /// </remarks>
-        /// <param name="syncMethod">The sync method to link.</param>
-        /// <param name="methodName">The name of the sync method to link.</param>
-        /// <param name="fromRemote">Whether the link is being established from the remote side.</param>
-        /// <returns><c>true</c> if the link was successfully created; otherwise, <c>false</c>.</returns>
-        protected abstract bool EstablishLinkFor(Action syncMethod, string methodName, bool fromRemote);
+            if (linkedValue is null)
+                return false;
+
+            syncValues.Add(linkedValue);
+            linkedValue.Changed += (sender, changedArgs)
+                => OnPropertyChanged(propertyName);
+
+            return true;
+        }
 
         /// <summary>
         /// Cleans up any managed resources as part of <see cref="Dispose()">disposing</see>.
         /// </summary>
         /// <remarks>
-        /// <i>By default:</i> Disposes all <typeparamref name="TSyncValue"/> instances
+        /// <i>By default:</i> Disposes all <typeparamref name="TUnlinkedSyncValue"/> instances
         /// that were added to the <see cref="syncValues">set of instances</see>,
         /// and the <see cref="LinkObject">LinkObject</see> if it's <see cref="IDisposable"/>.
         /// </remarks>
@@ -318,7 +317,7 @@ namespace MonkeyLoader.Sync
         /// event with the given <paramref name="propertyName"/>.
         /// </summary>
         /// <remarks>
-        /// This is automatically called for any <typeparamref name="TSyncValue"/> fields / properties.
+        /// This is automatically called for any <typeparamref name="TUnlinkedSyncValue"/> fields / properties.
         /// </remarks>
         /// <param name="propertyName">The name of the property that changed.</param>
         protected void OnPropertyChanged(string propertyName)
@@ -329,9 +328,8 @@ namespace MonkeyLoader.Sync
         }
 
         /// <remarks><para>
-        /// <i>By default:</i> Calls <see cref="TryRestoreLinkFor(TSyncValue)">TryRestoreLinkFor</see>
-        /// for every <typeparamref name="TSyncValue"/> instance field on <typeparamref name="TSyncObject"/>.<br/>
-        /// The detected fields / properties are stored in <see cref="syncValueAccessorsByName">syncValueAccessorsByName</see>.
+        /// <i>By default:</i> Calls <see cref="TryRestoreLinkFor">TryRestoreLinkFor</see>
+        /// for every <typeparamref name="TLinkedSyncValue"/> in <see cref="syncValues"/>.
         /// </para><para>
         /// This method is called by <see cref="OnLinkInvalidated">OnLinkInvalidated</see>
         /// if <see cref="IsLinkValid">IsLinkValid</see> has become <c>false</c>.<br/>
@@ -344,8 +342,8 @@ namespace MonkeyLoader.Sync
         {
             var success = true;
 
-            foreach (var syncValues in syncValueAccessorsByName.Values)
-                success &= TryRestoreLinkFor(syncValues((TSyncObject)this));
+            foreach (var syncValue in syncValues)
+                success &= TryRestoreLinkFor(syncValue);
 
             return success;
         }
@@ -359,7 +357,7 @@ namespace MonkeyLoader.Sync
         /// </remarks>
         /// <param name="syncValue">The sync value to link.</param>
         /// <returns><c>true</c> if the link was successfully restored; otherwise, <c>false</c>.</returns>
-        protected virtual bool TryRestoreLinkFor(TSyncValue syncValue)
+        protected virtual bool TryRestoreLinkFor(TLinkedSyncValue syncValue)
             => syncValue.TryRestoreLink();
 
         private void Dispose(bool disposing)

@@ -12,12 +12,12 @@ namespace MonkeyLoader.Sync
     /// <summary>
     /// Defines the non-generic interface for <see cref="ILinkedMonkeySyncValue{TLink, T}"/>s.
     /// </summary>
-    /// <inheritdoc cref="ILinkedMonkeySyncValue{TLink, T}"/>
+    /// <inheritdoc cref="ILinkedMonkeySyncValue{TLink, TSyncObject, T}"/>
     public interface ILinkedMonkeySyncValue<out TLink, out TSyncObject> : INotifyValueChanged, IDisposable
         where TSyncObject : ILinkedMonkeySyncObject<TLink>
     {
         /// <summary>
-        /// Gets the <see cref="MonkeySyncObject{TSyncObject, TSyncValue, TLink}.LinkObject">LinkObject</see>
+        /// Gets the <see cref="MonkeySyncObject{TSyncObject, TSyncValue, TLinkedSyncValue, TLink}.LinkObject">LinkObject</see>
         /// of the <see cref="ILinkedMonkeySyncValue{TLink, TSyncObject}.SyncObject">SyncObject</see> that this value belongs to.
         /// </summary>
         public TLink LinkObject { get; }
@@ -70,7 +70,7 @@ namespace MonkeyLoader.Sync
     /// <remarks>
     /// This interface exists purely to facilitate keeping a covariant list of sync values.
     /// </remarks>
-    /// <inheritdoc cref="ILinkedMonkeySyncValue{TLink, T}"/>
+    /// <inheritdoc cref="ILinkedMonkeySyncValue{TLink, TSyncObject, T}"/>
     public interface IReadOnlyMonkeySyncValue<out TLink, out TSyncObject, out T> : ILinkedMonkeySyncValue<TLink, TSyncObject>
         where TSyncObject : ILinkedMonkeySyncObject<TLink>
     {
@@ -81,11 +81,12 @@ namespace MonkeyLoader.Sync
     }
 
     /// <summary>
-    /// Defines the interface for not yet linked <see cref="MonkeySyncValue{TLink, TSyncObject, T}"/>s.
+    /// Defines the interface for not yet linked <see cref="ILinkedMonkeySyncValue{TLink, TSyncObject, T}"/>s.
     /// </summary>
-    /// <inheritdoc cref="ILinkedMonkeySyncValue{TLink, T}"/>
-    public interface IUnlinkedMonkeySyncValue<TLink, TSyncObject> : ILinkedMonkeySyncValue<TLink, TSyncObject>
+    /// <inheritdoc cref="ILinkedMonkeySyncValue{TLink, TSyncObject, T}"/>
+    public interface IUnlinkedMonkeySyncValue<in TLink, in TSyncObject, out TLinkedSyncValue>
         where TSyncObject : ILinkedMonkeySyncObject<TLink>
+        where TLinkedSyncValue : ILinkedMonkeySyncValue<TLink, TSyncObject>
     {
         /// <summary>
         /// Establishes this sync value's association and link through the given sync object.
@@ -93,8 +94,8 @@ namespace MonkeyLoader.Sync
         /// <param name="syncObject">The sync object that this value belongs to.</param>
         /// <param name="name">The name of this sync value.</param>
         /// <param name="fromRemote">Whether the link is being established from the remote side.</param>
-        /// <returns><c>true</c> if the established link is valid; otherwise, <c>false</c>.</returns>
-        public bool EstablishLinkFor(TSyncObject syncObject, string name, bool fromRemote);
+        /// <returns>The linked sync value if the established link is valid; otherwise, <c>null</c>.</returns>
+        public TLinkedSyncValue? EstablishLinkFor(TSyncObject syncObject, string name, bool fromRemote);
     }
 
     /// <summary>
@@ -103,7 +104,7 @@ namespace MonkeyLoader.Sync
     /// <remarks>
     /// This interface exists purely to facilitate keeping a contravariant list of sync values.
     /// </remarks>
-    /// <inheritdoc cref="ILinkedMonkeySyncValue{TLink, T}"/>
+    /// <inheritdoc cref="ILinkedMonkeySyncValue{TLink, TSyncObject, T}"/>
     public interface IWriteOnlyMonkeySyncValue<out TLink, out TSyncObject, in T> : ILinkedMonkeySyncValue<TLink, TSyncObject>
         where TSyncObject : ILinkedMonkeySyncObject<TLink>
     {
@@ -116,9 +117,12 @@ namespace MonkeyLoader.Sync
     /// <summary>
     /// Implements an abstract base for <see cref="ILinkedMonkeySyncValue{TLink, T}"/>s.
     /// </summary>
-    /// <inheritdoc cref="ILinkedMonkeySyncValue{TLink, T}"/>
-    public abstract class MonkeySyncValue<TLink, TSyncObject, T> : IUnlinkedMonkeySyncValue<TLink, TSyncObject>, ILinkedMonkeySyncValue<TLink, TSyncObject, T>
+    /// <inheritdoc cref="ILinkedMonkeySyncValue{TLink, TSyncObject, T}"/>
+    public abstract class MonkeySyncValue<TLink, TSyncObject, TSyncValue, T>
+        : IUnlinkedMonkeySyncValue<TLink, TSyncObject, TSyncValue>,
+            ILinkedMonkeySyncValue<TLink, TSyncObject, T>
         where TSyncObject : class, ILinkedMonkeySyncObject<TLink>
+        where TSyncValue : MonkeySyncValue<TLink, TSyncObject, TSyncValue, T>
     {
         private static readonly Type _valueType = typeof(T);
 
@@ -180,7 +184,7 @@ namespace MonkeyLoader.Sync
         /// Unwraps the <see cref="Value">Value</see> from the given sync object.
         /// </summary>
         /// <param name="syncValue">The sync object to unwrap.</param>
-        public static implicit operator T(MonkeySyncValue<TLink, TSyncObject, T> syncValue) => syncValue.Value;
+        public static implicit operator T(MonkeySyncValue<TLink, TSyncObject, TSyncValue, T> syncValue) => syncValue.Value;
 
         /// <inheritdoc/>
         public void Dispose()
@@ -196,12 +200,12 @@ namespace MonkeyLoader.Sync
         /// Then calls the <see cref="EstablishLinkInternal">internal link method</see>.
         /// </remarks>
         /// <inheritdoc/>
-        public bool EstablishLinkFor(TSyncObject syncObject, string propertyName, bool fromRemote)
+        public TSyncValue? EstablishLinkFor(TSyncObject syncObject, string propertyName, bool fromRemote)
         {
             SyncObject = syncObject;
             Name = propertyName;
 
-            return EstablishLinkInternal(fromRemote);
+            return (TSyncValue?)(EstablishLinkInternal(fromRemote) ? this : null);
         }
 
         /// <inheritdoc/>
@@ -217,7 +221,7 @@ namespace MonkeyLoader.Sync
         /// have already been assigned by the <see cref="EstablishLinkFor">EstablishLinkFor</see>
         /// method that calls this.
         /// </remarks>
-        /// <inheritdoc cref="IUnlinkedMonkeySyncValue{TLink, TSyncObject}.EstablishLinkFor"/>
+        /// <inheritdoc cref="IUnlinkedMonkeySyncValue{TLink, TSyncObject, TLinkedSyncValue}.EstablishLinkFor"/>
         protected abstract bool EstablishLinkInternal(bool fromRemote);
 
         /// <summary>
