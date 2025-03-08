@@ -81,6 +81,13 @@ namespace MonkeyLoader.Sync
     /// <summary>
     /// Implements the abstract base for MonkeySync objects.
     /// </summary>
+    /// <remarks>
+    /// Automatically detects any instance fields / properties containing
+    /// MonkeySync values or methods compatible with <typeparamref name="TSyncValue"/>.<br/>
+    /// Property names take precedence over their backing fields.<br/>
+    /// Use the <see cref="IgnoreSyncValueAttribute"/> to mark fields / properties that should be ignored.
+    /// If a property is marked, its backing field will be ignored too.
+    /// </remarks>
     /// <typeparam name="TSyncObject">The concrete type of the MonkeySync object.</typeparam>
     /// <typeparam name="TSyncValue">
     /// The <see cref="IUnlinkedMonkeySyncValue{TLink}"/>-derived interface
@@ -93,21 +100,14 @@ namespace MonkeyLoader.Sync
         where TLink : class
     {
         /// <summary>
-        /// The <see cref="MethodInfo"/>s of the detected <see cref="MonkeySyncMethodAttribute">MonkeySync
-        /// methods</see> of this type by their name.
+        /// The getters for the automatically detected <typeparamref name="TSyncValue"/> instance fields / properties by their name.
         /// </summary>
-        protected static readonly Dictionary<string, MethodInfo> methodInfosByName = new(StringComparer.Ordinal);
-
-        /// <summary>
-        /// The getters for the detected <typeparamref name="TSyncValue"/> instance properties by their name.
-        /// </summary>
-        protected static readonly Dictionary<string, Func<TSyncObject, TSyncValue>> propertyAccessorsByName = new(StringComparer.Ordinal);
-
-        /// <summary>
-        /// The <see cref="Action"/>s to invoke the detected <see cref="MonkeySyncMethodAttribute">MonkeySync
-        /// methods</see> of this type by their name.
-        /// </summary>
-        protected readonly Dictionary<string, Action> methodsByName = new(StringComparer.Ordinal);
+        /// <remarks>
+        /// Property names take precedence over their backing fields.<br/>
+        /// Use the <see cref="IgnoreSyncValueAttribute"/> to mark fields / properties that should be ignored.
+        /// If a property is marked, its backing field will be ignored too.
+        /// </remarks>
+        protected static readonly Dictionary<string, Func<TSyncObject, TSyncValue>> syncValueAccessorsByName = new(StringComparer.Ordinal);
 
         /// <summary>
         /// The <typeparamref name="TSyncValue"/> instances associated with this sync object.
@@ -132,19 +132,34 @@ namespace MonkeyLoader.Sync
         static MonkeySyncObject()
         {
             var syncValueType = typeof(TSyncValue);
+            var syncValueFields = typeof(TSyncObject).GetFields(AccessTools.all)
+                .Where(field => !field.IsStatic && syncValueType.IsAssignableFrom(field.FieldType) && field.GetCustomAttribute<IgnoreSyncValueAttribute>() is null);
+
             var syncValueProperties = typeof(TSyncObject).GetProperties(AccessTools.all)
                 .Where(property => syncValueType.IsAssignableFrom(property.PropertyType) && (!(property.GetGetMethod()?.IsStatic ?? true)));
 
+            foreach (var field in syncValueFields)
+                syncValueAccessorsByName.Add(field.Name, (TSyncObject instance) => (TSyncValue)field.GetValue(instance));
+
             foreach (var property in syncValueProperties)
-                propertyAccessorsByName.Add(property.Name, (TSyncObject instance) => (TSyncValue)property.GetValue(instance));
+            {
+                var fieldName = $"<{property.Name}>";
+                var potentialField = syncValueAccessorsByName.FirstOrDefault(entry => entry.Key.Contains(fieldName));
+                var hasIgnoreAttribute = property.GetCustomAttribute<IgnoreSyncValueAttribute>() is null;
 
-            // Replace this with a special MonkeySyncMethod type that takes an action as the target
-            // The invoke method can then be overridden to for example set the user field that triggers the method.
-            var syncMethods = typeof(TSyncObject).GetMethods(AccessTools.all)
-                .Where(MonkeySyncMethodAttribute.IsValid);
+                if (potentialField.Value is not null)
+                {
+                    syncValueAccessorsByName.Remove(potentialField.Key);
 
-            foreach (var method in syncMethods)
-                methodInfosByName.Add(method.Name, method);
+                    if (!hasIgnoreAttribute)
+                        syncValueAccessorsByName.Add(property.Name, potentialField.Value);
+
+                    continue;
+                }
+
+                if (!hasIgnoreAttribute)
+                    syncValueAccessorsByName.Add(property.Name, (TSyncObject instance) => (TSyncValue)property.GetValue(instance));
+            }
         }
 
         /// <summary>
@@ -157,9 +172,6 @@ namespace MonkeyLoader.Sync
         {
             if (GetType() != typeof(TSyncObject))
                 throw new InvalidOperationException("TSyncObject must be the concrete Type being instantiated!");
-
-            foreach (var methodEntry in methodInfosByName)
-                methodsByName.Add(methodEntry.Key, AccessTools.MethodDelegate<Action>(methodEntry.Value, this));
         }
 
         /// <summary>
@@ -196,12 +208,9 @@ namespace MonkeyLoader.Sync
         /// <remarks><para>
         /// <i>By default:</i> Sets up the <see cref="INotifyValueChanged.Changed"/> event handlers
         /// and calls <see cref="EstablishLinkFor(TSyncValue, string, bool)">EstablishLinkFor</see>
-        /// for every readable <typeparamref name="TSyncValue"/> instance property and
-        /// <see cref="EstablishLinkFor(TSyncValue, string, bool)">its overload</see> for every
-        /// <see cref="MonkeySyncMethodAttribute">MonkeySync method</see> on <typeparamref name="TSyncObject"/>.
+        /// for every <typeparamref name="TSyncValue"/> instance field / property on <typeparamref name="TSyncObject"/>.
         /// </para><para>
-        /// The detected properties are stored in <see cref="propertyAccessorsByName">propertyAccessorsByName</see>,
-        /// while the detected methods are stored in <see cref="methodInfosByName">methodsByName</see>.
+        /// The detected fields / properties are stored in <see cref="syncValueAccessorsByName">syncValueAccessorsByName</see>.
         /// </para><para>
         /// This method is called by <see cref="LinkWith">LinkWith</see>
         /// after the <see cref="LinkObject">LinkObject</see> has been assigned.<br/>
@@ -214,7 +223,7 @@ namespace MonkeyLoader.Sync
         {
             var success = true;
 
-            foreach (var syncValueProperty in propertyAccessorsByName)
+            foreach (var syncValueProperty in syncValueAccessorsByName)
             {
                 var syncValue = syncValueProperty.Value((TSyncObject)this);
 
@@ -223,9 +232,6 @@ namespace MonkeyLoader.Sync
 
                 success &= EstablishLinkFor(syncValue, syncValueProperty.Key, fromRemote);
             }
-
-            foreach (var syncMethod in methodsByName)
-                success &= EstablishLinkFor(syncMethod.Value, syncMethod.Key, fromRemote);
 
             return success;
         }
@@ -312,7 +318,7 @@ namespace MonkeyLoader.Sync
         /// event with the given <paramref name="propertyName"/>.
         /// </summary>
         /// <remarks>
-        /// This is automatically called for any <typeparamref name="TSyncValue"/> properties.
+        /// This is automatically called for any <typeparamref name="TSyncValue"/> fields / properties.
         /// </remarks>
         /// <param name="propertyName">The name of the property that changed.</param>
         protected void OnPropertyChanged(string propertyName)
@@ -324,11 +330,8 @@ namespace MonkeyLoader.Sync
 
         /// <remarks><para>
         /// <i>By default:</i> Calls <see cref="TryRestoreLinkFor(TSyncValue)">TryRestoreLinkFor</see>
-        /// for every readable <typeparamref name="TSyncValue"/> instance property and
-        /// <see cref="TryRestoreLinkFor(Action, string)">its overload</see> for every
-        /// <see cref="MonkeySyncMethodAttribute">MonkeySync method</see> on <typeparamref name="TSyncObject"/>.<br/>
-        /// The detected properties are stored in <see cref="propertyAccessorsByName">propertyAccessorsByName</see>,
-        /// while the detected methods are stored in <see cref="methodInfosByName">methodsByName</see>.
+        /// for every <typeparamref name="TSyncValue"/> instance field on <typeparamref name="TSyncObject"/>.<br/>
+        /// The detected fields / properties are stored in <see cref="syncValueAccessorsByName">syncValueAccessorsByName</see>.
         /// </para><para>
         /// This method is called by <see cref="OnLinkInvalidated">OnLinkInvalidated</see>
         /// if <see cref="IsLinkValid">IsLinkValid</see> has become <c>false</c>.<br/>
@@ -341,11 +344,8 @@ namespace MonkeyLoader.Sync
         {
             var success = true;
 
-            foreach (var syncValues in propertyAccessorsByName.Values)
+            foreach (var syncValues in syncValueAccessorsByName.Values)
                 success &= TryRestoreLinkFor(syncValues((TSyncObject)this));
-
-            foreach (var syncMethod in methodsByName)
-                success &= TryRestoreLinkFor(syncMethod.Value, syncMethod.Key);
 
             return success;
         }
@@ -361,14 +361,6 @@ namespace MonkeyLoader.Sync
         /// <returns><c>true</c> if the link was successfully restored; otherwise, <c>false</c>.</returns>
         protected virtual bool TryRestoreLinkFor(TSyncValue syncValue)
             => syncValue.TryRestoreLink();
-
-        /// <summary>
-        /// Tries to restore the link for the given sync method of the given name.
-        /// </summary>
-        /// <param name="syncMethod">The sync method to link.</param>
-        /// <param name="methodName">The name of the sync method to link.</param>
-        /// <returns><c>true</c> if the link was successfully restored; otherwise, <c>false</c>.</returns>
-        protected abstract bool TryRestoreLinkFor(Action syncMethod, string methodName);
 
         private void Dispose(bool disposing)
         {

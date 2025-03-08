@@ -52,7 +52,7 @@ namespace MonkeyLoader.Sync
     /// <summary>
     /// Defines the generic interface for linked <see cref="MonkeySyncValue{TLink, T}"/>s.
     /// </summary>
-    /// <typeparam name="TLink">The type of the link object used by the sync object.</typeparam>
+    /// <typeparam name="TLink">The type of the link object used by the sync object that this sync value links to.</typeparam>
     /// <typeparam name="T">The type of the <see cref="ILinkedMonkeySyncValue{T}.Value">Value</see>.</typeparam>
     public interface ILinkedMonkeySyncValue<out TLink, T> : INotifyValueChanged<T>,
         IReadOnlyMonkeySyncValue<TLink, T>, IWriteOnlyMonkeySyncValue<TLink, T>
@@ -86,10 +86,10 @@ namespace MonkeyLoader.Sync
         /// Establishes this sync value's association and link through the given sync object.
         /// </summary>
         /// <param name="syncObject">The sync object that this value belongs to.</param>
-        /// <param name="propertyName">The property name of this sync value.</param>
+        /// <param name="name">The name of this sync value.</param>
         /// <param name="fromRemote">Whether the link is being established from the remote side.</param>
         /// <returns><c>true</c> if the established link is valid; otherwise, <c>false</c>.</returns>
-        public bool EstablishLinkFor(ILinkedMonkeySyncObject<TLink> syncObject, string propertyName, bool fromRemote);
+        public bool EstablishLinkFor(ILinkedMonkeySyncObject<TLink> syncObject, string name, bool fromRemote);
     }
 
     /// <summary>
@@ -153,7 +153,7 @@ namespace MonkeyLoader.Sync
         public Type ValueType => _valueType;
 
         /// <summary>
-        /// Creates a new sync object instance that wraps the given <paramref name="value"/>.
+        /// Creates a new sync value instance that wraps the given <paramref name="value"/>.
         /// </summary>
         /// <param name="value">The value to wrap.</param>
         public MonkeySyncValue(T value)
