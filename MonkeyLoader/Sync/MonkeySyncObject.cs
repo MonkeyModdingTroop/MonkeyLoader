@@ -22,7 +22,7 @@ namespace MonkeyLoader.Sync
 
     /// <summary>
     /// Defines the generic interface for <see cref="MonkeySyncObject{TSyncObject,
-    /// TSyncValues, TLink}">MonkeySync objects</see> that have been linked.
+    /// TUnlinkedSyncValue, TLinkedSyncValue, TLink}">MonkeySync objects</see> that have been linked.
     /// </summary>
     /// <typeparam name="TLink">The type of the link object used by the sync object.</typeparam>
     public interface ILinkedMonkeySyncObject<out TLink> : IMonkeySyncObject
@@ -33,7 +33,7 @@ namespace MonkeyLoader.Sync
 
     /// <summary>
     /// Defines the non-generic interface for <see cref="MonkeySyncObject{TSyncObject,
-    /// TSyncValues, TLink}">MonkeySync objects</see>.
+    /// TUnlinkedSyncValue, TLinkedSyncValue, TLink}">MonkeySync objects</see>.
     /// </summary>
     public interface IMonkeySyncObject : INotifyPropertyChanged, IDisposable
     {
@@ -57,7 +57,7 @@ namespace MonkeyLoader.Sync
 
     /// <summary>
     /// Defines the generic interface for <see cref="MonkeySyncObject{TSyncObject,
-    /// TSyncValues, TLink}">MonkeySync objects</see> that are yet to be linked.
+    /// TUnlinkedSyncValue, TLinkedSyncValue, TLink}">MonkeySync objects</see> that are yet to be linked.
     /// </summary>
     /// <inheritdoc/>
     public interface IUnlinkedMonkeySyncObject<TLink> : ILinkedMonkeySyncObject<TLink>
@@ -100,8 +100,8 @@ namespace MonkeyLoader.Sync
     /// <typeparam name="TLink">The type of the link object used by the sync object.</typeparam>
     public abstract class MonkeySyncObject<TSyncObject, TUnlinkedSyncValue, TLinkedSyncValue, TLink> : IUnlinkedMonkeySyncObject<TLink>
         where TSyncObject : MonkeySyncObject<TSyncObject, TUnlinkedSyncValue, TLinkedSyncValue, TLink>
-        where TLinkedSyncValue : ILinkedMonkeySyncValue<TLink, TSyncObject>
-        where TUnlinkedSyncValue : IUnlinkedMonkeySyncValue<TLink, TSyncObject, TLinkedSyncValue>
+        where TLinkedSyncValue : ILinkedMonkeySyncValue<TLink, ILinkedMonkeySyncObject<TLink>>
+        where TUnlinkedSyncValue : IUnlinkedMonkeySyncValue<TLink, ILinkedMonkeySyncObject<TLink>, TLinkedSyncValue>
         where TLink : class
     {
         /// <summary>
