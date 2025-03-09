@@ -117,7 +117,10 @@ namespace MonkeyLoader.Sync
     /// <summary>
     /// Implements an abstract base for <see cref="ILinkedMonkeySyncValue{TLink, T}"/>s.
     /// </summary>
-    /// <inheritdoc cref="ILinkedMonkeySyncValue{TLink, TSyncObject, T}"/>
+    /// <typeparam name="TLink">The type of the link object used by the sync object that this sync value links to.</typeparam>
+    /// <typeparam name="TSyncObject">The type of the sync object that may contain this sync value.</typeparam>
+    /// <typeparam name="TSyncValue">The concrete type of the sync value.</typeparam>
+    /// <typeparam name="T">The type of the <see cref="ILinkedMonkeySyncValue{T, TSyncObject}.Value">Value</see>.</typeparam>
     public abstract class MonkeySyncValue<TLink, TSyncObject, TSyncValue, T>
         : IUnlinkedMonkeySyncValue<TLink, TSyncObject, TSyncValue>,
             ILinkedMonkeySyncValue<TLink, TSyncObject, T>
