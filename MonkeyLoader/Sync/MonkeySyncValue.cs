@@ -51,7 +51,7 @@ namespace MonkeyLoader.Sync
     }
 
     /// <summary>
-    /// Defines the generic interface for linked <see cref="MonkeySyncValue{TLink, TSyncObject, T}"/>s.
+    /// Defines the generic interface for linked <see cref="MonkeySyncValue{TLink, TSyncObject, TSyncValue, T}"/>s.
     /// </summary>
     /// <typeparam name="TLink">The type of the link object used by the sync object that this sync value links to.</typeparam>
     /// <typeparam name="TSyncObject">The type of the sync object that may contain this sync value.</typeparam>
