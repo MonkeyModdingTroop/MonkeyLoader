@@ -11,7 +11,7 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>MonkeyLoader</Title>
     <Authors>Banane9</Authors>
-    <Version>0.24.1-beta</Version>
+    <Version>0.24.15-beta</Version>
     <Description>A convenience and extendability focused mod loader using NuGet packages.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
@@ -76,10 +76,10 @@
     <PackageReference Include="Ben.Demystifier" Version="0.4.1" />
     <PackageReference Include="EnumerableToolkit.Builder" Version="2.0.2" />
     <PackageReference Include="EnumerableToolkit.Builder.Async" Version="2.0.2" />
-    <PackageReference Include="Lib.Harmony.Thin" Version="2.3.3" />
+    <PackageReference Include="Lib.Harmony.Thin" Version="2.3.5" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="NuGet.Protocol" Version="6.11.0" />
-    <PackageReference Include="PolySharp" Version="1.14.1">
+    <PackageReference Include="NuGet.Protocol" Version="6.13.2" />
+    <PackageReference Include="PolySharp" Version="1.15.0">
       <Private>False</Private>
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -87,7 +87,7 @@
     <PackageReference Include="System.Linq.Async" Version="6.0.1" />
     <PackageReference Include="System.Text.Json" Version="9.0.0" />
     <PackageReference Include="System.ValueTuple" Version="4.5.0" />
-    <PackageReference Include="Zio" Version="0.19.2" />
+    <PackageReference Include="Zio" Version="0.20.0" />
     <!--<ProjectReference Include="..\MonkeyLoader.CodeGenerators\MonkeyLoader.CodeGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />-->
   </ItemGroup>
 
