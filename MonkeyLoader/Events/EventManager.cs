@@ -165,8 +165,19 @@ namespace MonkeyLoader.Events
         {
             ValidateLoader(mod);
 
-            foreach (var eventDispatcher in _eventDispatchers.GetCastableValues<IEventDispatcher>())
-                eventDispatcher.UnregisterMod(mod);
+            Logger.Info(() => $"Unregistering all event sources and handlers of mod: {mod}");
+
+            try
+            {
+                foreach (var eventDispatcher in _eventDispatchers.GetCastableValues<IEventDispatcher>())
+                    eventDispatcher.UnregisterMod(mod);
+            }
+            catch (Exception ex)
+            {
+                Logger.Error(ex.LogFormat($"Error while unregistering mod: {mod}"));
+            }
+
+            Logger.Info(() => $"Unregistered all event sources and handlers of mod: {mod}");
         }
 
         internal bool UnregisterSyncEventHandler<TEvent>(Mod mod, IEventHandler<TEvent> eventHandler)

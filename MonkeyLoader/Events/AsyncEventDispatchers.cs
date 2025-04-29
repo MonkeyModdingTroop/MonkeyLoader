@@ -8,14 +8,23 @@ using System.Threading.Tasks;
 
 namespace MonkeyLoader.Events
 {
+    /// <summary>
+    /// Concrete async dispatcher for <see cref="AsyncEvent"/>s.
+    /// </summary>
+    /// <inheritdoc cref="EventDispatcher{TEvent}"/>
     internal sealed class AsyncEventDispatcher<TEvent>
             : EventDispatcherBase<IAsyncEventSource<TEvent>, IAsyncEventHandler<TEvent>>
         where TEvent : AsyncEvent
     {
+        /// <summary>
+        /// Creates a new async dispatcher for the given <paramref name="manager"/>.
+        /// </summary>
+        /// <param name="manager">The manager that this dispatcher belongs to.</param>
         public AsyncEventDispatcher(EventManager manager)
             : base(manager, AccessTools.DeclaredMethod(typeof(AsyncEventDispatcher<TEvent>), nameof(RemoveSource)))
         { }
 
+        /// <inheritdoc cref="EventDispatcher{TEvent}.AddSource"/>
         public bool AddSource<TDerivedEvent>(Mod mod, IAsyncEventSource<TDerivedEvent> eventSource)
             where TDerivedEvent : TEvent
         {
@@ -30,6 +39,7 @@ namespace MonkeyLoader.Events
             return true;
         }
 
+        /// <inheritdoc cref="EventDispatcher{TEvent}.RemoveSource"/>
         public bool RemoveSource<TDerivedEvent>(Mod mod, IAsyncEventSource<TDerivedEvent> eventSource)
             where TDerivedEvent : TEvent
         {
@@ -61,28 +71,38 @@ namespace MonkeyLoader.Events
             where TDerivedEvent : TEvent => new(DispatchEventsAsync);
     }
 
+    /// <summary>
+    /// Concrete async dispatcher for <see cref="CancelableAsyncEvent"/>s.
+    /// </summary>
+    /// <inheritdoc cref="EventDispatcher{TEvent}"/>
     internal sealed class CancelableAsyncEventDispatcher<TEvent>
             : EventDispatcherBase<ICancelableAsyncEventSource<TEvent>, ICancelableAsyncEventHandler<TEvent>>
         where TEvent : CancelableAsyncEvent
     {
+        /// <summary>
+        /// Creates a new async dispatcher for the given <paramref name="manager"/>.
+        /// </summary>
+        /// <param name="manager">The manager that this dispatcher belongs to.</param>
         public CancelableAsyncEventDispatcher(EventManager manager)
             : base(manager, AccessTools.DeclaredMethod(typeof(CancelableAsyncEventDispatcher<TEvent>), nameof(RemoveSource)))
         { }
 
-        public bool AddSource<TDerivedEvent>(Mod mod, ICancelableAsyncEventSource<TDerivedEvent> eventSource)
+        /// <inheritdoc cref="EventDispatcher{TEvent}.AddSource"/>
+        public bool AddSource<TDerivedEvent>(Mod mod, ICancelableAsyncEventSource<TDerivedEvent> source)
             where TDerivedEvent : TEvent
         {
-            if (!AddSource(mod, typeof(TDerivedEvent), eventSource))
+            if (!AddSource(mod, typeof(TDerivedEvent), source))
                 return false;
 
             // Have to wrap the DispatchEvents method in the correct delegate type,
             // otherwise the event will throw when adding it, despite being compatible
             var eventDispatcher = eventDispatchers.GetOrCreateValue(MakeEventDispatcher<TDerivedEvent>);
-            eventSource.Dispatching += eventDispatcher;
+            source.Dispatching += eventDispatcher;
 
             return true;
         }
 
+        /// <inheritdoc cref="EventDispatcher{TEvent}.RemoveSource"/>
         public bool RemoveSource<TDerivedEvent>(Mod mod, ICancelableAsyncEventSource<TDerivedEvent> eventSource)
             where TDerivedEvent : TEvent
         {

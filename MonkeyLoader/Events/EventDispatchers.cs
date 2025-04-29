@@ -9,36 +9,46 @@ using System.Threading.Tasks;
 
 namespace MonkeyLoader.Events
 {
+    /// <summary>
+    /// Concrete dispatcher for <see cref="CancelableSyncEvent"/>s.
+    /// </summary>
+    /// <inheritdoc cref="EventDispatcher{TEvent}"/>
     internal sealed class CancelableEventDispatcher<TEvent>
             : EventDispatcherBase<ICancelableEventSource<TEvent>, ICancelableEventHandler<TEvent>>
         where TEvent : CancelableSyncEvent
     {
+        /// <summary>
+        /// Creates a new dispatcher for the given <paramref name="manager"/>.
+        /// </summary>
+        /// <param name="manager">The manager that this dispatcher belongs to.</param>
         public CancelableEventDispatcher(EventManager manager)
             : base(manager, AccessTools.DeclaredMethod(typeof(CancelableEventDispatcher<TEvent>), nameof(RemoveSource)))
         { }
 
-        public bool AddSource<TDerivedEvent>(Mod mod, ICancelableEventSource<TDerivedEvent> eventSource)
+        /// <inheritdoc cref="EventDispatcher{TEvent}.AddSource"/>
+        public bool AddSource<TDerivedEvent>(Mod mod, ICancelableEventSource<TDerivedEvent> source)
             where TDerivedEvent : TEvent
         {
-            if (!AddSource(mod, typeof(TDerivedEvent), eventSource))
+            if (!AddSource(mod, typeof(TDerivedEvent), source))
                 return false;
 
             // Have to wrap the DispatchEvents method in the correct delegate type,
             // otherwise the event will throw when adding it, despite being compatible
             var eventDispatcher = eventDispatchers.GetOrCreateValue(MakeEventDispatcher<TDerivedEvent>);
-            eventSource.Dispatching += eventDispatcher;
+            source.Dispatching += eventDispatcher;
 
             return true;
         }
 
-        public bool RemoveSource<TDerivedEvent>(Mod mod, ICancelableEventSource<TDerivedEvent> eventSource)
+        /// <inheritdoc cref="EventDispatcher{TEvent}.RemoveSource"/>
+        public bool RemoveSource<TDerivedEvent>(Mod mod, ICancelableEventSource<TDerivedEvent> source)
             where TDerivedEvent : TEvent
         {
-            if (!RemoveSource(mod, typeof(TDerivedEvent), eventSource))
+            if (!RemoveSource(mod, typeof(TDerivedEvent), source))
                 return false;
 
             var eventDispatcher = eventDispatchers.GetOrCreateValue(MakeEventDispatcher<TDerivedEvent>);
-            eventSource.Dispatching -= eventDispatcher;
+            source.Dispatching -= eventDispatcher;
 
             return true;
         }
@@ -68,36 +78,56 @@ namespace MonkeyLoader.Events
             where TDerivedEvent : TEvent => new(DispatchEvents);
     }
 
+    /// <summary>
+    /// Concrete dispatcher for <see cref="SyncEvent"/>s.
+    /// </summary>
+    /// <typeparam name="TEvent">The type of the dispatched events.</typeparam>
     internal sealed class EventDispatcher<TEvent>
             : EventDispatcherBase<IEventSource<TEvent>, IEventHandler<TEvent>>
         where TEvent : SyncEvent
     {
+        /// <summary>
+        /// Creates a new dispatcher for the given <paramref name="manager"/>.
+        /// </summary>
+        /// <param name="manager">The manager that this dispatcher belongs to.</param>
         public EventDispatcher(EventManager manager)
             : base(manager, AccessTools.DeclaredMethod(typeof(EventDispatcher<TEvent>), nameof(RemoveSource)))
         { }
 
-        public bool AddSource<TDerivedEvent>(Mod mod, IEventSource<TDerivedEvent> eventSource)
+        /// <summary>
+        /// Adds the <typeparamref name="TDerivedEvent"/> <paramref name="source"/>
+        /// from the given <paramref name="mod"/> to this dispatcher.
+        /// </summary>
+        /// <typeparam name="TDerivedEvent">The concrete type of the events created by the source.</typeparam>
+        /// <inheritdoc cref="EventDispatcherBase{TSource, THandler}.AddSource"/>
+        public bool AddSource<TDerivedEvent>(Mod mod, IEventSource<TDerivedEvent> source)
             where TDerivedEvent : TEvent
         {
-            if (!AddSource(mod, typeof(TDerivedEvent), eventSource))
+            if (!AddSource(mod, typeof(TDerivedEvent), source))
                 return false;
 
             // Have to wrap the DispatchEvents method in the correct delegate type,
             // otherwise the event will throw when adding it, despite being compatible
             var eventDispatcher = eventDispatchers.GetOrCreateValue(MakeEventDispatcher<TDerivedEvent>);
-            eventSource.Dispatching += eventDispatcher;
+            source.Dispatching += eventDispatcher;
 
             return true;
         }
 
-        public bool RemoveSource<TDerivedEvent>(Mod mod, IEventSource<TDerivedEvent> eventSource)
+        /// <summary>
+        /// Removes the <typeparamref name="TDerivedEvent"/> <paramref name="source"/>
+        /// from the given <paramref name="mod"/> from this dispatcher.
+        /// </summary>
+        /// <typeparam name="TDerivedEvent">The concrete type of the events created by the source.</typeparam>
+        /// <inheritdoc cref="EventDispatcherBase{TSource, THandler}.RemoveSource"/>
+        public bool RemoveSource<TDerivedEvent>(Mod mod, IEventSource<TDerivedEvent> source)
             where TDerivedEvent : TEvent
         {
-            if (!RemoveSource(mod, typeof(TDerivedEvent), eventSource))
+            if (!RemoveSource(mod, typeof(TDerivedEvent), source))
                 return false;
 
             var eventDispatcher = eventDispatchers.GetOrCreateValue(MakeEventDispatcher<TDerivedEvent>);
-            eventSource.Dispatching -= eventDispatcher;
+            source.Dispatching -= eventDispatcher;
 
             return true;
         }
