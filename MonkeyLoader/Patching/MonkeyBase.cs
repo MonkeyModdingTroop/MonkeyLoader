@@ -118,7 +118,7 @@ namespace MonkeyLoader.Patching
                 if (!CanBeDisabled)
                     return;
 
-                EnabledToggle = _mod.MonkeyToggles.GetToggle(this);
+                EnabledToggle = _mod.MonkeyToggles.GetToggle(this, OnComputeDefaultEnabledState);
                 EnabledToggle.Changed += OnActiveStateChanged;
             }
         }
@@ -243,6 +243,16 @@ namespace MonkeyLoader.Patching
         /// Gets the impacts this (pre-)patcher has on certain features.
         /// </summary>
         protected virtual IEnumerable<IFeaturePatch> GetFeaturePatches() => [];
+
+        /// <summary>
+        /// Lets this monkey compute the default value for its <see cref="EnabledToggle">EnabledToggle</see>.
+        /// </summary>
+        /// <remarks>
+        /// This method may return different values depending on the current state of the application.<br/>
+        /// <i>By default:</i> returns <c>true</c>.
+        /// </remarks>
+        /// <returns><c>true</c> if this monkey should be enabled by default; otherwise, <c>false</c>.</returns>
+        protected virtual bool OnComputeDefaultEnabledState() => true;
 
         /// <summary>
         /// Lets this monkey react to being disabled at runtime.<br/>
