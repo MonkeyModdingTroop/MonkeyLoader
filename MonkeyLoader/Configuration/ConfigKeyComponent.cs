@@ -1,4 +1,5 @@
 ﻿using MonkeyLoader.Components;
+using MonkeyLoader.Meta.Tagging;
 
 namespace MonkeyLoader.Configuration
 {
@@ -17,6 +18,9 @@ namespace MonkeyLoader.Configuration
         public static void Add<TKey>(this IEntity<TKey> configKey, IConfigKeyComponent<TKey> component)
             where TKey : class, IDefiningConfigKey, IEntity<TKey>
             => configKey.Components.Add(component);
+
+        public static void Add(this IDefiningConfigKey configKey, ITag tag)
+            => configKey.Tags.Add(tag);
     }
 
     /// <summary>

@@ -21,7 +21,6 @@ namespace MonkeyLoader.Meta
     public abstract partial class Mod : IConfigOwner, IShutdown, ILoadedNuGetPackage, IComparable<Mod>,
         INestedIdentifiableOwner<ConfigSection>, INestedIdentifiableOwner<IDefiningConfigKey>,
         IIdentifiableOwner<Mod, IMonkey>, IIdentifiableOwner<Mod, IEarlyMonkey>, IAuthorable
-
     {
         /// <summary>
         /// The file extension for mods' assemblies.

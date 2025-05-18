@@ -12,7 +12,7 @@ namespace MonkeyLoader.Meta
     /// </summary>
     public sealed class MonkeyTogglesConfigSection : ExpandoConfigSection
     {
-        private readonly Dictionary<IMonkey, IDefiningConfigKey<bool>> _togglesByMonkey = new();
+        private readonly Dictionary<IMonkey, IDefiningConfigKey<bool>> _togglesByMonkey = [];
 
         /// <inheritdoc/>
         public override string Description => "Contains toggles for the Monkeys of a mod which support disabling.";
@@ -44,8 +44,11 @@ namespace MonkeyLoader.Meta
         public static ITypedConfigKey<bool> GetTemplateKey(IMonkey monkey)
             => new ConfigKey<bool>(monkey.Id);
 
+        /// <summary>
+        /// Gets or creates the toggle config item for the given (early) monkey.
+        /// </summary>
         /// <remarks>
-        /// The default for toggles created with this method is <c>true</c>.
+        /// The default for toggles created with this method is always <c>true</c>.
         /// </remarks>
         /// <inheritdoc cref="GetToggle(IMonkey, Func{bool})"/>
         public IDefiningConfigKey<bool> GetToggle(IMonkey monkey)

@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MonkeyLoader.Meta.Tagging;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,13 +13,16 @@ namespace MonkeyLoader.Components
     /// that <see cref="IComponent{TEntity}"/> instances can belong to.
     /// </summary>
     /// <typeparam name="TEntity">The type of the entity.</typeparam>
-    public abstract class Entity<TEntity> : IEntity<TEntity>
+    public abstract class Entity<TEntity> : IEntity<TEntity>, ITaggable
         where TEntity : Entity<TEntity>
     {
         /// <inheritdoc/>
         public IComponentList<TEntity> Components { get; }
 
         TEntity IEntity<TEntity>.Self => (TEntity)this;
+
+        /// <inheritdoc/>
+        public TagCollection Tags { get; } = [];
 
         /// <summary>
         /// Creates a new entity instance, using <c>this</c> as the
