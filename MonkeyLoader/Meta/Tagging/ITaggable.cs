@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace MonkeyLoader.Meta.Tagging
+﻿namespace MonkeyLoader.Meta.Tagging
 {
     /// <summary>
     /// Defines the interface for object that support tagging using <see cref="ITag"/>s.

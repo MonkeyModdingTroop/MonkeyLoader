@@ -1,15 +1,10 @@
 ﻿namespace MonkeyLoader.Meta.Tagging
 {
     /// <summary>
-    /// Defines the non-generic interface for the tags of <see cref="ITaggable"/>s.
+    /// Defines the interface for the presence tags of <see cref="ITaggable"/>s.
     /// </summary>
     public interface ITag
     {
-        /// <summary>
-        /// Gets the data associated with this tag instance.
-        /// </summary>
-        public object? Data { get; }
-
         /// <summary>
         /// Gets the description for this type of tag.
         /// </summary>
@@ -30,16 +25,5 @@
         /// Implementations may default to the <see cref="Id">Id</see>.
         /// </remarks>
         public string Name { get; }
-    }
-
-    /// <summary>
-    /// Defines the generic interface for the tags of <see cref="ITaggable"/>s.
-    /// </summary>
-    public interface ITag<T> : ITag
-    {
-        /// <summary>
-        /// Gets the data associated with this tag instance.
-        /// </summary>
-        public new T Data { get; }
     }
 }

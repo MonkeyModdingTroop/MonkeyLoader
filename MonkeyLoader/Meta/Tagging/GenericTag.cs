@@ -4,10 +4,10 @@ using System.Collections.Generic;
 namespace MonkeyLoader.Meta.Tagging
 {
     /// <summary>
-    /// Represents a generic tag that can have any <see cref="Id">Id</see> and <see cref="Tag{T}.Data">Data</see>.
+    /// Represents a generic tag that can have any <see cref="Id">Id</see> and <see cref="DataTag{T}.Data">Data</see>.
     /// </summary>
     /// <inheritdoc/>
-    public sealed class GenericTag<T> : Tag<T>
+    public sealed class GenericTag<T> : DataTag<T>
     {
         private static readonly Dictionary<string, string> _descriptionsById = new(StringComparer.OrdinalIgnoreCase);
 
