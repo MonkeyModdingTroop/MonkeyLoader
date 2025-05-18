@@ -437,7 +437,7 @@ namespace MonkeyLoader.Configuration
     /// Defines the definition for a config item.
     /// </summary>
     public interface IDefiningConfigKey : ITypedConfigKey, IEntity<IDefiningConfigKey>,
-        INestedIdentifiable<ConfigSection>, IPrioritizable
+        INestedIdentifiable<ConfigSection>, IPrioritizable, ITaggable
     {
         /// <summary>
         /// Gets the config this item belongs to.
