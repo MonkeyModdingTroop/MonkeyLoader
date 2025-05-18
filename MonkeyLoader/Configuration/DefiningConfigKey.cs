@@ -11,6 +11,7 @@ using MonkeyLoader.Components;
 using System.Diagnostics.CodeAnalysis;
 using MonkeyLoader.Meta;
 using EnumerableToolkit;
+using MonkeyLoader.Meta.Tagging;
 
 namespace MonkeyLoader.Configuration
 {
@@ -80,7 +81,7 @@ namespace MonkeyLoader.Configuration
         public string Id => AsUntyped.Id;
 
         /// <inheritdoc/>
-        public bool InternalAccessOnly { get; }
+        public bool InternalAccessOnly => (Tags[nameof(ConfigAccessLevel)].OfType<ConfigAccessLevelTag>().FirstOrDefault()?.Data ?? ConfigAccessLevel.Regular) is ConfigAccessLevel.Internal;
 
         /// <inheritdoc/>
         public bool IsDefiningKey => true;
@@ -89,10 +90,10 @@ namespace MonkeyLoader.Configuration
 
         IIdentifiable INestedIdentifiable.Parent => Section;
 
-        /// <inheritdoc/>
         /// <remarks>
         /// Add a <see cref="IConfigKeyPriority">priority</see> component to this config key or set a value during initialization.
         /// </remarks>
+        /// <inheritdoc/>
         public int Priority
         {
             get => Components.TryGet<IConfigKeyPriority>(out var priorityComponent) ? priorityComponent.Priority : 0;
@@ -164,7 +165,8 @@ namespace MonkeyLoader.Configuration
             if (valueValidator is not null)
                 Components.Add(new ConfigKeyValidator<T>(valueValidator));
 
-            InternalAccessOnly = internalAccessOnly;
+            if (internalAccessOnly)
+                Tags.Add(new ConfigAccessLevelTag(ConfigAccessLevel.Internal));
 
             _canAlwaysHaveChanges = !ValueType.IsValueType
                 && !(typeof(INotifyPropertyChanged).IsAssignableFrom(ValueType) || typeof(INotifyCollectionChanged).IsAssignableFrom(ValueType));
