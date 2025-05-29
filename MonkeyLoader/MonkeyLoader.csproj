@@ -78,7 +78,7 @@
     <PackageReference Include="EnumerableToolkit.Builder.Async" Version="2.0.2" />
     <PackageReference Include="Lib.Harmony.Thin" Version="2.3.6" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="NuGet.Protocol" Version="6.13.2" />
+    <PackageReference Include="NuGet.Protocol" Version="6.14.0" />
     <PackageReference Include="PolySharp" Version="1.15.0">
       <Private>False</Private>
       <PrivateAssets>all</PrivateAssets>
