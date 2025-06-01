@@ -11,6 +11,10 @@ namespace MonkeyLoader.Events
     /// </summary>
     public abstract class AsyncEvent : Event
     {
+        /// <value>Always <see langword="true"/>.</value>
+        /// <inheritdoc/>
+        public override sealed bool IsAsync => true;
+
         /// <summary>
         /// Initializes this asynchronous event.
         /// </summary>
@@ -23,8 +27,12 @@ namespace MonkeyLoader.Events
     /// </summary>
     public abstract class CancelableAsyncEvent : AsyncEvent, ICancelableEvent
     {
+        /// <value>Always <see langword="true"/>.</value>
         /// <inheritdoc/>
         public bool Canceled { get; set; }
+
+        /// <inheritdoc/>
+        public override sealed bool IsCancelable => true;
 
         /// <summary>
         /// Initializes this cancelable asynchronous event.
