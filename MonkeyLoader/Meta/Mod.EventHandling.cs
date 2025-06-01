@@ -24,7 +24,7 @@ namespace MonkeyLoader.Meta
         /// <returns><c>true</c> if the <paramref name="eventHandler"/> was newly registered; otherwise, <c>false</c>.</returns>
         public bool RegisterEventHandler<TEvent>(IEventHandler<TEvent> eventHandler)
             where TEvent : SyncEvent
-            => Loader.EventManager.RegisterSyncEventHandler(this, eventHandler);
+            => Loader.EventManager.RegisterEventHandler(this, eventHandler);
 
         /// <summary>
         /// Registers the given <see cref="ICancelableEventHandler{TEvent}">cancelable event handler</see> for this mod.
@@ -37,7 +37,7 @@ namespace MonkeyLoader.Meta
         /// <returns><c>true</c> if the <paramref name="cancelableEventHandler"/> was newly registered; otherwise, <c>false</c>.</returns>
         public bool RegisterEventHandler<TEvent>(ICancelableEventHandler<TEvent> cancelableEventHandler)
             where TEvent : CancelableSyncEvent
-            => Loader.EventManager.RegisterCancelableSyncEventHandler(this, cancelableEventHandler);
+            => Loader.EventManager.RegisterEventHandler(this, cancelableEventHandler);
 
         /// <summary>
         /// Registers the given <see cref="IAsyncEventHandler{TEvent}">async event handler</see> for this mod.
@@ -50,7 +50,7 @@ namespace MonkeyLoader.Meta
         /// <returns><c>true</c> if the <paramref name="asyncEventHandler"/> was newly registered; otherwise, <c>false</c>.</returns>
         public bool RegisterEventHandler<TEvent>(IAsyncEventHandler<TEvent> asyncEventHandler)
             where TEvent : AsyncEvent
-            => Loader.EventManager.RegisterAsyncEventHandler(this, asyncEventHandler);
+            => Loader.EventManager.RegisterEventHandler(this, asyncEventHandler);
 
         /// <summary>
         /// Registers the given <see cref="ICancelableEventHandler{TEvent}">cancelable async event handler</see> for this mod.
@@ -63,7 +63,7 @@ namespace MonkeyLoader.Meta
         /// <returns><c>true</c> if the <paramref name="cancelableAsyncEventHandler"/> was newly registered; otherwise, <c>false</c>.</returns>
         public bool RegisterEventHandler<TEvent>(ICancelableAsyncEventHandler<TEvent> cancelableAsyncEventHandler)
             where TEvent : CancelableAsyncEvent
-            => Loader.EventManager.RegisterCancelableAsyncEventHandler(this, cancelableAsyncEventHandler);
+            => Loader.EventManager.RegisterEventHandler(this, cancelableAsyncEventHandler);
 
         /// <summary>
         /// Registers the given <see cref="IEventSource{TEvent}">event source</see> for this mod.
@@ -128,7 +128,7 @@ namespace MonkeyLoader.Meta
         /// <returns><c>true</c> if the <paramref name="eventHandler"/> was found and unregistered; otherwise, <c>false</c>.</returns>
         public bool UnregisterEventHandler<TEvent>(IEventHandler<TEvent> eventHandler)
             where TEvent : SyncEvent
-            => Loader.EventManager.UnregisterSyncEventHandler(this, eventHandler);
+            => Loader.EventManager.UnregisterEventHandler(this, eventHandler);
 
         /// <summary>
         /// Unregisters the given <see cref="ICancelableEventHandler{TEvent}">cancelable event handler</see> for this mod.
@@ -141,7 +141,7 @@ namespace MonkeyLoader.Meta
         /// <returns><c>true</c> if the <paramref name="cancelableEventHandler"/> was found and unregistered; otherwise, <c>false</c>.</returns>
         public bool UnregisterEventHandler<TEvent>(ICancelableEventHandler<TEvent> cancelableEventHandler)
             where TEvent : CancelableSyncEvent
-            => Loader.EventManager.UnregisterCancelableSyncEventHandler(this, cancelableEventHandler);
+            => Loader.EventManager.UnregisterEventHandler(this, cancelableEventHandler);
 
         /// <summary>
         /// Unregisters the given <see cref="IAsyncEventHandler{TEvent}">event handler</see> for this mod.
@@ -154,7 +154,7 @@ namespace MonkeyLoader.Meta
         /// <returns><c>true</c> if the <paramref name="asyncEventHandler"/> was found and unregistered; otherwise, <c>false</c>.</returns>
         public bool UnregisterEventHandler<TEvent>(IAsyncEventHandler<TEvent> asyncEventHandler)
             where TEvent : AsyncEvent
-            => Loader.EventManager.UnregisterAsyncEventHandler(this, asyncEventHandler);
+            => Loader.EventManager.UnregisterEventHandler(this, asyncEventHandler);
 
         /// <summary>
         /// Unregisters the given <see cref="ICancelableEventHandler{TEvent}">cancelable async event handler</see> for this mod.
@@ -167,7 +167,7 @@ namespace MonkeyLoader.Meta
         /// <returns><c>true</c> if the <paramref name="cancelableAsyncEventHandler"/> was found and unregistered; otherwise, <c>false</c>.</returns>
         public bool UnregisterEventHandler<TEvent>(ICancelableAsyncEventHandler<TEvent> cancelableAsyncEventHandler)
             where TEvent : CancelableAsyncEvent
-            => Loader.EventManager.UnregisterCancelableAsyncEventHandler(this, cancelableAsyncEventHandler);
+            => Loader.EventManager.UnregisterEventHandler(this, cancelableAsyncEventHandler);
 
         /// <summary>
         /// Unregisters the given <see cref="IEventSource{TEvent}">event source</see> for this mod.

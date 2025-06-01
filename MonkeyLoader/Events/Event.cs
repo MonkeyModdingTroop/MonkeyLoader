@@ -14,10 +14,9 @@ namespace MonkeyLoader.Events
     /// </summary>
     public abstract partial class Event
     {
-        private static readonly Type _asyncEventType = typeof(AsyncEvent);
-
         private static readonly HashSet<Type> _baseTypes;
 
+        private static readonly Type _asyncEventType = typeof(AsyncEvent);
         private static readonly Type _cancelableAsyncEventType = typeof(CancelableAsyncEvent);
         private static readonly Type _cancelableEventType = typeof(ICancelableEvent);
         private static readonly Type _cancelableSyncEventType = typeof(CancelableSyncEvent);
@@ -46,7 +45,7 @@ namespace MonkeyLoader.Events
         }
 
         // Make sure this stays private protected
-        internal Event()
+        private protected Event()
         { }
 
         /// <summary>
@@ -66,20 +65,20 @@ namespace MonkeyLoader.Events
             => _baseTypes.Contains(type);
 
         /// <summary>
-        /// Determines whether the given <see cref="Event"/> <see cref="Type"/> is cancelable.
-        /// </summary>
-        /// <param name="eventType">The concrete <see cref="Event"/> <see cref="Type"/> to check.</param>
-        /// <returns><c>true</c> if it is cancelable; otherwise, <c>false</c>.</returns>
-        public static bool IsCancelable(Type eventType)
-            => _cancelableEventType.IsAssignableFrom(eventType);
-
-        /// <summary>
         /// Determines whether the given <see cref="Event"/> <see cref="Type"/> is a <see cref="CancelableAsyncEvent"/>.
         /// </summary>
         /// <param name="eventType">The concrete <see cref="Event"/> <see cref="Type"/> to check.</param>
         /// <returns><c>true</c> if it is a <see cref="CancelableAsyncEvent"/>; otherwise, <c>false</c>.</returns>
         public static bool IsCancelableAsyncEvent(Type eventType)
             => _cancelableAsyncEventType.IsAssignableFrom(eventType);
+
+        /// <summary>
+        /// Determines whether the given <see cref="Event"/> <see cref="Type"/> is cancelable.
+        /// </summary>
+        /// <param name="eventType">The concrete <see cref="Event"/> <see cref="Type"/> to check.</param>
+        /// <returns><c>true</c> if it is cancelable; otherwise, <c>false</c>.</returns>
+        public static bool IsCancelableEvent(Type eventType)
+            => _cancelableEventType.IsAssignableFrom(eventType);
 
         /// <summary>
         /// Determines whether the given <see cref="Event"/> <see cref="Type"/> is a <see cref="CancelableSyncEvent"/>.
