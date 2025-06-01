@@ -39,8 +39,7 @@ namespace MonkeyLoader.Events
         /// </summary>
         /// <remarks>
         /// When this method sets <c><paramref name="eventData"/>.<see cref="CancelableAsyncEvent.Canceled">Canceled</see>
-        /// = true</c>, the default action should be prevented from happening and further
-        /// <see cref="ICancelableAsyncEventHandler{TEvent}">async event handlers</see> may be skipped.
+        /// = <see langword="true"/></c>, the remaining <see cref="ICancelableAsyncEventHandler{TEvent}">async event handlers</see> may be skipped.
         /// </remarks>
         /// <param name="eventData">An object containing all the relevant information for the async event.</param>
         public Task Handle(TEvent eventData);

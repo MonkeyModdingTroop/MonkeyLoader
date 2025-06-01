@@ -25,7 +25,7 @@ namespace MonkeyLoader.Events
         /// </summary>
         /// <remarks>
         /// When this method sets <c><paramref name="eventData"/>.<see cref="CancelableSyncEvent.Canceled">Canceled</see>
-        /// = true</c>, the default action should be prevented from happening and further event handlers may be skipped.
+        /// = <see langword="true"/></c>, the remaining <see cref="ICancelableEventHandler{TEvent}">event handlers</see> may be skipped.
         /// </remarks>
         /// <param name="eventData">An object containing all the relevant information for the cancelable event.</param>
         public void Handle(TEvent eventData);
