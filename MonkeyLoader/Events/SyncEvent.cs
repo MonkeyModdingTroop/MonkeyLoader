@@ -14,6 +14,10 @@ namespace MonkeyLoader.Events
         /// <inheritdoc/>
         public bool Canceled { get; set; }
 
+        /// <value>Always <see langword="true"/>.</value>
+        /// <inheritdoc/>
+        public override sealed bool IsCancelable => true;
+
         /// <summary>
         /// Initializes this cancelable synchronous event.
         /// </summary>
@@ -26,6 +30,10 @@ namespace MonkeyLoader.Events
     /// </summary>
     public abstract class SyncEvent : Event
     {
+        /// <value>Always <see langword="false"/>.</value>
+        /// <inheritdoc/>
+        public override sealed bool IsAsync => false;
+
         /// <summary>
         /// Initializes this synchronous event.
         /// </summary>

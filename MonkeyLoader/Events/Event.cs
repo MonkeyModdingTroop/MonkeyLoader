@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -11,7 +12,7 @@ namespace MonkeyLoader.Events
     /// Marks the base for all event data classes.<br/>
     /// Also contains static helper methods.
     /// </summary>
-    public abstract class Event
+    public abstract partial class Event
     {
         private static readonly Type _asyncEventType = typeof(AsyncEvent);
 
@@ -23,42 +24,30 @@ namespace MonkeyLoader.Events
         private static readonly Type _eventType = typeof(Event);
         private static readonly Type _syncEventType = typeof(SyncEvent);
 
+        /// <summary>
+        /// Gets whether this event is an <see cref="AsyncEvent"/>.
+        /// </summary>
+        public abstract bool IsAsync { get; }
+
+        /// <summary>
+        /// Gets whether this event can be <see cref="ICancelableEvent.Canceled">canceled</see>.
+        /// </summary>
+        /// <value><see langword="true"/> if this event implements <see cref="ICancelableEvent"/>; otherwise, <see langword="false"/>.</value>
+        public virtual bool IsCancelable => this is ICancelableEvent;
+
         static Event()
         {
-            _baseTypes = new()
-            {
+            _baseTypes =
+            [
                 typeof(object), _eventType,
                 _syncEventType, _cancelableSyncEventType,
                 _asyncEventType, _cancelableAsyncEventType
-            };
+            ];
         }
 
+        // Make sure this stays private protected
         internal Event()
         { }
-
-        /// <summary>
-        /// Enumerates all <see cref="Type"/>s in the given <see cref="Event"/> <see cref="Type"/>'s
-        /// hierarchy which events should be <see cref="DispatchableBaseEventAttribute">dispatched</see> for.
-        /// </summary>
-        /// <param name="eventType">The concrete <see cref="Event"/> <see cref="Type"/> to dispatch.</param>
-        /// <returns>The concrete <paramref name="eventType"/> and any <see cref="DispatchableBaseEventAttribute">dispatchable</see> base <see cref="Type"/>s.</returns>
-        public static IEnumerable<Type> GetDispatchableEventTypes(Type eventType)
-        {
-            if (!IsEvent(eventType) || _baseTypes.Contains(eventType))
-                yield break;
-
-            yield return eventType;
-
-            eventType = eventType.BaseType;
-
-            while (!_baseTypes.Contains(eventType))
-            {
-                if (eventType.GetCustomAttribute<DispatchableBaseEventAttribute>() is not null)
-                    yield return eventType;
-
-                eventType = eventType.BaseType;
-            }
-        }
 
         /// <summary>
         /// Determines whether the given <see cref="Event"/> <see cref="Type"/> is an <see cref="AsyncEvent"/>.
@@ -67,6 +56,14 @@ namespace MonkeyLoader.Events
         /// <returns><c>true</c> if it is an <see cref="AsyncEvent"/>; otherwise, <c>false</c>.</returns>
         public static bool IsAsyncEvent(Type eventType)
             => _asyncEventType.IsAssignableFrom(eventType);
+
+        /// <summary>
+        /// Determines whether the given <see cref="Type"/> is a base <see cref="Event"/>.
+        /// </summary>
+        /// <param name="type">The <see cref="Type"/> to check.</param>
+        /// <returns><c>true</c> if it is a base <see cref="Event"/>; otherwise, <c>false</c>.</returns>
+        public static bool IsBaseEvent(Type type)
+            => _baseTypes.Contains(type);
 
         /// <summary>
         /// Determines whether the given <see cref="Event"/> <see cref="Type"/> is cancelable.
