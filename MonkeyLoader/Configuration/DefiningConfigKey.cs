@@ -234,6 +234,9 @@ namespace MonkeyLoader.Configuration
         }
 
         /// <inheritdoc/>
+        public override string ToString() => $"{Id} ({(_value is null ? "null" : _value.ToString())})";
+
+        /// <inheritdoc/>
         bool IDefiningConfigKey.TryComputeDefault(out object? defaultValue)
         {
             var success = TryComputeDefault(out var defaultTypedValue);
