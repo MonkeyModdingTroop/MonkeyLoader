@@ -7,50 +7,71 @@ using System.Text;
 namespace MonkeyLoader.Events
 {
     /// <summary>
-    /// Marks an <see cref="Event"/>-derived class as to be dispatched,
-    /// even if it's only a base class of the concrete event coming from the source.
+    /// Marks an <see cref="Event"/>-derived class as a useful base class of
+    /// the more derived instances dispatched by sources.<br/>
+    /// This causes sources dispatching derived event types to
+    /// dispatch events for the marked class too.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    public sealed class DispatchableBaseEventAttribute : MonkeyLoaderAttribute
+    /// <remarks>
+    /// This is primarily intended for events where multiple sources may dispatch more
+    /// concrete versions, but where the marked base event can be useful by itself.
+    /// </remarks>
+    public sealed class DispatchableBaseEventAttribute : EventAttribute
     { }
 
     public abstract partial class Event
     {
-        private static readonly Dictionary<Type, ImmutableArray<Type>> _dispatchableEventTypesByConcreteType = [];
+        private static readonly Dictionary<Type, ImmutableArray<Type>> _dispatchableBaseEventTypesByConcreteType = [];
 
         /// <summary>
-        /// Enumerates all <see cref="Type"/>s in the given <see cref="Event"/> <see cref="Type"/>'s
-        /// hierarchy which events should be <see cref="DispatchableBaseEventAttribute">dispatched</see> for.
+        /// Enumerates all <see cref="DispatchableBaseEventAttribute">dispatchable</see>
+        /// base <see cref="Type"/>s of the given <paramref name="eventType"/>.
         /// </summary>
-        /// <param name="eventType">The concrete <see cref="Event"/> <see cref="Type"/> to dispatch.</param>
-        /// <returns>The concrete <paramref name="eventType"/> and any <see cref="DispatchableBaseEventAttribute">dispatchable</see> base <see cref="Type"/>s.</returns>
-        public static IEnumerable<Type> GetDispatchableEventTypes(Type eventType)
+        /// <param name="eventType">The concrete <see cref="Event"/> <see cref="Type"/> being analyzed.</param>
+        /// <returns>Any <see cref="DispatchableBaseEventAttribute">dispatchable</see> base <see cref="Type"/>s of the <paramref name="eventType"/>.</returns>
+        public static IEnumerable<Type> GetDispatchableBaseEventTypes(Type eventType)
         {
             if (!IsEvent(eventType) || IsBaseEvent(eventType))
                 return ImmutableArray<Type>.Empty;
 
-            if (!_dispatchableEventTypesByConcreteType.TryGetValue(eventType, out var dispatchableEventTypes))
+            if (!_dispatchableBaseEventTypesByConcreteType.TryGetValue(eventType, out var baseEvents))
             {
-                dispatchableEventTypes = GetDispatchableEventTypesInternal(eventType).ToImmutableArray();
-                _dispatchableEventTypesByConcreteType.Add(eventType, dispatchableEventTypes);
+                baseEvents = GetDispatchableEventTypesInternal(eventType.BaseType);
+                _dispatchableBaseEventTypesByConcreteType.Add(eventType, baseEvents);
             }
 
-            return dispatchableEventTypes;
+            return baseEvents;
         }
 
-        private static IEnumerable<Type> GetDispatchableEventTypesInternal(Type eventType)
+        /// <summary>
+        /// Enumerates all <see cref="Type"/>s in the given <see cref="Event"/> <see cref="Type"/>'s
+        /// hierarchy which sources for the <paramref name="eventType"/> should dispatch for.
+        /// </summary>
+        /// <param name="eventType">The concrete <see cref="Event"/> <see cref="Type"/> being analyzed.</param>
+        /// <returns>The <paramref name="eventType"/> and any <see cref="DispatchableBaseEventAttribute">dispatchable</see> base <see cref="Type"/>s of it.</returns>
+        public static IEnumerable<Type> GetDispatchableEventTypes(Type eventType)
         {
+            if (!IsEvent(eventType) || IsBaseEvent(eventType))
+                yield break;
+
             yield return eventType;
 
-            eventType = eventType.BaseType;
+            foreach (var baseEventType in GetDispatchableBaseEventTypes(eventType))
+                yield return baseEventType;
+        }
 
-            while (!IsBaseEvent(eventType))
-            {
-                if (eventType.GetCustomAttribute<DispatchableBaseEventAttribute>() is not null)
-                    yield return eventType;
+        private static ImmutableArray<Type> GetDispatchableEventTypesInternal(Type eventType)
+        {
+            if (IsBaseEvent(eventType))
+                return ImmutableArray<Type>.Empty;
 
-                eventType = eventType.BaseType;
-            }
+            if (!_dispatchableBaseEventTypesByConcreteType.TryGetValue(eventType, out var dispatchableBaseEventTypes))
+                dispatchableBaseEventTypes = GetDispatchableEventTypesInternal(eventType.BaseType);
+
+            if (eventType.GetCustomAttribute<DispatchableBaseEventAttribute>() is not null)
+                dispatchableBaseEventTypes = dispatchableBaseEventTypes.Insert(0, eventType);
+
+            return dispatchableBaseEventTypes;
         }
     }
 }

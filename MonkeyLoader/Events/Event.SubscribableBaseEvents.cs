@@ -1,23 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text;
 
 namespace MonkeyLoader.Events
 {
-    [SuppressMessage("Style", "IDE0301:Simplify collection initialization", Justification = "This is a lie - ImmutableArray<T> can't be created with [].")]
     public abstract partial class Event
     {
         private static readonly Dictionary<Type, ImmutableArray<Type>> _subscribableBaseEventTypesByConcreteType = [];
 
         /// <summary>
-        /// Enumerates all <see cref="SubscribableBaseEventAttribute">generic</see> base <see cref="Type"/>s
-        /// of the given <paramref name="eventType"/>.
+        /// Enumerates all <see cref="SubscribableBaseEventAttribute">subscribable</see>
+        /// base <see cref="Type"/>s of the given <paramref name="eventType"/>.
         /// </summary>
         /// <param name="eventType">The concrete <see cref="Event"/> <see cref="Type"/> being analyzed.</param>
-        /// <returns>Any <see cref="SubscribableBaseEventAttribute">generic</see> base <see cref="Type"/>s of the <paramref name="eventType"/>.</returns>
+        /// <returns>Any <see cref="SubscribableBaseEventAttribute">subscribable</see> base <see cref="Type"/>s of the <paramref name="eventType"/>.</returns>
         public static IEnumerable<Type> GetSubscribableBaseEventTypes(Type eventType)
         {
             if (!IsEvent(eventType) || IsBaseEvent(eventType))
@@ -34,19 +32,19 @@ namespace MonkeyLoader.Events
 
         /// <summary>
         /// Enumerates all <see cref="Type"/>s in the given <see cref="Event"/> <see cref="Type"/>'s
-        /// hierarchy which more concrete event handlers should be subscribed to.
+        /// hierarchy which handlers for the <paramref name="eventType"/> should be subscribed to.
         /// </summary>
         /// <param name="eventType">The concrete <see cref="Event"/> <see cref="Type"/> being handled.</param>
-        /// <returns>Any <see cref="SubscribableBaseEventAttribute">generic</see> base <see cref="Type"/>s of the <paramref name="eventType"/> and itself.</returns>
+        /// <returns>The <paramref name="eventType"/> and any <see cref="SubscribableBaseEventAttribute">subscribable</see> base <see cref="Type"/>s of it.</returns>
         public static IEnumerable<Type> GetSubscribableEventTypes(Type eventType)
         {
             if (!IsEvent(eventType) || IsBaseEvent(eventType))
                 yield break;
 
+            yield return eventType;
+
             foreach (var baseEventType in GetSubscribableBaseEventTypes(eventType))
                 yield return baseEventType;
-
-            yield return eventType;
         }
 
         private static ImmutableArray<Type> GetSubscribableBaseEventTypesInternal(Type eventType)
@@ -58,7 +56,7 @@ namespace MonkeyLoader.Events
                 subscribableBaseEventTypes = GetSubscribableBaseEventTypesInternal(eventType.BaseType);
 
             if (eventType.GetCustomAttribute<SubscribableBaseEventAttribute>() is not null)
-                subscribableBaseEventTypes = subscribableBaseEventTypes.Add(eventType);
+                subscribableBaseEventTypes = subscribableBaseEventTypes.Insert(0, eventType);
 
             return subscribableBaseEventTypes;
         }
@@ -75,7 +73,6 @@ namespace MonkeyLoader.Events
     /// This is primarily intended for sources dispatching different event classes
     /// that involve a generic parameter, to avoid having to exhaustively list them.
     /// </remarks>
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    public sealed class SubscribableBaseEventAttribute : MonkeyLoaderAttribute
+    public sealed class SubscribableBaseEventAttribute : EventAttribute
     { }
 }

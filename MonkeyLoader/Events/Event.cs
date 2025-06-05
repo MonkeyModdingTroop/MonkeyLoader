@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -12,11 +12,11 @@ namespace MonkeyLoader.Events
     /// Marks the base for all event data classes.<br/>
     /// Also contains static helper methods.
     /// </summary>
+    [SuppressMessage("Style", "IDE0301:Simplify collection initialization", Justification = "This is a lie - ImmutableArray<T> can't be created with [].")]
     public abstract partial class Event
     {
-        private static readonly HashSet<Type> _baseTypes;
-
         private static readonly Type _asyncEventType = typeof(AsyncEvent);
+        private static readonly HashSet<Type> _baseTypes;
         private static readonly Type _cancelableAsyncEventType = typeof(CancelableAsyncEvent);
         private static readonly Type _cancelableEventType = typeof(ICancelableEvent);
         private static readonly Type _cancelableSyncEventType = typeof(CancelableSyncEvent);
@@ -104,4 +104,14 @@ namespace MonkeyLoader.Events
         public static bool IsSyncEvent(Type eventType)
             => _syncEventType.IsAssignableFrom(eventType);
     }
+
+    /// <summary>
+    /// Base class for all <see cref="Attribute"/>s marking <see cref="Event"/>s.
+    /// </summary>
+    /// <remarks>
+    /// These control how the event types are treated by sources and handlers for more derived types.
+    /// </remarks>
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+    public abstract class EventAttribute : MonkeyLoaderAttribute
+    { }
 }
