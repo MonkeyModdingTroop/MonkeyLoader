@@ -1,7 +1,7 @@
 using System.Collections.Specialized;
-using System.ComponentModel;
 using System;
 using System.Diagnostics.CodeAnalysis;
+using MonkeyLoader.Meta;
 
 namespace MonkeyLoader.Configuration
 {
@@ -24,14 +24,8 @@ namespace MonkeyLoader.Configuration
     /// Represents the data for the <see cref="Config.ItemChanged"/> and <see cref="MonkeyLoader.AnyConfigChanged"/> events.
     /// </summary>
     /// <typeparam name="T">The type of the key's value.</typeparam>
-    public sealed class ConfigKeyChangedEventArgs<T> : IConfigKeyChangedEventArgs
+    public sealed class ConfigKeyChangedEventArgs<T> : ValueChangedEventArgs<T>, IConfigKeyChangedEventArgs
     {
-        /// <inheritdoc/>
-        public NotifyCollectionChangedEventArgs? ChangedCollection { get; }
-
-        /// <inheritdoc/>
-        public string? ChangedProperty { get; }
-
         /// <inheritdoc/>
         public Config Config { get; }
 
@@ -45,14 +39,6 @@ namespace MonkeyLoader.Configuration
         /// <inheritdoc/>
         public bool HasValue { get; }
 
-        /// <inheritdoc/>
-        [MemberNotNullWhen(true, nameof(ChangedCollection))]
-        public bool IsChangedCollection => ChangedCollection is not null;
-
-        /// <inheritdoc/>
-        [MemberNotNullWhen(true, nameof(ChangedProperty))]
-        public bool IsChangedProperty => ChangedProperty is not null;
-
         /// <summary>
         /// Gets the configuration item who's value changed.
         /// </summary>
@@ -62,22 +48,6 @@ namespace MonkeyLoader.Configuration
 
         /// <inheritdoc/>
         public string? Label { get; }
-
-        /// <summary>
-        /// Gets the new value of the <see cref="DefiningConfigKey{T}"/>.<br/>
-        /// This can be the default value.
-        /// </summary>
-        public T? NewValue { get; }
-
-        object? IConfigKeyChangedEventArgs.NewValue => NewValue;
-
-        /// <summary>
-        /// Gets the old value of the <see cref="DefiningConfigKey{T}"/>.<br/>
-        /// This can be the default value.
-        /// </summary>
-        public T? OldValue { get; }
-
-        object? IConfigKeyChangedEventArgs.OldValue => OldValue;
 
         /// <summary>
         /// Creates a new event args instance for a changed config item.
@@ -94,41 +64,23 @@ namespace MonkeyLoader.Configuration
         public ConfigKeyChangedEventArgs(Config config, IDefiningConfigKey<T> key,
             bool hadValue, T? oldValue, bool hasValue, T? newValue, string? label,
             string? changedProperty, NotifyCollectionChangedEventArgs? changedCollection)
+                : base(oldValue, newValue, changedProperty, changedCollection)
         {
             Config = config;
             Key = key;
 
-            OldValue = oldValue;
             HadValue = hadValue;
-            NewValue = newValue;
             HasValue = hasValue;
 
             Label = label;
-
-            ChangedProperty = changedProperty;
-            ChangedCollection = changedCollection;
         }
     }
 
     /// <summary>
     /// Represents a non-generic <see cref="ConfigKeyChangedEventArgs{T}"/>.
     /// </summary>
-    public interface IConfigKeyChangedEventArgs
+    public interface IConfigKeyChangedEventArgs : IValueChangedEventArgs
     {
-        /// <summary>
-        /// Gets the changed collection event arguments,
-        /// if this configuration item's changed value originated
-        /// from an <see cref="INotifyCollectionChanged.CollectionChanged"/> event.
-        /// </summary>
-        public NotifyCollectionChangedEventArgs? ChangedCollection { get; }
-
-        /// <summary>
-        /// Gets the name of the property that changed,
-        /// if this configuration item's changed value originated
-        /// from an <see cref="INotifyPropertyChanged.PropertyChanged"/> event.
-        /// </summary>
-        public string? ChangedProperty { get; }
-
         /// <summary>
         /// Gets the <see cref="Configuration.Config"/> in which the change occured.
         /// </summary>
@@ -154,26 +106,6 @@ namespace MonkeyLoader.Configuration
         public bool HasValue { get; }
 
         /// <summary>
-        /// Gets whether this configuration item's changed value originated
-        /// from an <see cref="INotifyCollectionChanged.CollectionChanged"/> event.
-        /// </summary>
-        /// <value>
-        /// <c>true</c> if <see cref="ChangedCollection">ChangedCollection</see> is not <c>null</c>; otherwise, <c>false</c>.
-        /// </value>
-        [MemberNotNullWhen(true, nameof(ChangedCollection))]
-        public bool IsChangedCollection { get; }
-
-        /// <summary>
-        /// Gets whether this configuration item's changed value originated
-        /// from an <see cref="INotifyPropertyChanged.PropertyChanged"/> event.
-        /// </summary>
-        /// <value>
-        /// <c>true</c> if <see cref="ChangedProperty">ChangedProperty</see> is not <c>null</c>; otherwise, <c>false</c>.
-        /// </value>
-        [MemberNotNullWhen(true, nameof(ChangedProperty))]
-        public bool IsChangedProperty { get; }
-
-        /// <summary>
         /// Gets the configuration item who's value changed.
         /// </summary>
         public IDefiningConfigKey Key { get; }
@@ -182,17 +114,5 @@ namespace MonkeyLoader.Configuration
         /// Gets a custom label that may be set by whoever changed the configuration.
         /// </summary>
         public string? Label { get; }
-
-        /// <summary>
-        /// Gets the new value of the configuration item.<br/>
-        /// This can be the default value.
-        /// </summary>
-        public object? NewValue { get; }
-
-        /// <summary>
-        /// Gets the old value of the configuration item.<br/>
-        /// This can be the default value.
-        /// </summary>
-        public object? OldValue { get; }
     }
 }
