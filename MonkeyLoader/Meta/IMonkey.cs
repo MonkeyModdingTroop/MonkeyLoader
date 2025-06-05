@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using MonkeyLoader.Configuration;
 using MonkeyLoader.Logging;
+using MonkeyLoader.Meta.Tagging;
 using MonkeyLoader.Patching;
 using System;
 using System.Collections.Generic;
@@ -35,7 +36,7 @@ namespace MonkeyLoader.Meta
     /// Defines the interface for all (<see cref="EarlyMonkey{TMonkey}">early</see>)
     /// <see cref="Monkey{TMonkey}">monkeys</see>.
     /// </summary>
-    public interface IMonkey : IRun, IShutdown, IComparable<IMonkey>, INestedIdentifiable<Mod>, IAuthorable
+    public interface IMonkey : IRun, IShutdown, IComparable<IMonkey>, INestedIdentifiable<Mod>, IAuthorable, ITaggable
     {
         /// <summary>
         /// Gets the name of the assembly this monkey is defined in.
@@ -68,7 +69,7 @@ namespace MonkeyLoader.Meta
         public bool Enabled { get; set; }
 
         /// <summary>
-        /// Gets the this monkey's <see cref="MonkeyTogglesConfigSection.GetToggle">toggle</see>
+        /// Gets the this monkey's <see cref="MonkeyTogglesConfigSection.GetToggle(IMonkey, Func{bool})">toggle</see>
         /// if it <see cref="CanBeDisabled">can be disabled</see>.
         /// </summary>
         /// <value>The toggle config item if this monkey <see cref="CanBeDisabled">can be disabled</see>; otherwise, <c>null</c>.</value>

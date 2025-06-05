@@ -3,6 +3,7 @@ using HarmonyLib;
 using MonkeyLoader.Configuration;
 using MonkeyLoader.Logging;
 using MonkeyLoader.Meta;
+using MonkeyLoader.Meta.Tagging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -147,6 +148,9 @@ namespace MonkeyLoader.Patching
         /// Gets whether this monkey's <see cref="Shutdown">Shutdown</see>() method has been called.
         /// </summary>
         public bool ShutdownRan { get; private set; } = false;
+
+        /// <inheritdoc/>
+        public TagCollection Tags { get; } = [];
 
         /// <inheritdoc/>
         public Type Type { get; }
