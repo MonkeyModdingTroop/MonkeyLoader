@@ -21,7 +21,8 @@ namespace MonkeyLoader.Configuration
     /// <remarks>
     /// Use your mod's <see cref="Configuration.Config"/> instance to <see cref="Config.LoadSection{TSection}()">load sections</see>.
     /// </remarks>
-    public abstract class ConfigSection : INestedIdentifiable<Config>, IIdentifiableOwner<ConfigSection, IDefiningConfigKey>, IPrioritizable
+    public abstract class ConfigSection : IPrioritizable, IDisplayable,
+        INestedIdentifiable<Config>, IIdentifiableOwner<ConfigSection, IDefiningConfigKey>
     {
         /// <summary>
         /// Stores the <see cref="IDefiningConfigKey"/>s tracked by this section.
@@ -36,10 +37,11 @@ namespace MonkeyLoader.Configuration
         // Make the Compiler shut up about Config not being set - it gets set by the Config loading the section.
         public Config Config { get; internal set; } = null!;
 
-        /// <summary>
-        /// Gets a description of the config items found in this section.
-        /// </summary>
-        public abstract string Description { get; }
+        /// <remarks>
+        /// <i>By default:</i> <see langword="null"/>.
+        /// </remarks>
+        /// <inheritdoc/>
+        public virtual string? Description => null;
 
         /// <summary>
         /// Gets the fully qualified unique identifier for this section.
@@ -54,6 +56,10 @@ namespace MonkeyLoader.Configuration
         /// Gets whether there are any config keys with unsaved changes in this section.
         /// </summary>
         public bool HasChanges => keys.Any(key => key.HasChanges);
+
+        /// <inheritdoc/>
+        [MemberNotNullWhen(true, nameof(Description))]
+        public bool HasDescription => Description is not null;
 
         /// <summary>
         /// Gets the mod-unique identifier of this section.
@@ -75,9 +81,10 @@ namespace MonkeyLoader.Configuration
         /// </summary>
         public IEnumerable<IDefiningConfigKey> Keys => keys.OrderByDescending(key => key.Priority);
 
-        /// <summary>
-        /// Gets the name for this section.
-        /// </summary>
+        /// <remarks>
+        /// <i>By default:</i> this section's <see cref="Id">Id</see>.
+        /// </remarks>
+        /// <inheritdoc/>
         public virtual string Name => Id;
 
         IIdentifiable INestedIdentifiable.Parent => Config;

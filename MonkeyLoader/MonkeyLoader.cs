@@ -39,7 +39,7 @@ namespace MonkeyLoader
     /// <summary>
     /// The root of all mod loading.
     /// </summary>
-    public sealed class MonkeyLoader : IConfigOwner, IShutdown, IIdentifiableCollection<Mod>,
+    public sealed class MonkeyLoader : IConfigOwner, IShutdown, IDisplayable, IIdentifiableCollection<Mod>,
         INestedIdentifiableCollection<IMonkey>, INestedIdentifiableCollection<IEarlyMonkey>,
         INestedIdentifiableCollection<Config>, INestedIdentifiableCollection<ConfigSection>, INestedIdentifiableCollection<IDefiningConfigKey>
     {
@@ -75,12 +75,18 @@ namespace MonkeyLoader
         /// </summary>
         public string ConfigPath { get; }
 
+        /// <inheritdoc/>
+        public string Description => "Handles all the mod loading.";
+
         string IIdentifiable.FullId => Id;
 
         /// <summary>
         /// Gets all loaded game pack <see cref="Mod"/>s in topological order.
         /// </summary>
         public IEnumerable<Mod> GamePacks => _allMods.Where(mod => mod.IsGamePack);
+
+        /// <inheritdoc/>
+        bool IDisplayable.HasDescription => true;
 
         /// <summary>
         /// Gets this loader's id.
@@ -133,6 +139,8 @@ namespace MonkeyLoader
         /// Gets <i>all</i> loaded <see cref="Mod"/>s in topological order.
         /// </summary>
         public IEnumerable<Mod> Mods => _allMods.AsSafeEnumerable();
+
+        string IDisplayable.Name => Id;
 
         /// <summary>
         /// Gets the NuGet manager used by this loader.

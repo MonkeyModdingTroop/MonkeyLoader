@@ -35,7 +35,7 @@ namespace MonkeyLoader.Meta
     /// Defines the interface for all (<see cref="EarlyMonkey{TMonkey}">early</see>)
     /// <see cref="Monkey{TMonkey}">monkeys</see>.
     /// </summary>
-    public interface IMonkey : IRun, IShutdown, IComparable<IMonkey>, INestedIdentifiable<Mod>, IAuthorable
+    public interface IMonkey : IRun, IShutdown, IComparable<IMonkey>, INestedIdentifiable<Mod>, IAuthorable, IDisplayable
     {
         /// <summary>
         /// Gets the name of the assembly this monkey is defined in.
@@ -68,8 +68,8 @@ namespace MonkeyLoader.Meta
         public bool Enabled { get; set; }
 
         /// <summary>
-        /// Gets the this monkey's <see cref="MonkeyTogglesConfigSection.GetToggle">toggle</see>
-        /// if it <see cref="CanBeDisabled">can be disabled</see>.
+        /// Gets the this monkey's <see cref="MonkeyTogglesConfigSection.GetToggle(IMonkey,
+        /// Func{bool})">toggle</see> if it <see cref="CanBeDisabled">can be disabled</see>.
         /// </summary>
         /// <value>The toggle config item if this monkey <see cref="CanBeDisabled">can be disabled</see>; otherwise, <c>null</c>.</value>
         public IDefiningConfigKey<bool>? EnabledToggle { get; }
@@ -93,11 +93,6 @@ namespace MonkeyLoader.Meta
         /// Gets the mod that this monkey is a part of.
         /// </summary>
         public Mod Mod { get; }
-
-        /// <summary>
-        /// Gets the display name of this monkey.
-        /// </summary>
-        public string Name { get; }
 
         /// <summary>
         /// Gets the runtime type of this monkey.
