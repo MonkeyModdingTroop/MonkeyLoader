@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection;
 
 namespace MonkeyLoader.Patching
 {
@@ -43,6 +44,12 @@ namespace MonkeyLoader.Patching
 
         /// <inheritdoc/>
         public Config Config => Mod.Config;
+
+        /// <remarks>
+        /// <i>By default:</i> <see langword="null"/>.
+        /// </remarks>
+        /// <inheritdoc/>
+        public virtual string? Description => null;
 
         /// <inheritdoc/>
         public bool Enabled
@@ -84,11 +91,14 @@ namespace MonkeyLoader.Patching
         /// <inheritdoc/>
         public Harmony Harmony => _harmony.Value;
 
+        /// <inheritdoc/>
+        public bool HasDescription => Description is not null;
+
         /// <summary>
         /// Gets the mod-unique identifier of this monkey.
         /// </summary>
         /// <remarks>
-        /// <i>By Default</i>: The monkey's <see cref="Type">Type</see>'s Name.
+        /// <i>By Default</i>: This monkey's <see cref="object.GetType">type</see>'s <see cref="MemberInfo.Name">name</see>.
         /// </remarks>
         public virtual string Id => Type.Name;
 
@@ -124,7 +134,7 @@ namespace MonkeyLoader.Patching
         }
 
         /// <remarks>
-        /// <i>By Default</i>: The monkey's <see cref="Id">Id</see>.
+        /// <i>By Default</i>: This monkey's <see cref="Id">Id</see>.
         /// </remarks>
         /// <inheritdoc/>
         public virtual string Name => Id;

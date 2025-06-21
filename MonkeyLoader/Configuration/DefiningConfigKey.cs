@@ -69,7 +69,7 @@ namespace MonkeyLoader.Configuration
 
         /// <inheritdoc/>
         [MemberNotNullWhen(true, nameof(Description))]
-        public bool HasDescription => Components.TryGet<IConfigKeyDescription>(out var _);
+        public bool HasDescription => Description is not null;
 
         /// <inheritdoc/>
         public bool HasValue { get; private set; }
@@ -84,6 +84,8 @@ namespace MonkeyLoader.Configuration
 
         /// <inheritdoc/>
         public bool IsDefiningKey => true;
+
+        string IDisplayable.Name => Id;
 
         ConfigSection INestedIdentifiable<ConfigSection>.Parent => Section;
 
@@ -437,7 +439,7 @@ namespace MonkeyLoader.Configuration
     /// Defines the definition for a config item.
     /// </summary>
     public interface IDefiningConfigKey : ITypedConfigKey, IEntity<IDefiningConfigKey>,
-        INestedIdentifiable<ConfigSection>, IPrioritizable
+        INestedIdentifiable<ConfigSection>, IPrioritizable, IDisplayable
     {
         /// <summary>
         /// Gets the config this item belongs to.
@@ -445,23 +447,9 @@ namespace MonkeyLoader.Configuration
         public Config Config { get; }
 
         /// <summary>
-        /// Gets the human-readable description of this config item.
-        /// </summary>
-        public string? Description { get; }
-
-        /// <summary>
         /// Gets or sets whether this config item has unsaved changes.
         /// </summary>
         public bool HasChanges { get; set; }
-
-        /// <summary>
-        /// Gets whether this config item has a human-readable <see cref="Description">description</see>.
-        /// </summary>
-        /// <value>
-        /// <c>true</c> if <see cref="Description"/> is not <c>null</c>; otherwise, <c>false</c>.
-        /// </value>
-        [MemberNotNullWhen(true, nameof(Description))]
-        public bool HasDescription { get; }
 
         /// <summary>
         /// Gets whether this config item has a set value.
