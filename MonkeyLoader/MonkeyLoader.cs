@@ -56,11 +56,6 @@ namespace MonkeyLoader
         private ExecutionPhase _phase;
 
         /// <summary>
-        /// Gets the path pointing to the directory containing runtime assemblies.
-        /// </summary>
-        public static string RuntimeAssemblyPath { get; }
-        
-        /// <summary>
         /// Gets the path pointing of the directory containing the game's assemblies.
         /// </summary>
         public static string GameAssemblyPath { get; }
@@ -69,6 +64,11 @@ namespace MonkeyLoader
         /// Gets the name of the game (its executable).
         /// </summary>
         public static string GameName { get; }
+
+        /// <summary>
+        /// Gets the path pointing to the directory containing runtime assemblies.
+        /// </summary>
+        public static string RuntimeAssemblyPath { get; }
 
         /// <summary>
         /// Gets the config that this loader uses to load <see cref="ConfigSection"/>s.
@@ -189,15 +189,15 @@ namespace MonkeyLoader
 
         internal EventManager EventManager { get; }
 
-        internal AssemblyPool RuntimeAssemblyPool { get; }
         internal AssemblyPool GameAssemblyPool { get; }
         internal AssemblyPool PatcherAssemblyPool { get; }
+        internal AssemblyPool RuntimeAssemblyPool { get; }
 
         static MonkeyLoader()
         {
             var executablePath = Environment.GetCommandLineArgs()[0];
-            GameName = "Resonite";
-            GameAssemblyPath = Path.Combine(Path.GetDirectoryName(executablePath), $"{GameName}_Data", "Managed");
+            GameName = "Resonite"; // Todo: Untweak this for unity / net9
+            GameAssemblyPath = Path.Combine(Path.GetDirectoryName(executablePath));//, $"{GameName}_Data", "Managed");
 
             if (!Directory.Exists(GameAssemblyPath))
                 GameAssemblyPath = Path.GetDirectoryName(executablePath);
@@ -261,7 +261,7 @@ namespace MonkeyLoader
 
             RuntimeAssemblyPool = new AssemblyPool(this, "RuntimeAssemblyPool", () => Locations.PatchedAssemblies);
             RuntimeAssemblyPool.AddSearchDirectory(RuntimeAssemblyPath);
-            
+
             GameAssemblyPool = new AssemblyPool(this, "GameAssemblyPool", () => Locations.PatchedAssemblies);
             GameAssemblyPool.AddSearchDirectory(GameAssemblyPath);
             GameAssemblyPool.AddFallbackPool(RuntimeAssemblyPool);
@@ -384,7 +384,7 @@ namespace MonkeyLoader
         public void FullLoad()
         {
             EnsureAllLocationsExist();
-            
+
             LoadRuntimeAssemblyDefinitions();
             LoadGameAssemblyDefinitions();
 
@@ -507,28 +507,6 @@ namespace MonkeyLoader
         }
 
         /// <summary>
-        /// Loads assembly definitions for runtime assemblies.
-        /// </summary>
-        public void LoadRuntimeAssemblyDefinitions()
-        {
-            Phase = ExecutionPhase.LoadingRuntimeAssemblyDefinitions;
-
-            foreach (var assemblyFile in Directory.EnumerateFiles(RuntimeAssemblyPath, "*.dll", SearchOption.TopDirectoryOnly))
-            {
-                try
-                {
-                    RuntimeAssemblyPool.LoadDefinition(assemblyFile);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Debug(ex.LogFormat($"Exception while trying to load assembly {assemblyFile}"));
-                }
-            }
-
-            Phase = ExecutionPhase.LoadedRuntimeAssemblyDefinitions;
-        }
-        
-        /// <summary>
         /// Loads all of the game's assemblies from their potentially modified in-memory versions.
         /// </summary>
         public void LoadGameAssemblies()
@@ -643,6 +621,28 @@ namespace MonkeyLoader
 
             foreach (var mod in mods.Where(mod => /*mod.AllDependenciesLoaded*/ true))
                 mod.LoadMonkeys();
+        }
+
+        /// <summary>
+        /// Loads assembly definitions for runtime assemblies.
+        /// </summary>
+        public void LoadRuntimeAssemblyDefinitions()
+        {
+            Phase = ExecutionPhase.LoadingRuntimeAssemblyDefinitions;
+
+            foreach (var assemblyFile in Directory.EnumerateFiles(RuntimeAssemblyPath, "*.dll", SearchOption.TopDirectoryOnly))
+            {
+                try
+                {
+                    RuntimeAssemblyPool.LoadDefinition(assemblyFile);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Debug(ex.LogFormat($"Exception while trying to load assembly {assemblyFile}"));
+                }
+            }
+
+            Phase = ExecutionPhase.LoadedRuntimeAssemblyDefinitions;
         }
 
         /// <summary>
@@ -1212,12 +1212,12 @@ namespace MonkeyLoader
             /// While <see cref="LoadRuntimeAssemblyDefinitions"/> is executing.
             /// </summary>
             LoadingRuntimeAssemblyDefinitions,
-            
+
             /// <summary>
             /// After <see cref="LoadRuntimeAssemblyDefinitions"/> is done.
             /// </summary>
             LoadedRuntimeAssemblyDefinitions,
-            
+
             /// <summary>
             /// While <see cref="LoadGameAssemblyDefinitions"/> is executing.
             /// </summary>
