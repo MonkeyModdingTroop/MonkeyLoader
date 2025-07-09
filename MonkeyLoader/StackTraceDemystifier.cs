@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+/*
 namespace MonkeyLoader
 {
     [HarmonyPatch(typeof(Environment))]
@@ -32,3 +33,4 @@ namespace MonkeyLoader
         }
     }
 }
+*/
