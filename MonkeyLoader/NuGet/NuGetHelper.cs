@@ -82,6 +82,9 @@ namespace MonkeyLoader.NuGet
 
             // For example: ".NET Framework 4.6.57.0"
             var descSplit = RuntimeInformation.FrameworkDescription?.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            if (descSplit is not null && descSplit.Length >= 2)
+                return $".NETCoreApp,Version=v{descSplit[1]}";
+            
             if (descSplit is not null && descSplit.Length >= 3)
                 return $"{descSplit[0]}{descSplit[1]},Version=v{descSplit[2]}";
 

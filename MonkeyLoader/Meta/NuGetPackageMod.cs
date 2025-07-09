@@ -32,6 +32,8 @@ namespace MonkeyLoader.Meta
 
         internal readonly HashSet<Assembly> PatcherAssemblies = new();
         internal readonly HashSet<Assembly> PrePatcherAssemblies = new();
+
+        private Dictionary<string, Assembly> assemblyCache = new();
         private const char AuthorsSeparator = ',';
         private const string PrePatchersFolderName = "pre-patchers";
         private const char TagsSeparator = ' ';
@@ -174,6 +176,8 @@ namespace MonkeyLoader.Meta
 
             if (dependencies.Any())
                 Logger.Debug(() => $"Found the following dependencies:{Environment.NewLine}    - {string.Join($"{Environment.NewLine}    - ", dependencies.Keys)}");
+
+            AppDomain.CurrentDomain.AssemblyResolve += ResolveAssembly;
         }
 
         /// <inheritdoc/>
@@ -251,10 +255,33 @@ namespace MonkeyLoader.Meta
 
             return !error;
         }
+        
+        private Assembly? ResolveAssembly(object? sender, ResolveEventArgs args)
+        {
+            var strippedName = args.Name[..args.Name.IndexOf(',')];
+            if (assemblyCache.TryGetValue(strippedName, out var cachedAssembly))
+            {
+                Logger.Debug(() => $"Resolving assembly: {args.Name} from cache");
+                return cachedAssembly;
+            }
+                
+            var assemblyPath = assemblyPaths.FirstOrDefault(path => path.GetNameWithoutExtension() == strippedName);
+
+            if (assemblyPath == default)
+                return null;
+
+            Logger.Debug(() => $"Resolving assembly: {args.Name} from path: {assemblyPath}");
+            return LoadAssembly(FileSystem, assemblyPath);
+        }
 
         private Assembly LoadAssembly(IFileSystem fileSystem, UPath assemblyPath)
         {
             var filename = assemblyPath.GetNameWithoutExtension()!;
+            
+            if (!fileSystem.FileExists(assemblyPath))
+            {
+                return null!;
+            }
 
             using var assemblyFile = fileSystem.OpenFile(assemblyPath, FileMode.Open, FileAccess.Read);
             using var assemblyStream = new MemoryStream();
@@ -296,7 +323,9 @@ namespace MonkeyLoader.Meta
                 assemblyDefinition.Write(newAssemblyStream);
             }
 
-            return Assembly.Load((newAssemblyStream.Length == 0 ? assemblyStream : newAssemblyStream).ToArray(), symbolStream.ToArray());
+            var assembly = Assembly.Load((newAssemblyStream.Length == 0 ? assemblyStream : newAssemblyStream).ToArray(), symbolStream.ToArray());
+            assemblyCache[assembly.GetName().Name] = assembly;
+            return assembly;
         }
     }
 }

@@ -56,6 +56,11 @@ namespace MonkeyLoader
         private ExecutionPhase _phase;
 
         /// <summary>
+        /// Gets the path pointing to the directory containing runtime assemblies.
+        /// </summary>
+        public static string RuntimeAssemblyPath { get; }
+        
+        /// <summary>
         /// Gets the path pointing of the directory containing the game's assemblies.
         /// </summary>
         public static string GameAssemblyPath { get; }
@@ -184,17 +189,20 @@ namespace MonkeyLoader
 
         internal EventManager EventManager { get; }
 
+        internal AssemblyPool RuntimeAssemblyPool { get; }
         internal AssemblyPool GameAssemblyPool { get; }
         internal AssemblyPool PatcherAssemblyPool { get; }
 
         static MonkeyLoader()
         {
             var executablePath = Environment.GetCommandLineArgs()[0];
-            GameName = Path.GetFileNameWithoutExtension(executablePath);
+            GameName = "Resonite";
             GameAssemblyPath = Path.Combine(Path.GetDirectoryName(executablePath), $"{GameName}_Data", "Managed");
 
             if (!Directory.Exists(GameAssemblyPath))
                 GameAssemblyPath = Path.GetDirectoryName(executablePath);
+
+            RuntimeAssemblyPath = @"C:\Program Files (x86)\dotnet\shared\Microsoft.NETCore.App\9.0.6";
 
             var harmony = new Harmony("MonkeyLoader");
             harmony.PatchAll();
@@ -251,8 +259,12 @@ namespace MonkeyLoader
             NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Lib.Harmony.Thin", new NuGetVersion(2, 3, 3)), NuGetHelper.Framework));
             NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Zio", new NuGetVersion(0, 18, 0)), NuGetHelper.Framework));
 
+            RuntimeAssemblyPool = new AssemblyPool(this, "RuntimeAssemblyPool", () => Locations.PatchedAssemblies);
+            RuntimeAssemblyPool.AddSearchDirectory(RuntimeAssemblyPath);
+            
             GameAssemblyPool = new AssemblyPool(this, "GameAssemblyPool", () => Locations.PatchedAssemblies);
             GameAssemblyPool.AddSearchDirectory(GameAssemblyPath);
+            GameAssemblyPool.AddFallbackPool(RuntimeAssemblyPool);
 
             PatcherAssemblyPool = new AssemblyPool(this, "PatcherAssemblyPool", () => Locations.PatchedAssemblies);
             PatcherAssemblyPool.AddFallbackPool(GameAssemblyPool);
@@ -372,6 +384,8 @@ namespace MonkeyLoader
         public void FullLoad()
         {
             EnsureAllLocationsExist();
+            
+            LoadRuntimeAssemblyDefinitions();
             LoadGameAssemblyDefinitions();
 
             LoadAllLibraries();
@@ -488,10 +502,32 @@ namespace MonkeyLoader
             foreach (var mod in mods.Where(mod => !mod.AllDependenciesLoaded))
                 Logger.Error(() => $"Couldn't load monkeys for mod [{mod.Title}] because some dependencies weren't present!");
 
-            foreach (var mod in mods.Where(mod => mod.AllDependenciesLoaded))
+            foreach (var mod in mods.Where(mod => /*mod.AllDependenciesLoaded*/ true))
                 mod.LoadEarlyMonkeys();
         }
 
+        /// <summary>
+        /// Loads assembly definitions for runtime assemblies.
+        /// </summary>
+        public void LoadRuntimeAssemblyDefinitions()
+        {
+            Phase = ExecutionPhase.LoadingRuntimeAssemblyDefinitions;
+
+            foreach (var assemblyFile in Directory.EnumerateFiles(RuntimeAssemblyPath, "*.dll", SearchOption.TopDirectoryOnly))
+            {
+                try
+                {
+                    RuntimeAssemblyPool.LoadDefinition(assemblyFile);
+                }
+                catch (Exception ex)
+                {
+                    Logger.Debug(ex.LogFormat($"Exception while trying to load assembly {assemblyFile}"));
+                }
+            }
+
+            Phase = ExecutionPhase.LoadedRuntimeAssemblyDefinitions;
+        }
+        
         /// <summary>
         /// Loads all of the game's assemblies from their potentially modified in-memory versions.
         /// </summary>
@@ -500,19 +536,6 @@ namespace MonkeyLoader
             Phase = ExecutionPhase.LoadingGameAssemblies;
 
             GameAssemblyPool.LoadAll(Locations.PatchedAssemblies);
-
-            // Load all unmodified assemblies that weren't loaded already
-            foreach (var assemblyFile in Directory.EnumerateFiles(GameAssemblyPath, "*.dll", SearchOption.TopDirectoryOnly))
-            {
-                try
-                {
-                    Assembly.LoadFile(assemblyFile);
-                }
-                catch (Exception ex)
-                {
-                    Logger.Debug(ex.LogFormat($"Exception while trying to load assembly {assemblyFile}"));
-                }
-            }
 
             Phase = ExecutionPhase.LoadedGameAssemblies;
         }
@@ -618,7 +641,7 @@ namespace MonkeyLoader
             foreach (var mod in mods.Where(mod => !mod.AllDependenciesLoaded))
                 Logger.Error(() => $"Couldn't load monkeys for mod [{mod.Title}] because some dependencies weren't present!");
 
-            foreach (var mod in mods.Where(mod => mod.AllDependenciesLoaded))
+            foreach (var mod in mods.Where(mod => /*mod.AllDependenciesLoaded*/ true))
                 mod.LoadMonkeys();
         }
 
@@ -1185,6 +1208,16 @@ namespace MonkeyLoader
             /// </summary>
             Initialized,
 
+            /// <summary>
+            /// While <see cref="LoadRuntimeAssemblyDefinitions"/> is executing.
+            /// </summary>
+            LoadingRuntimeAssemblyDefinitions,
+            
+            /// <summary>
+            /// After <see cref="LoadRuntimeAssemblyDefinitions"/> is done.
+            /// </summary>
+            LoadedRuntimeAssemblyDefinitions,
+            
             /// <summary>
             /// While <see cref="LoadGameAssemblyDefinitions"/> is executing.
             /// </summary>
