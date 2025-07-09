@@ -118,8 +118,8 @@ namespace MonkeyLoader
             //    entry.LoadAssembly(_logger, PatchedAssemblyPath);
 
             // Only need to save and manually load those that were modified or have dependencies that were modified
-            foreach (var assemblyPath in _assemblies.Values.Where(entry => entry.Changes).Select(entry => entry.SaveAssembly(path, _logger)).Where(path => path is not null).ToArray())
-                Assembly.LoadFile(assemblyPath);
+            foreach (var assemblyEntry in _assemblies.Values.ToArray())
+                assemblyEntry.LoadAssembly(_logger, PatchedAssemblyPath);
 
             _logger.Info(() => $"Loaded all {_assemblies.Count} assembly definitions in {sw.ElapsedMilliseconds}ms!");
         }
@@ -145,7 +145,7 @@ namespace MonkeyLoader
             if (TryResolve(name, out assemblyDefinition))
                 return assemblyDefinition;
 
-            _assemblies.Add(name, new AssemblyEntry(name, definition));
+            _assemblies.Add(name, new AssemblyEntry(new FileInfo(path), name, definition));
             _logger.Debug(() => $"Loaded assembly definition from {path}");
 
             return definition;
@@ -160,7 +160,7 @@ namespace MonkeyLoader
             if (TryResolve(name, out var assemblyDefinition))
                 return assemblyDefinition;
 
-            _assemblies.Add(name, new AssemblyEntry(name, definition));
+            _assemblies.Add(name, new AssemblyEntry(null, name, definition));
             _logger.Debug(() => $"Loaded assembly definition [{definition.Name}] from a stream!");
 
             return definition;
@@ -303,6 +303,7 @@ namespace MonkeyLoader
 
         private sealed class AssemblyEntry : IDisposable
         {
+            public readonly FileInfo? AssemblyFile;
             public readonly AssemblyName Name;
             private AssemblyDefinition _definition;
             private AutoResetEvent? _definitionLock;
@@ -315,8 +316,9 @@ namespace MonkeyLoader
             [MemberNotNullWhen(false, nameof(_definition), nameof(_definitionLock), nameof(_definitionSnapshot))]
             public bool Loaded => _loadedAssembly != null;
 
-            public AssemblyEntry(AssemblyName name, AssemblyDefinition definition)
+            public AssemblyEntry(FileInfo? file, AssemblyName name, AssemblyDefinition definition)
             {
+                AssemblyFile = file;
                 Name = name;
                 _definition = definition;
                 _definitionLock = new(true);
@@ -362,32 +364,49 @@ namespace MonkeyLoader
 
                 if (!Loaded)
                 {
-                    WaitForDefinition();
-                    var definitionBytes = _definitionSnapshot.ToArray();
-
-                    if (saveAssemblies && Changes)
+                    if (Changes)
                     {
-                        var targetPath = Path.Combine(patchedAssemblyPath, $"{Name}.dll");
+                        WaitForDefinition();
+                        var definitionBytes = _definitionSnapshot.ToArray();
 
-                        try
+                        // Code in FrooxEngine cannot handle datamodel assemblies with an empty .Location,
+                        // so let's always load assemblies from files for now
+                        if (saveAssemblies)
                         {
-                            File.WriteAllBytes(targetPath, definitionBytes);
-                            logger.Trace(() => $"Saved patched assembly to {targetPath}");
+                            var targetPath = Path.Combine(patchedAssemblyPath, $"{Name}.dll");
+
+                            try
+                            {
+                                File.WriteAllBytes(targetPath, definitionBytes);
+                                logger.Trace(() => $"Saved patched assembly to {targetPath}");
+                            }
+                            catch (Exception ex)
+                            {
+                                logger.Warn(ex.LogFormat($"Exception while trying to save assembly to {targetPath}"));
+                            }
+                            
+                            _loadedAssembly = Assembly.LoadFile(Path.GetFullPath(targetPath));
+                            logger.Trace(() => $"Loaded changed assembly definition [{Name}]");
                         }
-                        catch (Exception ex)
+                        else
                         {
-                            logger.Warn(ex.LogFormat($"Exception while trying to save assembly to {targetPath}"));
+                            // Not supported, see comment above
+                            throw new InvalidOperationException();
                         }
+
+                        _definitionSnapshot.Dispose();
+                        _definitionSnapshot = null;
+
+                        _definitionLock.Dispose();
+                        _definitionLock = null;
                     }
-
-                    _loadedAssembly = Assembly.Load(definitionBytes);
-                    logger.Trace(() => $"Loaded assembly definition [{Name}]");
-
-                    _definitionSnapshot.Dispose();
-                    _definitionSnapshot = null;
-
-                    _definitionLock.Dispose();
-                    _definitionLock = null;
+                    else
+                    {
+                        // This technically doesn't support in-memory assembly entries but nothing
+                        // uses that at the moment
+                        _loadedAssembly = Assembly.LoadFile(AssemblyFile!.FullName);
+                        logger.Trace(() => $"Loaded assembly definition [{Name}]");
+                    }
                 }
 
                 return _loadedAssembly;
@@ -430,27 +449,6 @@ namespace MonkeyLoader
                 _definition.Write(_definitionSnapshot);
 
                 return _definition;
-            }
-
-            internal string? SaveAssembly(string path, Logger logger)
-            {
-                var targetPath = Path.Combine(path, $"{Name}.dll");
-
-                try
-                {
-                    WaitForDefinition();
-                    var definitionBytes = _definitionSnapshot!.ToArray();
-
-                    File.WriteAllBytes(targetPath, definitionBytes);
-                    logger.Trace(() => $"Saved patched assembly to {targetPath}");
-                    return targetPath;
-                }
-                catch (Exception ex)
-                {
-                    logger.Warn(ex.LogFormat($"Exception while trying to save assembly to {targetPath}"));
-                }
-
-                return null;
             }
 
             private void Dispose(bool disposing)
