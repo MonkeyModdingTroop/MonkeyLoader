@@ -1,4 +1,5 @@
 ﻿using NuGet.Packaging.Core;
+using NuGet.Versioning;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
@@ -37,11 +38,27 @@ namespace MonkeyLoader.NuGet
         public string Id => Dependency.Id;
 
         [MemberNotNullWhen(true, nameof(LoadedPackage))]
-        public bool IsLoaded => LoadedPackage is not null;
+        public bool IsLoaded => LoadedPackage is not null || HasLoadedAssembly;
 
         public ILoadedNuGetPackage? LoadedPackage { get; private set; }
 
         public NuGetManager NuGet { get; }
+
+        private bool HasLoadedAssembly
+        {
+            // Todo: adjust this?
+            get
+            {
+                var assembly = AppDomain.CurrentDomain.GetAssemblies()
+                    .FirstOrDefault(assembly => Id.Equals(assembly.GetName().Name, StringComparison.OrdinalIgnoreCase));
+
+                if (assembly is null)
+                    return false;
+
+                LoadedPackage = new LoadedNuGetPackage(new PackageIdentity(assembly.GetName().Name, new NuGetVersion(assembly.GetName().Version ?? Version.Parse("1.0"))), NuGetHelper.Framework);
+                return true;
+            }
+        }
 
         internal DependencyReference(NuGetManager nuGetManager, PackageDependency dependency)
         {
