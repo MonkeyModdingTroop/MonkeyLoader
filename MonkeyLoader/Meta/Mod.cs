@@ -87,6 +87,9 @@ namespace MonkeyLoader.Meta
         {
             get
             {
+                // Todo: remove this once dependencies have been figured out
+                return true;
+
                 if (!_allDependenciesLoaded)
                     _allDependenciesLoaded = dependencies.Values.All(dep => dep.AllDependenciesLoaded);
 
