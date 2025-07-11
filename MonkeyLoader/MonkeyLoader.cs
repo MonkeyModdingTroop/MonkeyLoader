@@ -218,8 +218,14 @@ namespace MonkeyLoader
 
             RuntimeAssemblyPath = RuntimeEnvironment.GetRuntimeDirectory();
 
-            var harmony = new Harmony("MonkeyLoader");
-            harmony.PatchAll();
+            try
+            {
+                // Try applying the patches of the Mod Loader.
+                // They're all written to be "safe", but better be sure no Exception escapes.
+                var harmony = new Harmony("MonkeyLoader");
+                harmony.PatchAll();
+            }
+            catch { }
         }
 
         /// <summary>
