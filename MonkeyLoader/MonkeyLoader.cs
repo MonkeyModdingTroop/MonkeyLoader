@@ -18,6 +18,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Threading;
 
 namespace MonkeyLoader
@@ -202,7 +203,7 @@ namespace MonkeyLoader
             if (!Directory.Exists(GameAssemblyPath))
                 GameAssemblyPath = Path.GetDirectoryName(executablePath);
 
-            RuntimeAssemblyPath = @"C:\Program Files (x86)\dotnet\shared\Microsoft.NETCore.App\9.0.6";
+            RuntimeAssemblyPath = RuntimeEnvironment.GetRuntimeDirectory();
 
             var harmony = new Harmony("MonkeyLoader");
             harmony.PatchAll();
