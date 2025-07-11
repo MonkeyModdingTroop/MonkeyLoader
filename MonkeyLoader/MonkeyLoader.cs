@@ -196,12 +196,25 @@ namespace MonkeyLoader
 
         static MonkeyLoader()
         {
+            // AppContext.BaseDirectory doesn't work for Unity
+            // and we need the executable name for Unity too
             var executablePath = Environment.GetCommandLineArgs()[0];
-            GameName = "Resonite"; // Todo: Untweak this for unity / net9
-            GameAssemblyPath = Path.Combine(Path.GetDirectoryName(executablePath));//, $"{GameName}_Data", "Managed");
 
-            if (!Directory.Exists(GameAssemblyPath))
-                GameAssemblyPath = Path.GetDirectoryName(executablePath);
+            // Assume Unity structure
+            var gameName = Path.GetFileNameWithoutExtension(executablePath);
+            var gameAssemblyPath = Path.Combine(Path.GetDirectoryName(executablePath), $"{GameName}_Data", "Managed");
+
+            if (!Directory.Exists(gameAssemblyPath))
+            {
+                // If Unity directory doesn't exist, assume plain .NET application
+                DirectoryInfo executablePathInfo = new(executablePath);
+
+                gameName = executablePathInfo.Parent.Name;
+                gameAssemblyPath = executablePathInfo.Parent.FullName;
+            }
+
+            GameName = gameName;
+            GameAssemblyPath = gameAssemblyPath;
 
             RuntimeAssemblyPath = RuntimeEnvironment.GetRuntimeDirectory();
 
