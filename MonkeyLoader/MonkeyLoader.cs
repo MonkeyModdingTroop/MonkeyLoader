@@ -382,6 +382,9 @@ namespace MonkeyLoader
                     Logger.Error(ex.LogFormat($"Exception while trying to create directory: {location}"));
                 }
             }
+
+            foreach (var watchingModLocation in Locations.Mods.Where(modLocation => modLocation.SupportHotReload))
+                watchingModLocation.ShouldWatcherBeActive = true;
         }
 
         /// <summary>
