@@ -22,10 +22,11 @@ namespace MonkeyLoader.Meta
     /// Specifies where and how to search for mods.
     /// </summary>
     [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
-    public sealed class ModLoadingLocation
+    public sealed class ModLoadingLocation : IDisposable
     {
-        private readonly FileSystemWatcher? _watcher;
+        private bool _disposedValue;
         private Regex[] _ignorePatterns;
+        private FileSystemWatcher? _watcher;
 
         /// <summary>
         /// Gets the regex patterns that exclude a mod from being loaded if any match.<br/>
@@ -36,7 +37,7 @@ namespace MonkeyLoader.Meta
             get => _ignorePatterns.AsSafeEnumerable();
 
             [MemberNotNull(nameof(_ignorePatterns))]
-            set => _ignorePatterns = value.ToArray();
+            set => _ignorePatterns = [.. value];
         }
 
         /// <summary>
@@ -72,6 +73,40 @@ namespace MonkeyLoader.Meta
         public bool SupportHotReload { get; }
 
         /// <summary>
+        /// Gets or sets whether this loading location's <see cref="FileSystemWatcher"/>
+        /// is <see cref="FileSystemWatcher.EnableRaisingEvents">enabled</see>,
+        /// if it <see cref="SupportHotReload">supports hot reloading</see>.
+        /// </summary>
+        internal bool ShouldWatcherBeActive
+        {
+            get => _watcher?.EnableRaisingEvents ?? false;
+            set
+            {
+                if (!SupportHotReload)
+                    throw new InvalidOperationException("This mod loading location doesn't support hot reloading!");
+
+                if (!value)
+                {
+                    _watcher?.Dispose();
+                    _watcher = null;
+
+                    return;
+                }
+
+                _watcher = new FileSystemWatcher(Path, NuGetPackageMod.SearchPattern)
+                {
+                    EnableRaisingEvents = true,
+                    IncludeSubdirectories = Recursive,
+                    NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size,
+                };
+
+                _watcher.Created += OnLoadMod;
+                _watcher.Changed += OnReloadMod;
+                _watcher.Deleted += OnUnloadMod;
+            }
+        }
+
+        /// <summary>
         /// Creates a new <see cref="ModLoadingLocation"/> with the given specification.
         /// </summary>
         /// <param name="path">The root folder to search.</param>
@@ -102,20 +137,14 @@ namespace MonkeyLoader.Meta
             Recursive = recursive;
             SupportHotReload = supportHotReload;
             IgnorePatterns = ignorePatterns;
+        }
 
-            if (!SupportHotReload)
-                return;
-
-            _watcher = new FileSystemWatcher(path, NuGetPackageMod.SearchPattern)
-            {
-                EnableRaisingEvents = true,
-                IncludeSubdirectories = recursive,
-                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size,
-            };
-
-            _watcher.Created += OnLoadMod;
-            _watcher.Changed += OnReloadMod;
-            _watcher.Deleted += OnUnloadMod;
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
         }
 
         /// <summary>
@@ -137,6 +166,24 @@ namespace MonkeyLoader.Meta
         /// <inheritdoc/>
         public override string ToString()
             => $"[Recursive: {Recursive}, Path: {Path}, Excluding: {{ {string.Join(" ", _ignorePatterns.Select(p => p.ToString()))} }}]";
+
+        private void Dispose(bool disposing)
+        {
+            if (!_disposedValue)
+            {
+                if (disposing)
+                {
+                    _watcher?.Dispose();
+                }
+
+                // free unmanaged resources (unmanaged objects) and override finalizer
+                // set large fields to null
+
+                _watcher = null;
+
+                _disposedValue = true;
+            }
+        }
 
         private void OnLoadMod(object sender, FileSystemEventArgs e)
         {
@@ -162,5 +209,12 @@ namespace MonkeyLoader.Meta
         /// Called when a mod should be unloaded because its file got deleted or changed.
         /// </summary>
         public event HotReloadModEventHandler? UnloadMod;
+
+        // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
+        // ~ModLoadingLocation()
+        // {
+        //     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+        //     Dispose(disposing: false);
+        // }
     }
 }
