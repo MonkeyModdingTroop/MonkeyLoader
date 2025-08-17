@@ -131,6 +131,18 @@ namespace MonkeyLoader
         /// <returns>The loaded <see cref="Assembly"/>.</returns>
         /// <exception cref="KeyNotFoundException">When the <paramref name="name"/> doesn't exist in this pool.</exception>
         public Assembly LoadAssembly(AssemblyName name) => GetEntry(name).LoadAssembly(_logger, PatchedAssemblyPath);
+        
+        public bool TryResolveAssembly(AssemblyName name, [NotNullWhen(true)] out Assembly? assembly)
+        {
+            if (TryGetEntry(name, out var entry))
+            {
+                assembly = entry.LoadAssembly(_logger, PatchedAssemblyPath);
+                return true;
+            }
+
+            assembly = null;
+            return false;
+        }
 
         public AssemblyDefinition LoadDefinition(string path, ReaderParameters? readerParameters = null)
         {
@@ -145,7 +157,7 @@ namespace MonkeyLoader
             if (TryResolve(name, out assemblyDefinition))
                 return assemblyDefinition;
 
-            _assemblies.Add(name, new AssemblyEntry(new FileInfo(path), name, definition));
+            _assemblies.Add(name, new AssemblyEntry(new FileInfo(path), name, definition, Loader.AssemblyLoadStrategy));
             _logger.Debug(() => $"Loaded assembly definition from {path}");
 
             return definition;
@@ -160,7 +172,7 @@ namespace MonkeyLoader
             if (TryResolve(name, out var assemblyDefinition))
                 return assemblyDefinition;
 
-            _assemblies.Add(name, new AssemblyEntry(null, name, definition));
+            _assemblies.Add(name, new AssemblyEntry(null, name, definition, Loader.AssemblyLoadStrategy));
             _logger.Debug(() => $"Loaded assembly definition [{definition.Name}] from a stream!");
 
             return definition;
@@ -306,6 +318,7 @@ namespace MonkeyLoader
             public readonly FileInfo? AssemblyFile;
             public readonly AssemblyName Name;
             private AssemblyDefinition _definition;
+            private readonly IAssemblyLoadStrategy _assemblyLoadStrategy;
             private AutoResetEvent? _definitionLock;
             private MemoryStream? _definitionSnapshot;
             private bool _disposedValue = false;
@@ -316,11 +329,12 @@ namespace MonkeyLoader
             [MemberNotNullWhen(false, nameof(_definition), nameof(_definitionLock), nameof(_definitionSnapshot))]
             public bool Loaded => _loadedAssembly != null;
 
-            public AssemblyEntry(FileInfo? file, AssemblyName name, AssemblyDefinition definition)
+            public AssemblyEntry(FileInfo? file, AssemblyName name, AssemblyDefinition definition, IAssemblyLoadStrategy assemblyLoadStrategy)
             {
                 AssemblyFile = file;
                 Name = name;
                 _definition = definition;
+                _assemblyLoadStrategy = assemblyLoadStrategy;
                 _definitionLock = new(true);
                 _definitionSnapshot = new();
             }
@@ -385,7 +399,7 @@ namespace MonkeyLoader
                                 logger.Warn(ex.LogFormat($"Exception while trying to save assembly to {targetPath}"));
                             }
                             
-                            _loadedAssembly = Assembly.LoadFile(Path.GetFullPath(targetPath));
+                            _loadedAssembly = _assemblyLoadStrategy.LoadFile(Path.GetFullPath(targetPath));
                             logger.Trace(() => $"Loaded changed assembly definition [{Name}]");
                         }
                         else
@@ -404,7 +418,7 @@ namespace MonkeyLoader
                     {
                         // This technically doesn't support in-memory assembly entries but nothing
                         // uses that at the moment
-                        _loadedAssembly = Assembly.LoadFile(AssemblyFile!.FullName);
+                        _loadedAssembly = _assemblyLoadStrategy.LoadFile(AssemblyFile!.FullName);
                         logger.Trace(() => $"Loaded assembly definition [{Name}]");
                     }
                 }

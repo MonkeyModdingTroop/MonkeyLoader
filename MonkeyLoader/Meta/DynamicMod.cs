@@ -7,7 +7,9 @@ using NuGet.Packaging.Core;
 using NuGet.Versioning;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Reflection;
 using Zio;
 using Zio.FileSystems;
 
@@ -51,6 +53,12 @@ namespace MonkeyLoader.Meta
 
         /// <inheritdoc/>
         public override string Title => _title ?? base.Title;
+
+        public override bool TryResolveAssembly(AssemblyName assemblyName, [NotNullWhen(true)] out Assembly? assembly)
+        {
+            assembly = null;
+            return false;
+        }
 
         private DynamicMod(MonkeyLoader loader, Builder builder)
             : base(loader, builder.Location, builder.IsGamePack)
