@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using Zio;
 
 namespace MonkeyLoader.Meta
@@ -310,6 +311,8 @@ namespace MonkeyLoader.Meta
             _monkeyToggles = new(() => Config.LoadSection(new MonkeyTogglesConfigSection(this)));
         }
 
+        public abstract bool TryResolveAssembly(AssemblyName assemblyName, [NotNullWhen(true)] out Assembly? assembly);
+        
         /// <summary>
         /// Compares this mod with another and returns a value indicating whether
         /// one is dependent on the other, independent, or the other dependent on this.
