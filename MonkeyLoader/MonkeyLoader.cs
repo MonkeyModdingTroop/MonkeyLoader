@@ -193,6 +193,27 @@ namespace MonkeyLoader
         internal AssemblyPool GameAssemblyPool { get; }
         internal AssemblyPool PatcherAssemblyPool { get; }
         internal AssemblyPool RuntimeAssemblyPool { get; }
+        
+        public IAssemblyLoadStrategy AssemblyLoadStrategy { get; }
+
+        public Assembly? ResolveAssemblyFromPoolsAndMods(System.Reflection.AssemblyName assemblyName)
+        {
+            var mlAssemblyName = new AssemblyName(assemblyName.FullName);
+            
+            if (PatcherAssemblyPool.TryResolveAssembly(mlAssemblyName, out var assembly))
+                return assembly;
+            
+            if (GameAssemblyPool.TryResolveAssembly(mlAssemblyName, out assembly))
+                return assembly;
+
+            foreach (var mod in Mods)
+            {
+                if (mod.TryResolveAssembly(mlAssemblyName, out assembly))
+                    return assembly;
+            }
+
+            return null;
+        }
 
         static MonkeyLoader()
         {
@@ -244,6 +265,10 @@ namespace MonkeyLoader
         /// <param name="configPath">The path to the configuration file to use.</param>
         public MonkeyLoader(LoggingController loggingController, string configPath = DefaultConfigPath)
         {
+#if NET5_0_OR_GREATER
+            AssemblyLoadStrategy = new AssemblyLoadContextLoadStrategy();
+#endif
+            
             ConfigPath = configPath;
             Id = GetId(configPath);
 

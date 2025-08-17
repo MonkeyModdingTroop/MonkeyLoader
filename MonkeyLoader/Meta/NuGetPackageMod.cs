@@ -8,6 +8,7 @@ using NuGet.Packaging.Core;
 using NuGet.Versioning;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.IO;
 using System.IO.Compression;
@@ -79,6 +80,33 @@ namespace MonkeyLoader.Meta
 
         /// <inheritdoc/>
         public override string Title => _title ?? base.Title;
+
+        public override bool TryResolveAssembly(AssemblyName assemblyName, [NotNullWhen(true)] out Assembly? assembly)
+        {
+            assembly = null;
+            
+            var strippedName = assemblyName.Name[..assemblyName.Name.IndexOf(',')];
+            if (assemblyCache.TryGetValue(strippedName, out var cachedAssembly))
+            {
+                Logger.Debug(() => $"Resolving assembly: {assemblyName.Name} from cache");
+                assembly = cachedAssembly;
+                return true;
+            }
+                
+            var assemblyPath = assemblyPaths.FirstOrDefault(path => path.GetNameWithoutExtension() == strippedName);
+            if (assemblyPath == default)
+                return false;
+
+            Logger.Debug(() => $"Resolving assembly: {assemblyName.Name} from path: {assemblyPath}");
+            assembly = LoadAssembly(FileSystem, assemblyPath);
+            if (assembly is null)
+            {
+                Logger.Warn(() => $"Failed to resolve assembly: {assemblyName.Name} from path: {assemblyPath}");
+                return false;
+            }
+            
+            return true;
+        }
 
         /// <summary>
         /// Creates a new <see cref="NuGetPackageMod"/> instance for the given <paramref name="loader"/>,
@@ -176,8 +204,6 @@ namespace MonkeyLoader.Meta
 
             if (dependencies.Any())
                 Logger.Debug(() => $"Found the following dependencies:{Environment.NewLine}    - {string.Join($"{Environment.NewLine}    - ", dependencies.Keys)}");
-
-            AppDomain.CurrentDomain.AssemblyResolve += ResolveAssembly;
         }
 
         /// <inheritdoc/>
@@ -255,26 +281,8 @@ namespace MonkeyLoader.Meta
 
             return !error;
         }
-        
-        private Assembly? ResolveAssembly(object? sender, ResolveEventArgs args)
-        {
-            var strippedName = args.Name[..args.Name.IndexOf(',')];
-            if (assemblyCache.TryGetValue(strippedName, out var cachedAssembly))
-            {
-                Logger.Debug(() => $"Resolving assembly: {args.Name} from cache");
-                return cachedAssembly;
-            }
-                
-            var assemblyPath = assemblyPaths.FirstOrDefault(path => path.GetNameWithoutExtension() == strippedName);
 
-            if (assemblyPath == default)
-                return null;
-
-            Logger.Debug(() => $"Resolving assembly: {args.Name} from path: {assemblyPath}");
-            return LoadAssembly(FileSystem, assemblyPath);
-        }
-
-        private Assembly LoadAssembly(IFileSystem fileSystem, UPath assemblyPath)
+        private Assembly? LoadAssembly(IFileSystem fileSystem, UPath assemblyPath)
         {
             var filename = assemblyPath.GetNameWithoutExtension()!;
             
@@ -323,7 +331,7 @@ namespace MonkeyLoader.Meta
                 assemblyDefinition.Write(newAssemblyStream);
             }
 
-            var assembly = Assembly.Load((newAssemblyStream.Length == 0 ? assemblyStream : newAssemblyStream).ToArray(), symbolStream.ToArray());
+            var assembly = Loader.AssemblyLoadStrategy.Load((newAssemblyStream.Length == 0 ? assemblyStream : newAssemblyStream).ToArray(), symbolStream.ToArray());
             assemblyCache[assembly.GetName().Name] = assembly;
             return assembly;
         }
