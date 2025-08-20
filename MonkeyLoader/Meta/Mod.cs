@@ -88,9 +88,6 @@ namespace MonkeyLoader.Meta
         {
             get
             {
-                // Todo: remove this once dependencies have been figured out
-                return true;
-
                 if (!_allDependenciesLoaded)
                     _allDependenciesLoaded = dependencies.Values.All(dep => dep.AllDependenciesLoaded);
 
@@ -311,8 +308,6 @@ namespace MonkeyLoader.Meta
             _monkeyToggles = new(() => Config.LoadSection(new MonkeyTogglesConfigSection(this)));
         }
 
-        public abstract bool TryResolveAssembly(AssemblyName assemblyName, [NotNullWhen(true)] out Assembly? assembly);
-        
         /// <summary>
         /// Compares this mod with another and returns a value indicating whether
         /// one is dependent on the other, independent, or the other dependent on this.
@@ -388,6 +383,8 @@ namespace MonkeyLoader.Meta
 
         /// <inheritdoc/>
         public override string ToString() => $"{Identity} ({(IsGamePack ? "Game Pack" : "Regular")})";
+
+        public abstract bool TryResolveAssembly(AssemblyName assemblyName, [NotNullWhen(true)] out Assembly? assembly);
 
         /// <inheritdoc/>
         public bool TryResolveDependencies()

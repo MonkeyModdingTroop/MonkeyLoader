@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>MonkeyLoader</AssemblyTitle>
+    <TargetFrameworks>net9.0;netstandard2.0</TargetFrameworks>
     <AssemblyFileName>$(AssemblyTitle).dll</AssemblyFileName>
     <Deterministic>True</Deterministic>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
@@ -11,7 +12,7 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>MonkeyLoader</Title>
     <Authors>Banane9</Authors>
-    <Version>0.27.1-beta</Version>
+    <Version>0.27.2-beta</Version>
     <Description>A convenience and extendability focused mod loader using NuGet packages.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
@@ -48,7 +49,7 @@
     <None Include="Configuration\ModLoaderConfiguration.cs" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(CopyToLibraries)'=='true'">
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(CopyToLibraries)'=='true' AND '$(TargetFramework)' == 'net9.0'">
     <Copy SourceFiles="$(TargetDir)$(TargetFileName)" DestinationFiles="$(GamePath)/MonkeyLoader/$(AssemblyFileName)" />
     <Message Text="Copied $(TargetFileName) to $(GamePath)/MonkeyLoader/$(AssemblyFileName)" Importance="high" />
 
@@ -56,27 +57,30 @@
     <Message Text="Copied $(TargetName).pdb to $(GamePath)/MonkeyLoader/$(TargetName).pdb" Importance="high" />
   </Target>
 
-  <Target Name="CreateZip" AfterTargets="Build">
+  <Target Name="CreateZip" AfterTargets="AfterBuild" Condition="'$(TargetFramework)' != ''">
     <PropertyGroup>
-      <ZipCreationFolder>$(BaseOutputPath)zip-creation</ZipCreationFolder>
+      <ZipCreationFolder>$(BaseOutputPath)zip-creation/$(TargetFramework)</ZipCreationFolder>
     </PropertyGroup>
     <ItemGroup>
       <ZipSourceFiles Include="$(OutputPath)\**\*.*" />
       <ZipVendorFiles Include="$(MSBuildProjectDirectory)/vendor/**/*.*" />
+      <ZipVendorFiles Remove="$(MSBuildProjectDirectory)/vendor/**/net*/*.*" />
+      <ZipFrameworkDependentFiles Include="$(MSBuildProjectDirectory)/vendor/**/$(TargetFramework)/*.*" />
     </ItemGroup>
 
     <RemoveDir Directories="$(ZipCreationFolder)" />
     <MakeDir Directories="$(ZipCreationFolder);$(ZipCreationFolder)/MonkeyLoader;$(ZipCreationFolder)/MonkeyLoader/Configs;$(ZipCreationFolder)/MonkeyLoader/GamePacks;$(ZipCreationFolder)/MonkeyLoader/Libs;$(ZipCreationFolder)/MonkeyLoader/Mods;$(ZipCreationFolder)/MonkeyLoader/PatchedAssemblies;$(ZipCreationFolder)/MonkeyLoader/Logs" />
     <Copy SourceFiles="@(ZipSourceFiles)" DestinationFolder="$(ZipCreationFolder)/MonkeyLoader/" />
     <Copy SourceFiles="@(ZipVendorFiles)" DestinationFolder="$(ZipCreationFolder)/%(RecursiveDir)" />
-    <ZipDirectory SourceDirectory="$(ZipCreationFolder)" Overwrite="true" DestinationFile="$(BaseOutputPath)\MonkeyLoader-v$(Version)-$(Configuration).zip" />
+    <Copy SourceFiles="@(ZipFrameworkDependentFiles)" DestinationFolder="$(ZipCreationFolder)/MonkeyLoader/" />
+    <ZipDirectory SourceDirectory="$(ZipCreationFolder)" Overwrite="true" DestinationFile="$(BaseOutputPath)\MonkeyLoader-$(TargetFramework)-v$(Version)-$(Configuration).zip" />
   </Target>
 
   <ItemGroup>
     <PackageReference Include="Ben.Demystifier" Version="0.4.1" />
     <PackageReference Include="EnumerableToolkit.Builder" Version="2.0.2" />
     <PackageReference Include="EnumerableToolkit.Builder.Async" Version="2.0.2" />
-    <PackageReference Include="Lib.Harmony.Thin" Version="2.3.6" />
+    <PackageReference Include="Lib.Harmony.Thin" Version="2.4.0" />
     <PackageReference Include="MicroUtils.HarmonyAnalyzers" Version="1.6.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -88,7 +92,6 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="System.Linq.Async" Version="6.0.1" />
     <PackageReference Include="System.Text.Json" Version="9.0.1" />
     <PackageReference Include="System.ValueTuple" Version="4.6.1" />
     <PackageReference Include="Zio" Version="0.21.0" />
