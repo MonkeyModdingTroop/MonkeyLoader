@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -41,5 +42,26 @@ namespace MonkeyLoader.Logging
         /// but may be useful during extended debugging sessions.
         /// </summary>
         Trace = 2
+    }
+
+    /// <summary>
+    /// Represents the possible window style modes these represent <see cref="ProcessWindowStyle"/> values with out the hidden mode
+    /// </summary>
+    public enum ConsoleWindowStyle
+    {
+        /// <summary>
+        /// Window will be presented as normal
+        /// </summary>
+        Normal = ProcessWindowStyle.Normal,
+
+        /// <summary>
+        /// Window will be minimized
+        /// </summary>
+        Minimized = ProcessWindowStyle.Minimized,
+
+        /// <summary>
+        /// Window will be maximized
+        /// </summary>
+        Maximized = ProcessWindowStyle.Maximized,
     }
 }

@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     <Title>MonkeyLoader</Title>
     <Authors>Banane9</Authors>
     <Version>0.27.2-beta</Version>
@@ -28,11 +28,12 @@
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);AddSymbolsToPackage</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
   
+    <!--
   <Target Name="AddSymbolsToPackage">
     <ItemGroup>
       <TfmSpecificPackageFile Include="$(OutDir)$(AssemblyName).pdb" PackagePath="lib/$(TargetFramework)/" />
     </ItemGroup>
-  </Target>
+  </Target> -->
   
   <ItemGroup>
     <!-- Exclude the output of source generators from the compilation -->
@@ -49,7 +50,7 @@
     <None Include="Configuration\ModLoaderConfiguration.cs" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(CopyToLibraries)'=='true' AND '$(TargetFramework)' == 'net9.0'">
+    <!--<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(CopyToLibraries)'=='true' AND '$(TargetFramework)' == 'net9.0'">
     <Copy SourceFiles="$(TargetDir)$(TargetFileName)" DestinationFiles="$(GamePath)/MonkeyLoader/$(AssemblyFileName)" />
     <Message Text="Copied $(TargetFileName) to $(GamePath)/MonkeyLoader/$(AssemblyFileName)" Importance="high" />
 
@@ -74,8 +75,21 @@
     <Copy SourceFiles="@(ZipVendorFiles)" DestinationFolder="$(ZipCreationFolder)/%(RecursiveDir)" />
     <Copy SourceFiles="@(ZipFrameworkDependentFiles)" DestinationFolder="$(ZipCreationFolder)/MonkeyLoader/" />
     <ZipDirectory SourceDirectory="$(ZipCreationFolder)" Overwrite="true" DestinationFile="$(BaseOutputPath)\MonkeyLoader-$(TargetFramework)-v$(Version)-$(Configuration).zip" />
-  </Target>
+  </Target>-->
 
+
+  <!-- Added Part -->
+    <ItemDefinitionGroup>
+		<PackageReference ExcludeAssets="runtime" />
+	</ItemDefinitionGroup>
+	<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(CopyToLibraries)'=='true' AND '$(TargetFramework)' == 'net9.0'">
+		<Copy SourceFiles="$(TargetDir)$(TargetFileName)" DestinationFiles="$(GamePath)/MonkeyLoader/$(AssemblyFileName)" />
+		<Message Text="Copied $(TargetFileName) to $(GamePath)/MonkeyLoader/$(AssemblyFileName)" Importance="high" />
+
+		<Copy SourceFiles="$(TargetDir)$(TargetName).pdb" DestinationFiles="$(GamePath)/MonkeyLoader/$(TargetName).pdb" />
+		<Message Text="Copied $(TargetName).pdb to $(GamePath)/MonkeyLoader/$(TargetName).pdb" Importance="high" />
+	</Target>
+	
   <ItemGroup>
     <PackageReference Include="Ben.Demystifier" Version="0.4.1" />
     <PackageReference Include="EnumerableToolkit.Builder" Version="2.0.2" />
@@ -99,7 +113,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- -->
     <ProjectReference Include="..\MonkeyLoader.ConsoleHost\MonkeyLoader.ConsoleHost.csproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <DisableTransitiveProjectReferences>true</DisableTransitiveProjectReferences>

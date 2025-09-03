@@ -62,6 +62,11 @@ namespace MonkeyLoader.Logging
         [MemberNotNullWhen(true, nameof(_pipeClient), nameof(_writer), nameof(_consoleHostProcess))]
         public override bool Connected => ConsoleHostConnected;
 
+        /// <summary>
+        /// Determines how the console window should be displayed at start-up
+        /// </summary>
+        public static ConsoleWindowStyle StartUpWindowStyle { get; set; }
+
         private ConsoleLoggingHandler()
         { }
 
@@ -78,7 +83,10 @@ namespace MonkeyLoader.Logging
             if (_consoleHostProcess is not null && (_pipeClient?.IsConnected ?? false))
                 return true;
 
+            //string path = Path.GetFullPath("./MonkeyLoader/Tools/ConsoleHost/MonkeyLoader.ConsoleHost.exe");
+            //var startInfo = new ProcessStartInfo("wt", path + " " + MonkeyLoader.GameName); // This is needed if the user wishes to use the Windows Terminal instead of conhost (default console)
             var startInfo = new ProcessStartInfo("./MonkeyLoader/Tools/ConsoleHost/MonkeyLoader.ConsoleHost.exe", MonkeyLoader.GameName);
+            startInfo.WindowStyle = (ProcessWindowStyle)StartUpWindowStyle;
 
             while (!cancellationToken.IsCancellationRequested)
             {

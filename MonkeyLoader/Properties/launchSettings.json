@@ -5,14 +5,14 @@
     },
     "Resonite": {
       "commandName": "Executable",
-      "executablePath": "$(ResonitePath)/Resonite.exe",
-      "commandLineArgs": "-donotautoloadhome",
+      "executablePath": "$(ResonitePath)\\Renderite.Host.exe",
+      "commandLineArgs": "-verbose -Screen -DoNotAutoLoadHome",
       "workingDirectory": "$(ResonitePath)"
     },
     "Resonite (Override Cache)": {
       "commandName": "Executable",
-      "executablePath": "$(ResonitePath)/Resonite.exe",
-      "commandLineArgs": "-donotautoloadhome -CachePath \"$(ResoniteCachePath)\"",
+      "executablePath": "$(ResonitePath)\\Renderite.Host.exe",
+      "commandLineArgs": "-verbose -Screen -DoNotAutoLoadHome -DataPath \"D:\\TempFiles\\Resonite\\Data\" -CachePath \"D:\\TempFiles\\Resonite\" -LogsPath \"D:\\TempFiles\\Resonite\\Logs\"",
       "workingDirectory": "$(ResonitePath)"
     }
   }

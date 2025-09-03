@@ -623,8 +623,6 @@ namespace MonkeyLoader
         /// <returns>The loaded mod.</returns>
         public NuGetPackageMod LoadMod(string path, bool isGamePack = false)
         {
-            path = Path.GetFullPath(path);
-
             Logger.Debug(() => $"Loading {(isGamePack ? "game pack" : "regular")} mod from: {path}");
 
             var mod = new NuGetPackageMod(this, path, isGamePack);
