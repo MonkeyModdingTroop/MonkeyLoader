@@ -6,13 +6,13 @@
     "Resonite": {
       "commandName": "Executable",
       "executablePath": "$(ResonitePath)\\Renderite.Host.exe",
-      "commandLineArgs": "-verbose -Screen -DoNotAutoLoadHome",
+      "commandLineArgs": "-Screen -DoNotAutoLoadHome",
       "workingDirectory": "$(ResonitePath)"
     },
     "Resonite (Override Cache)": {
       "commandName": "Executable",
       "executablePath": "$(ResonitePath)\\Renderite.Host.exe",
-      "commandLineArgs": "-verbose -Screen -DoNotAutoLoadHome -DataPath \"D:\\TempFiles\\Resonite\\Data\" -CachePath \"D:\\TempFiles\\Resonite\" -LogsPath \"D:\\TempFiles\\Resonite\\Logs\"",
+      "commandLineArgs": "-Screen -DoNotAutoLoadHome -DataPath \"$(ResoniteDataPath)\" -CachePath \"$(ResoniteCachePath)\"",
       "workingDirectory": "$(ResonitePath)"
     }
   }
