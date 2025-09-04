@@ -1,7 +1,7 @@
 <Project>
   <PropertyGroup>
     <OutputType>Library</OutputType>
-    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <LangVersion>13.0</LangVersion>
     <Nullable>enable</Nullable>
     <Deterministic>true</Deterministic>
