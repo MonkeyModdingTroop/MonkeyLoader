@@ -83,8 +83,6 @@ namespace MonkeyLoader.Logging
             if (_consoleHostProcess is not null && (_pipeClient?.IsConnected ?? false))
                 return true;
 
-            //string path = Path.GetFullPath("./MonkeyLoader/Tools/ConsoleHost/MonkeyLoader.ConsoleHost.exe");
-            //var startInfo = new ProcessStartInfo("wt", path + " " + MonkeyLoader.GameName); // This is needed if the user wishes to use the Windows Terminal instead of conhost (default console)
             var startInfo = new ProcessStartInfo("./MonkeyLoader/Tools/ConsoleHost/MonkeyLoader.ConsoleHost.exe", MonkeyLoader.GameName);
             startInfo.WindowStyle = (ProcessWindowStyle)StartUpWindowStyle;
 
