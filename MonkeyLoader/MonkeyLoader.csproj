@@ -1,11 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <AssemblyTitle>MonkeyLoader</AssemblyTitle>
-    <TargetFrameworks>net9.0;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net9.0</TargetFrameworks>
     <AssemblyFileName>$(AssemblyTitle).dll</AssemblyFileName>
     <Deterministic>True</Deterministic>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-    <CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
+    <CompilerGeneratedFilesOutputPath>Generated/$(TargetFramework)</CompilerGeneratedFilesOutputPath>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -36,7 +36,7 @@
   
   <ItemGroup>
     <!-- Exclude the output of source generators from the compilation -->
-    <Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
+    <Compile Remove="Generated/**/*.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -75,7 +75,7 @@
     <Copy SourceFiles="@(ZipFrameworkDependentFiles)" DestinationFolder="$(ZipCreationFolder)/MonkeyLoader/" />
     <ZipDirectory SourceDirectory="$(ZipCreationFolder)" Overwrite="true" DestinationFile="$(BaseOutputPath)\MonkeyLoader-$(TargetFramework)-v$(Version)-$(Configuration).zip" />
   </Target>
-	
+  
   <ItemGroup>
     <PackageReference Include="Ben.Demystifier" Version="0.4.1" />
     <PackageReference Include="EnumerableToolkit.Builder" Version="2.0.2" />
