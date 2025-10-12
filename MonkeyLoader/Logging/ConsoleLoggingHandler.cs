@@ -62,6 +62,11 @@ namespace MonkeyLoader.Logging
         [MemberNotNullWhen(true, nameof(_pipeClient), nameof(_writer), nameof(_consoleHostProcess))]
         public override bool Connected => ConsoleHostConnected;
 
+        /// <summary>
+        /// Determines how the console window should be displayed at start-up
+        /// </summary>
+        public static ConsoleWindowStyle StartUpWindowStyle { get; set; }
+
         private ConsoleLoggingHandler()
         { }
 
@@ -79,6 +84,7 @@ namespace MonkeyLoader.Logging
                 return true;
 
             var startInfo = new ProcessStartInfo("./MonkeyLoader/Tools/ConsoleHost/MonkeyLoader.ConsoleHost.exe", MonkeyLoader.GameName);
+            startInfo.WindowStyle = (ProcessWindowStyle)StartUpWindowStyle;
 
             while (!cancellationToken.IsCancellationRequested)
             {

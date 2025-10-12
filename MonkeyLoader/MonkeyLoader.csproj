@@ -75,7 +75,7 @@
     <Copy SourceFiles="@(ZipFrameworkDependentFiles)" DestinationFolder="$(ZipCreationFolder)/MonkeyLoader/" />
     <ZipDirectory SourceDirectory="$(ZipCreationFolder)" Overwrite="true" DestinationFile="$(BaseOutputPath)\MonkeyLoader-$(TargetFramework)-v$(Version)-$(Configuration).zip" />
   </Target>
-
+	
   <ItemGroup>
     <PackageReference Include="Ben.Demystifier" Version="0.4.1" />
     <PackageReference Include="EnumerableToolkit.Builder" Version="2.0.2" />
@@ -99,7 +99,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- -->
     <ProjectReference Include="..\MonkeyLoader.ConsoleHost\MonkeyLoader.ConsoleHost.csproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <DisableTransitiveProjectReferences>true</DisableTransitiveProjectReferences>

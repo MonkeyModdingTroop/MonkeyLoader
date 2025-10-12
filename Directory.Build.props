@@ -9,11 +9,7 @@
     <DebugType>portable</DebugType>
     <GenerateDocumentationFile>True</GenerateDocumentationFile>
 
-    <CopyToLibraries Condition="'$(CopyToLibraries)'==''">true</CopyToLibraries>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(GamePath)'==''">
-    <GamePath>$(MSBuildThisFileDirectory)Game</GamePath>
+  <CopyToLibraries Condition="'$(CopyToLibraries)'==''">true</CopyToLibraries>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(ResonitePath)'==''">
@@ -22,10 +18,21 @@
     <ResonitePath Condition="Exists('$(HOME)/.steam/steam/steamapps/common/Resonite/')">$(HOME)/.steam/steam/steamapps/common/Resonite</ResonitePath>
     <ResonitePath Condition="Exists('D:/Files/Games/Resonite/app/')">D:/Files/Games/Resonite/app</ResonitePath>
     <ResonitePath Condition="Exists('G:/SteamLibrary/steamapps/common/Resonite/')">G:/SteamLibrary/steamapps/common/Resonite</ResonitePath>
+	<ResonitePath Condition="Exists('D:/SteamLibrary/steamapps/common/Resonite')">D:/SteamLibrary/steamapps/common/Resonite</ResonitePath>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(GamePath)'==''">
+	<GamePath>$(MSBuildThisFileDirectory)Game</GamePath>
+	<GamePath Condition="Exists('$(ResonitePath)')">$(ResonitePath)</GamePath>
+  </PropertyGroup>
+	
   <PropertyGroup Condition="'$(ResoniteCachePath)' == ''">
     <ResoniteCachePath Condition="Exists('S:/Resonite/')">S:/Resonite/</ResoniteCachePath>
+	  <ResoniteCachePath Condition="Exists('D:/TempFiles/Resonite/')">D:/TempFiles/Resonite/</ResoniteCachePath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(ResoniteDataPath)'==''">
+	<ResoniteDataPath Condition="Exists('D:/TempFiles/Resonite/Data')">D:/TempFiles/Resonite/Data</ResoniteDataPath>
   </PropertyGroup>
 
 </Project>

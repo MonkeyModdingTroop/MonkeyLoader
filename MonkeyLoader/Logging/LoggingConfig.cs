@@ -21,6 +21,7 @@ namespace MonkeyLoader.Logging
         public readonly DefiningConfigKey<int> FilesToPreserveKey = new("FilesToPreserve", "The number of recent log files to keep around. Set <1 to disable.\nChanges take effect on restart.", () => 16);
         public readonly DefiningConfigKey<LoggingLevel> LevelKey = new("Level", "The logging level used to filter logging requests. May be ignored in the initial startup phase.\nChanges take effect immediately.", () => LoggingLevel.Info);
         public readonly DefiningConfigKey<bool> ShouldLogToConsoleKey = new("ShouldLogToConsole", "Whether to spawn a console window for logging.\nIf one isn't already present, it may be spawned.\nChanges take effect immediately.", () => false);
+        public readonly DefiningConfigKey<ConsoleWindowStyle> ConsoleWindowStartUpStyleKey = new("ConsoleWindowStartUpStyle", "How should the window be displayed to the user at start-up.", () => ConsoleWindowStyle.Normal);
 
         private readonly Lazy<string?> _currentLogFilePath;
         private LoggingController _loggingController;
@@ -63,6 +64,8 @@ namespace MonkeyLoader.Logging
         public bool ShouldCleanLogDirectory => ShouldWriteLogFile && FilesToPreserve > 0;
 
         public bool ShouldLogToConsole => ShouldLogToConsoleKey;
+
+        public ConsoleWindowStyle ConsoleWindowStartUpStyle => ConsoleWindowStartUpStyleKey;
 
         [MemberNotNullWhen(true, nameof(DirectoryPath), nameof(CurrentLogFilePath))]
         public bool ShouldWriteLogFile => !string.IsNullOrWhiteSpace(DirectoryPathKey.GetValue());
@@ -161,6 +164,7 @@ namespace MonkeyLoader.Logging
 
             if (ShouldLogToConsole)
             {
+                ConsoleLoggingHandler.StartUpWindowStyle = ConsoleWindowStartUpStyle;
                 loggingHandlers += ConsoleLoggingHandler.Instance;
 
                 using var cts = new CancellationTokenSource();
