@@ -8,6 +8,26 @@ using System.Threading.Tasks;
 namespace MonkeyLoader.Logging
 {
     /// <summary>
+    /// Specifies how the <see cref="ConsoleLoggingHandler">ConsoleHost</see>
+    /// window should appear when its process is started.
+    /// </summary>
+    /// <remarks>
+    /// Equivalent to <see cref="ProcessWindowStyle"/> without
+    /// the <see cref="ProcessWindowStyle.Hidden">hidden</see> option.
+    /// </remarks>
+    public enum ConsoleWindowStyle
+    {
+        /// <inheritdoc cref="ProcessWindowStyle.Normal"/>
+        Normal = ProcessWindowStyle.Normal,
+
+        /// <inheritdoc cref="ProcessWindowStyle.Minimized"/>
+        Minimized = ProcessWindowStyle.Minimized,
+
+        /// <inheritdoc cref="ProcessWindowStyle.Maximized"/>
+        Maximized = ProcessWindowStyle.Maximized,
+    }
+
+    /// <summary>
     /// Represents the possible logging levels.
     /// </summary>
     public enum LoggingLevel
@@ -42,26 +62,5 @@ namespace MonkeyLoader.Logging
         /// but may be useful during extended debugging sessions.
         /// </summary>
         Trace = 2
-    }
-
-    /// <summary>
-    /// Represents the possible window style modes these represent <see cref="ProcessWindowStyle"/> values with out the hidden mode
-    /// </summary>
-    public enum ConsoleWindowStyle
-    {
-        /// <summary>
-        /// Window will be presented as normal
-        /// </summary>
-        Normal = ProcessWindowStyle.Normal,
-
-        /// <summary>
-        /// Window will be minimized
-        /// </summary>
-        Minimized = ProcessWindowStyle.Minimized,
-
-        /// <summary>
-        /// Window will be maximized
-        /// </summary>
-        Maximized = ProcessWindowStyle.Maximized,
     }
 }

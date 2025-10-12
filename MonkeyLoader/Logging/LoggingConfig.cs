@@ -17,14 +17,16 @@ namespace MonkeyLoader.Logging
         public const string FileSearchPattern = "*" + FileExtension;
         public const string TimestampFormat = "yyyy-MM-ddTHH-mm-ss";
 
+        public readonly DefiningConfigKey<ConsoleWindowStyle> ConsoleWindowStartUpStyleKey = new("ConsoleWindowStartUpStyle", "How the console window for logging should be displayed at start-up.", () => ConsoleWindowStyle.Minimized);
         public readonly DefiningConfigKey<string?> DirectoryPathKey = new("DirectoryPath", "The directory to write log files to.\nChanges will only take effect on restart.", () => "./MonkeyLoader/Logs");
         public readonly DefiningConfigKey<int> FilesToPreserveKey = new("FilesToPreserve", "The number of recent log files to keep around. Set <1 to disable.\nChanges take effect on restart.", () => 16);
         public readonly DefiningConfigKey<LoggingLevel> LevelKey = new("Level", "The logging level used to filter logging requests. May be ignored in the initial startup phase.\nChanges take effect immediately.", () => LoggingLevel.Info);
         public readonly DefiningConfigKey<bool> ShouldLogToConsoleKey = new("ShouldLogToConsole", "Whether to spawn a console window for logging.\nIf one isn't already present, it may be spawned.\nChanges take effect immediately.", () => false);
-        public readonly DefiningConfigKey<ConsoleWindowStyle> ConsoleWindowStartUpStyleKey = new("ConsoleWindowStartUpStyle", "How should the window be displayed to the user at start-up.", () => ConsoleWindowStyle.Normal);
 
         private readonly Lazy<string?> _currentLogFilePath;
         private LoggingController _loggingController;
+
+        public ConsoleWindowStyle ConsoleWindowStartUpStyle => ConsoleWindowStartUpStyleKey;
 
         /// <summary>
         /// Gets the <see cref="LoggingController"/> used by the
@@ -64,8 +66,6 @@ namespace MonkeyLoader.Logging
         public bool ShouldCleanLogDirectory => ShouldWriteLogFile && FilesToPreserve > 0;
 
         public bool ShouldLogToConsole => ShouldLogToConsoleKey;
-
-        public ConsoleWindowStyle ConsoleWindowStartUpStyle => ConsoleWindowStartUpStyleKey;
 
         [MemberNotNullWhen(true, nameof(DirectoryPath), nameof(CurrentLogFilePath))]
         public bool ShouldWriteLogFile => !string.IsNullOrWhiteSpace(DirectoryPathKey.GetValue());

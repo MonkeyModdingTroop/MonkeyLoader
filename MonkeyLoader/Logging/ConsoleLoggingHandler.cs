@@ -1,12 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Pipes;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -50,9 +46,15 @@ namespace MonkeyLoader.Logging
         public static ConsoleLoggingHandler Instance { get; } = new ConsoleLoggingHandler();
 
         /// <summary>
-        /// Whether
+        /// Gets or sets whether this logging handler should be attempting
+        /// to create a ConsoleHost process and connect to it.
         /// </summary>
         public static bool ShouldBeConnected { get; private set; }
+
+        /// <summary>
+        /// Gets or sets how the ConsoleHost window should appear when its process is started.
+        /// </summary>
+        public static ConsoleWindowStyle StartUpWindowStyle { get; set; }
 
         /// <remarks>
         /// For this logger, that means that the ConsoleHost process
@@ -61,11 +63,6 @@ namespace MonkeyLoader.Logging
         /// <inheritdoc/>
         [MemberNotNullWhen(true, nameof(_pipeClient), nameof(_writer), nameof(_consoleHostProcess))]
         public override bool Connected => ConsoleHostConnected;
-
-        /// <summary>
-        /// Determines how the console window should be displayed at start-up
-        /// </summary>
-        public static ConsoleWindowStyle StartUpWindowStyle { get; set; }
 
         private ConsoleLoggingHandler()
         { }
