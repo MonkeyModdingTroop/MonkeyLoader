@@ -55,7 +55,7 @@
     <None Include="Configuration\ModLoaderConfiguration.cs" />
   </ItemGroup>
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(CopyToLibraries)'=='true' AND '$(TargetFramework)' == 'net9.0'">
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(CopyToLibraries)'=='true' AND '$(TargetFramework)' == 'net10.0'">
     <Copy SourceFiles="$(TargetDir)$(TargetFileName)" DestinationFiles="$(GamePath)/MonkeyLoader/$(AssemblyFileName)" />
     <Message Text="Copied $(TargetFileName) to $(GamePath)/MonkeyLoader/$(AssemblyFileName)" Importance="high" />
 

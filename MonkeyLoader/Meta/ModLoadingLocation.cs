@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -24,8 +25,16 @@ namespace MonkeyLoader.Meta
     [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
     public sealed class ModLoadingLocation : IDisposable
     {
+        /// <summary>
+        /// Hot (Re)Load tasks by file.<br/>
+        /// Ignores case, which may be technically wrong for some file systems, but makes sense for mod files.
+        /// </summary>
+        private static readonly Dictionary<string, HotReloadTask> _hotReloadTasksByFile = new(StringComparer.OrdinalIgnoreCase);
+
         private bool _disposedValue;
+
         private Regex[] _ignorePatterns;
+
         private FileSystemWatcher? _watcher;
 
         /// <summary>
@@ -97,7 +106,7 @@ namespace MonkeyLoader.Meta
                 {
                     EnableRaisingEvents = true,
                     IncludeSubdirectories = Recursive,
-                    NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size,
+                    NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName
                 };
 
                 _watcher.Created += OnLoadMod;
@@ -161,7 +170,7 @@ namespace MonkeyLoader.Meta
         /// <returns>The full names (including paths) of all files that satisfy the specifications.</returns>
         public IEnumerable<string> Search()
             => Directory.EnumerateFiles(Path, NuGetPackageMod.SearchPattern, Recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly)
-                    .Where(PassesIgnorePatterns);
+                .Where(PassesIgnorePatterns);
 
         /// <inheritdoc/>
         public override string ToString()
@@ -185,20 +194,50 @@ namespace MonkeyLoader.Meta
             }
         }
 
+        private HotReloadTask GetOrCreateHotLoadTask(string fullPath)
+        {
+            lock (_hotReloadTasksByFile)
+            {
+                if (!_hotReloadTasksByFile.TryGetValue(fullPath, out var hotLoadTask) || hotLoadTask.Task.IsCompleted)
+                {
+                    hotLoadTask = new(this, fullPath);
+                    _hotReloadTasksByFile[fullPath] = hotLoadTask;
+                }
+
+                return hotLoadTask;
+            }
+        }
+
         private void OnLoadMod(object sender, FileSystemEventArgs e)
         {
-            if (PassesIgnorePatterns(e.FullPath))
-                LoadMod?.Invoke(this, e.FullPath);
+            // e.FullPath is not actually a full path D:
+            var fullPath = System.IO.Path.GetFullPath(e.FullPath);
+
+            if (!PassesIgnorePatterns(fullPath))
+                return;
+
+            var hotLoadTask = GetOrCreateHotLoadTask(fullPath);
+            hotLoadTask.ShouldLoad |= true;
         }
 
         private void OnReloadMod(object sender, FileSystemEventArgs e)
         {
-            OnUnloadMod(sender, e);
-            OnLoadMod(sender, e);
+            // e.FullPath is not actually a full path D:
+            var fullPath = System.IO.Path.GetFullPath(e.FullPath);
+
+            var hotLoadTask = GetOrCreateHotLoadTask(fullPath);
+            hotLoadTask.ShouldUnload |= true;
+            hotLoadTask.ShouldLoad |= PassesIgnorePatterns(fullPath);
         }
 
         private void OnUnloadMod(object sender, FileSystemEventArgs e)
-            => UnloadMod?.Invoke(this, e.FullPath);
+        {
+            // e.FullPath is not actually a full path D:
+            var fullPath = System.IO.Path.GetFullPath(e.FullPath);
+
+            var hotLoadTask = GetOrCreateHotLoadTask(fullPath);
+            hotLoadTask.ShouldUnload |= true;
+        }
 
         /// <summary>
         /// Called when a mod should be loaded because its got added or changed.
@@ -209,6 +248,45 @@ namespace MonkeyLoader.Meta
         /// Called when a mod should be unloaded because its file got deleted or changed.
         /// </summary>
         public event HotReloadModEventHandler? UnloadMod;
+
+        private sealed class HotReloadTask
+        {
+            public string FullPath { get; }
+            public ModLoadingLocation Location { get; }
+            public bool ShouldLoad { get; set; }
+            public bool ShouldUnload { get; set; }
+            public Task Task { get; }
+
+            public HotReloadTask(ModLoadingLocation location, string fullPath)
+            {
+                Location = location;
+                FullPath = fullPath;
+                Task = Task.Run(DelayAndExecuteAsync);
+            }
+
+            private async Task DelayAndExecuteAsync()
+            {
+                await Task.Delay(TimeSpan.FromSeconds(5));
+
+                if (ShouldUnload)
+                {
+                    try
+                    {
+                        Location.UnloadMod?.TryInvokeAll(Location, FullPath);
+                    }
+                    catch { }
+                }
+
+                if (ShouldLoad)
+                {
+                    try
+                    {
+                        Location.LoadMod?.TryInvokeAll(Location, FullPath);
+                    }
+                    catch { }
+                }
+            }
+        }
 
         // // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
         // ~ModLoadingLocation()

@@ -193,16 +193,16 @@ namespace MonkeyLoader
         internal AssemblyPool GameAssemblyPool { get; }
         internal AssemblyPool PatcherAssemblyPool { get; }
         internal AssemblyPool RuntimeAssemblyPool { get; }
-        
+
         public IAssemblyLoadStrategy AssemblyLoadStrategy { get; }
 
         public Assembly? ResolveAssemblyFromPoolsAndMods(System.Reflection.AssemblyName assemblyName)
         {
             var mlAssemblyName = new AssemblyName(assemblyName.FullName);
-            
+
             if (PatcherAssemblyPool.TryResolveAssembly(mlAssemblyName, out var assembly))
                 return assembly;
-            
+
             if (GameAssemblyPool.TryResolveAssembly(mlAssemblyName, out assembly))
                 return assembly;
 
@@ -223,14 +223,14 @@ namespace MonkeyLoader
 
             // Assume Unity structure
             var gameName = Path.GetFileNameWithoutExtension(executablePath);
-            var gameAssemblyPath = Path.Combine(Path.GetDirectoryName(executablePath), $"{GameName}_Data", "Managed");
+            var gameAssemblyPath = Path.Combine(Path.GetDirectoryName(executablePath)!, $"{GameName}_Data", "Managed");
 
             if (!Directory.Exists(gameAssemblyPath))
             {
                 // If Unity directory doesn't exist, assume plain .NET application
                 DirectoryInfo executablePathInfo = new(executablePath);
 
-                gameName = executablePathInfo.Parent.Name;
+                gameName = executablePathInfo.Parent!.Name;
                 gameAssemblyPath = executablePathInfo.Parent.FullName;
             }
 
@@ -268,7 +268,7 @@ namespace MonkeyLoader
 #if NET5_0_OR_GREATER
             AssemblyLoadStrategy = new AssemblyLoadContextLoadStrategy();
 #endif
-            
+
             ConfigPath = configPath;
             Id = GetId(configPath);
 
@@ -284,9 +284,17 @@ namespace MonkeyLoader
 
             foreach (var modLocation in Locations.Mods)
             {
-                modLocation.LoadMod += (mL, path) => TryLoadAndRunMod(path, out _);
+                modLocation.LoadMod += (mL, path) =>
+                {
+                    Logger.Info(() => $"Trying to hot-load mod from: {path}");
+
+                    TryLoadAndRunMod(path, out _);
+                };
+
                 modLocation.UnloadMod += (mL, path) =>
                 {
+                    Logger.Info(() => $"Trying to unload mod from: {path}");
+
                     if (TryFindModByLocation(path, out var mod))
                         ShutdownMod(mod);
                 };
@@ -294,15 +302,15 @@ namespace MonkeyLoader
 
             // TODO: do this properly - scan all loaded assemblies?
             NuGet = new NuGetManager(this);
-            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("MonkeyLoader", new NuGetVersion(Assembly.GetExecutingAssembly().GetName().Version)), NuGetHelper.Framework));
-            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Newtonsoft.Json", new NuGetVersion(13, 0, 3)), NuGetHelper.Framework));
-            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("NuGet.Packaging", new NuGetVersion(6, 10, 0)), NuGetHelper.Framework));
-            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("NuGet.Protocol", new NuGetVersion(6, 10, 0)), NuGetHelper.Framework));
-            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Mono.Cecil", new NuGetVersion(0, 11, 5)), NuGetHelper.Framework));
-            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Harmony", new NuGetVersion(2, 3, 3)), NuGetHelper.Framework));
-            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Lib.Harmony", new NuGetVersion(2, 3, 3)), NuGetHelper.Framework));
-            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Lib.Harmony.Thin", new NuGetVersion(2, 3, 3)), NuGetHelper.Framework));
-            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Zio", new NuGetVersion(0, 18, 0)), NuGetHelper.Framework));
+            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("MonkeyLoader", new NuGetVersion(Assembly.GetExecutingAssembly().GetName().Version!)), NuGetHelper.Framework));
+            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Newtonsoft.Json", new NuGetVersion(13, 0, 4)), NuGetHelper.Framework));
+            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("NuGet.Packaging", new NuGetVersion(6, 14, 0)), NuGetHelper.Framework));
+            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("NuGet.Protocol", new NuGetVersion(6, 14, 0)), NuGetHelper.Framework));
+            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Mono.Cecil", new NuGetVersion(0, 11, 6)), NuGetHelper.Framework));
+            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Harmony", new NuGetVersion(2, 4, 2)), NuGetHelper.Framework));
+            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Lib.Harmony", new NuGetVersion(2, 4, 2)), NuGetHelper.Framework));
+            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Lib.Harmony.Thin", new NuGetVersion(2, 4, 2)), NuGetHelper.Framework));
+            NuGet.Add(new LoadedNuGetPackage(new PackageIdentity("Zio", new NuGetVersion(0, 22, 1)), NuGetHelper.Framework));
 
             RuntimeAssemblyPool = new AssemblyPool(this, "RuntimeAssemblyPool", () => Locations.PatchedAssemblies);
             RuntimeAssemblyPool.AddSearchDirectory(RuntimeAssemblyPath);
@@ -623,6 +631,8 @@ namespace MonkeyLoader
         /// <returns>The loaded mod.</returns>
         public NuGetPackageMod LoadMod(string path, bool isGamePack = false)
         {
+            path = Path.GetFullPath(path);
+
             Logger.Debug(() => $"Loading {(isGamePack ? "game pack" : "regular")} mod from: {path}");
 
             var mod = new NuGetPackageMod(this, path, isGamePack);
@@ -1035,7 +1045,8 @@ namespace MonkeyLoader
                 return false;
             }
 
-            var mods = _allMods.Where(mod => location.Equals(mod.Location, StringComparison.Ordinal)).ToArray();
+            // Ignores case, which may be technically wrong for some file systems, but makes sense for mod files.
+            var mods = _allMods.Where(mod => location.Equals(mod.Location, StringComparison.OrdinalIgnoreCase)).ToArray();
 
             if (mods.Length == 0)
                 return false;
