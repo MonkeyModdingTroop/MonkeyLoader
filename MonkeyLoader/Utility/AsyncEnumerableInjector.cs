@@ -190,7 +190,8 @@ namespace MonkeyLoader.Utility
             {
                 var item = _enumerator.Current;
                 var returnItem = await PreItem(item);
-                var transformedItems = await TransformItems(item).ToArrayAsync();
+                //var transformedItems = await TransformItems(item).ToArrayAsync();
+                var transformedItems = TransformItems(item).ToEnumerable().ToArray();
 
                 if (returnItem)
                 {
