@@ -16,7 +16,7 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>MonkeyLoader</Title>
     <Authors>Banane9</Authors>
-    <Version>0.28.0-beta</Version>
+    <Version>0.28.1-beta</Version>
     <Description>A convenience and extendability focused mod loader using NuGet packages.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
@@ -84,8 +84,8 @@
   
   <ItemGroup>
     <PackageReference Include="Ben.Demystifier" Version="0.4.1" />
-    <PackageReference Include="EnumerableToolkit.Builder" Version="2.0.2" />
-    <PackageReference Include="EnumerableToolkit.Builder.Async" Version="2.0.2" />
+    <PackageReference Include="EnumerableToolkit.Builder" Version="2.1.0" />
+    <PackageReference Include="EnumerableToolkit.Builder.Async" Version="2.1.0" />
     <PackageReference Include="Lib.Harmony.Thin" Version="2.4.2" />
     <PackageReference Include="MicroUtils.HarmonyAnalyzers" Version="1.6.1">
       <PrivateAssets>all</PrivateAssets>
@@ -98,11 +98,9 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
-    <PackageReference Include="System.ValueTuple" Version="4.6.1" />
-    <PackageReference Include="Zio" Version="0.21.3" />
+    <PackageReference Include="System.Formats.Asn1" Version="8.0.2" />
+    <PackageReference Include="Zio" Version="0.22.1" />
     <!--<ProjectReference Include="..\MonkeyLoader.CodeGenerators\MonkeyLoader.CodeGenerators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />-->
-
-    <PackageReference Condition="'$(TargetFramework)' == 'netstandard2.0' OR '$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'net5.0'" Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.0.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -131,6 +129,4 @@
       <ReferenceCopyLocalPaths Remove="@(RemoveRefCopy)" />
     </ItemGroup>
   </Target>
-
-
 </Project>
