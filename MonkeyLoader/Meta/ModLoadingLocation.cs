@@ -1,6 +1,7 @@
 ﻿using EnumerableToolkit;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -24,6 +25,8 @@ namespace MonkeyLoader.Meta
     [JsonObject(MemberSerialization = MemberSerialization.OptIn)]
     public sealed class ModLoadingLocation : IDisposable
     {
+        private static readonly ConcurrentDictionary<string, DateTime> _lastChangeByFile = new(MonkeyLoader.FilesystemComparer);
+
         private bool _disposedValue;
         private Regex[] _ignorePatterns;
         private FileSystemWatcher? _watcher;
@@ -97,7 +100,7 @@ namespace MonkeyLoader.Meta
                 {
                     EnableRaisingEvents = true,
                     IncludeSubdirectories = Recursive,
-                    NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size,
+                    NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.FileName
                 };
 
                 _watcher.Created += OnLoadMod;
@@ -188,17 +191,26 @@ namespace MonkeyLoader.Meta
         private void OnLoadMod(object sender, FileSystemEventArgs e)
         {
             if (PassesIgnorePatterns(e.FullPath))
-                LoadMod?.Invoke(this, e.FullPath);
+                LoadMod?.Invoke(this, System.IO.Path.GetFullPath(e.FullPath));
         }
 
         private void OnReloadMod(object sender, FileSystemEventArgs e)
         {
+            // use this in load / unload too
+            // FileName works for add / delete, but only write time works for in place modification
+            // use timeout to use last state from multiple changes that get written in chunks?
+            var fullPath = System.IO.Path.GetFullPath(e.FullPath);
+            if (_lastChangeByFile.TryGetValue(fullPath, out var lastChange) && (DateTime.UtcNow - lastChange).TotalSeconds < 5)
+                return;
+
             OnUnloadMod(sender, e);
             OnLoadMod(sender, e);
+
+            _lastChangeByFile[fullPath] = DateTime.UtcNow;
         }
 
         private void OnUnloadMod(object sender, FileSystemEventArgs e)
-            => UnloadMod?.Invoke(this, e.FullPath);
+            => UnloadMod?.Invoke(this, System.IO.Path.GetFullPath(e.FullPath));
 
         /// <summary>
         /// Called when a mod should be loaded because its got added or changed.

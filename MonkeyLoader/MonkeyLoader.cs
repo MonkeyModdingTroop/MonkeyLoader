@@ -54,6 +54,24 @@ namespace MonkeyLoader
         /// </summary>
         private readonly SortedSet<Mod> _allMods = new(Mod.AscendingComparer);
 
+        /// <summary>
+        /// Gets the <see cref="StringComparison"/> mode used by the current
+        /// <see cref="RuntimeInformation.IsOSPlatform(OSPlatform)">OS Platform</see>'s filesystem.
+        /// </summary>
+        public static StringComparison FilesystemComparison { get; }
+            = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? StringComparison.OrdinalIgnoreCase
+                : StringComparison.Ordinal;
+
+        /// <summary>
+        /// Gets the <see cref="StringComparer"/> used by the current
+        /// <see cref="RuntimeInformation.IsOSPlatform(OSPlatform)">OS Platform</see>'s filesystem.
+        /// </summary>
+        public static StringComparer FilesystemComparer { get; }
+            = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
+                ? StringComparer.OrdinalIgnoreCase
+                : StringComparer.Ordinal;
+
         private ExecutionPhase _phase;
 
         /// <summary>
@@ -193,16 +211,16 @@ namespace MonkeyLoader
         internal AssemblyPool GameAssemblyPool { get; }
         internal AssemblyPool PatcherAssemblyPool { get; }
         internal AssemblyPool RuntimeAssemblyPool { get; }
-        
+
         public IAssemblyLoadStrategy AssemblyLoadStrategy { get; }
 
         public Assembly? ResolveAssemblyFromPoolsAndMods(System.Reflection.AssemblyName assemblyName)
         {
             var mlAssemblyName = new AssemblyName(assemblyName.FullName);
-            
+
             if (PatcherAssemblyPool.TryResolveAssembly(mlAssemblyName, out var assembly))
                 return assembly;
-            
+
             if (GameAssemblyPool.TryResolveAssembly(mlAssemblyName, out assembly))
                 return assembly;
 
@@ -268,7 +286,7 @@ namespace MonkeyLoader
 #if NET5_0_OR_GREATER
             AssemblyLoadStrategy = new AssemblyLoadContextLoadStrategy();
 #endif
-            
+
             ConfigPath = configPath;
             Id = GetId(configPath);
 
@@ -284,9 +302,20 @@ namespace MonkeyLoader
 
             foreach (var modLocation in Locations.Mods)
             {
-                modLocation.LoadMod += (mL, path) => TryLoadAndRunMod(path, out _);
+                modLocation.LoadMod += (mL, path) =>
+                {
+                    var stackTrace = Environment.StackTrace;
+                    Logger.Info(() => $"Trying to hot-load mod from: {path}");
+                    Logger.Info(() => stackTrace);
+                    TryLoadAndRunMod(path, out _);
+                };
+
                 modLocation.UnloadMod += (mL, path) =>
                 {
+                    var stackTrace = Environment.StackTrace;
+                    Logger.Info(() => $"Trying to unload mod from: {path}");
+                    Logger.Info(() => stackTrace);
+
                     if (TryFindModByLocation(path, out var mod))
                         ShutdownMod(mod);
                 };
@@ -1037,7 +1066,7 @@ namespace MonkeyLoader
                 return false;
             }
 
-            var mods = _allMods.Where(mod => location.Equals(mod.Location, StringComparison.Ordinal)).ToArray();
+            var mods = _allMods.Where(mod => location.Equals(mod.Location, FilesystemComparison)).ToArray();
 
             if (mods.Length == 0)
                 return false;
