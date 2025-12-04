@@ -110,9 +110,12 @@ namespace MonkeyLoader.Configuration
         public abstract Version Version { get; }
 
         /// <summary>
-        /// Gets the way that an incompatible saved configuration should be treated.<br/>
-        /// <see cref="IncompatibleConfigHandling.Error"/> by default
+        /// Gets the way that an incompatible saved configuration should be treated.
         /// </summary>
+        /// <remarks>
+        /// <i>By default</i>: <c><see cref="IncompatibleConfigHandling.Error"/></c>
+        /// </remarks>
+        [Obsolete("Overwrite HandleIncompatibleVersions instead.")]
         protected virtual IncompatibleConfigHandling IncompatibilityHandling => IncompatibleConfigHandling.Error;
 
         /// <summary>
@@ -284,7 +287,7 @@ namespace MonkeyLoader.Configuration
             if (!Saveable)
                 return null;
 
-            var result = new JObject { ["Version"] = Version.ToString() };
+            var result = new JObject { [nameof(Version)] = Version.ToString() };
 
             // Any exceptions get handled by the Config.Save method
             OnSave(result, jsonSerializer);
@@ -333,6 +336,20 @@ namespace MonkeyLoader.Configuration
         /// </remarks>
         /// <returns>All <see cref="IDefiningConfigKey"/>s to track.</returns>
         protected virtual IEnumerable<IDefiningConfigKey> GetConfigKeys() => GetAutoConfigKeys();
+
+        /// <summary>
+        /// Determines how a saved configuration with an incompatible <paramref name="serializedVersion"/>
+        /// should be treated for this <see cref="Version">Version</see> of this <see cref="ConfigSection"/>.
+        /// </summary>
+        /// <remarks>
+        /// <i>By default</i>: <c><see cref="IncompatibilityHandling">IncompatibilityHandling</see></c> (until removed) -
+        /// really: <c><see cref="IncompatibleConfigHandling.Error"/></c>.
+        /// </remarks>
+        protected virtual IncompatibleConfigHandling HandleIncompatibleVersions(Version serializedVersion)
+#pragma warning disable CS0618 // Type or member is obsolete
+            => IncompatibilityHandling;
+
+#pragma warning restore CS0618 // Type or member is obsolete
 
         /// <summary>
         /// Deserializes all <see cref="Keys">keys</see> of this
@@ -431,7 +448,7 @@ namespace MonkeyLoader.Configuration
             if (AreVersionsCompatible(serializedVersion, Version))
                 return true;
 
-            switch (IncompatibilityHandling)
+            switch (HandleIncompatibleVersions(serializedVersion))
             {
                 case IncompatibleConfigHandling.Clobber:
                     Logger.Warn(() => $"Saved section [{Id}] version [{serializedVersion}] is incompatible with mod's version [{Version}]. Clobbering old config and starting fresh.");
