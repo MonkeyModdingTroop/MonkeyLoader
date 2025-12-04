@@ -267,6 +267,8 @@ namespace MonkeyLoader
         {
 #if NET5_0_OR_GREATER
             AssemblyLoadStrategy = new AssemblyLoadContextLoadStrategy();
+#else
+            AssemblyLoadStrategy = new AssemblyLoadLoadStrategy();
 #endif
 
             ConfigPath = configPath;
