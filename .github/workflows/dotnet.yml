@@ -19,6 +19,10 @@ concurrency:
   group: "ci"
   cancel-in-progress: false
 
+defaults:
+  run:
+    shell: pwsh
+
 jobs:
   publish-docs:
     environment:
