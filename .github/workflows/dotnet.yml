@@ -29,6 +29,9 @@ jobs:
     # Setup environment
     - name: Checkout
       uses: actions/checkout@v3
+      with:
+        lfs: true
+
     - name: Dotnet Setup
       uses: actions/setup-dotnet@v3
       with:
@@ -54,16 +57,23 @@ jobs:
     
     - name: Test
       run: dotnet test
+
+    - name: Upload Package artifact
+      uses: actions/upload-pages-artifact@v3
+      with:
+        name: NuGet Packages
+        path: '**/.nupkg'
     
     # Generate and upload docs
     - run: dotnet tool update -g docfx
     - run: docfx ./docfx.json
 
-    - name: Upload artifact
+    - name: Upload Docs artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        # Upload entire repository
+        name: Docs
         path: './Docs/_site'
+
     - name: Deploy to GitHub Pages
       id: deployment
       uses: actions/deploy-pages@v4

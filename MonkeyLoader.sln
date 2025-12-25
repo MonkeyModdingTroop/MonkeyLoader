@@ -4,6 +4,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.5.33516.290
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonkeyLoader", "MonkeyLoader\MonkeyLoader.csproj", "{74A818DD-B787-4309-B2F9-EA19685206A4}"
+	ProjectSection(ProjectDependencies) = postProject
+		{83BB47A1-8208-402D-BEEB-62DC89C0AFC5} = {83BB47A1-8208-402D-BEEB-62DC89C0AFC5}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MonkeyLoader.ConsoleTest", "MonkeyLoader.ConsoleTest\MonkeyLoader.ConsoleTest.csproj", "{15303CB3-F51F-433F-B167-2E85F3A84045}"
 EndProject

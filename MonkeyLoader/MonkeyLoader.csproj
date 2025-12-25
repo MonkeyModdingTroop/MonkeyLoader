@@ -112,7 +112,7 @@
     <PackageReference Condition="'$(TargetFramework)' == 'net462' OR '$(TargetFramework)' == 'netstandard2.0'" Include="System.Text.Json" Version="10.0.0" />
   </ItemGroup>
 
-  <ItemGroup>
+  <!--<ItemGroup>
     <ProjectReference Include="..\MonkeyLoader.ConsoleHost\MonkeyLoader.ConsoleHost.csproj">
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <DisableTransitiveProjectReferences>true</DisableTransitiveProjectReferences>
@@ -120,7 +120,7 @@
       <Private>false</Private>
       <ExcludeAssets>all</ExcludeAssets>
     </ProjectReference>
-  </ItemGroup>
+  </ItemGroup>-->
 
   <!-- Remove `System.*` DLLs from the output folder
   <Target Name="ClearReferenceCopyLocalPaths" AfterTargets="ResolveAssemblyReferences">
