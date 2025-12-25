@@ -164,13 +164,15 @@ namespace MonkeyLoader
         /// <remarks>
         /// Sorts using <see cref="AscendingComparer"/>: larger / shallower features first.
         /// </remarks>
-        public int CompareTo(Feature other) => AscendingComparer.Compare(this, other);
+        public int CompareTo(Feature? other)
+            => AscendingComparer.Compare(this, other!);
 
         /// <inheritdoc/>
-        public bool Equals(Feature other) => EqualityComparer.Equals(this, other);
+        public bool Equals(Feature? other)
+            => EqualityComparer.Equals(this, other!);
 
         /// <inheritdoc/>
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
             => obj is Feature feature && Equals(feature);
 
         /// <inheritdoc/>
@@ -183,7 +185,8 @@ namespace MonkeyLoader
             while (type != _featureType)
             {
                 depth++;
-                type = type.BaseType;
+                // Only used for types inheriting from this, so must always reach == _featureType before null
+                type = type.BaseType!;
             }
 
             return depth;
@@ -198,11 +201,22 @@ namespace MonkeyLoader
                 _factor = ascending ? 1 : -1;
             }
 
-            public int Compare(Feature x, Feature y) => _factor * (x._depth - y._depth);
+            public int Compare(Feature? x, Feature? y)
+            {
+                if (x is null)
+                    return y is null ? 0 : -_factor;
 
-            public bool Equals(Feature x, Feature y) => ReferenceEquals(x, y) || x._type == y._type;
+                if (y is null)
+                    return _factor;
 
-            public int GetHashCode(Feature obj) => obj._type.GetHashCode();
+                return _factor * (x._depth - y._depth);
+            }
+
+            public bool Equals(Feature? x, Feature? y)
+                => ReferenceEquals(x, y) || (x is not null && y is not null && x._type == y._type);
+
+            public int GetHashCode(Feature obj)
+                => obj._type.GetHashCode();
         }
     }
 }

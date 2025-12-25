@@ -24,8 +24,7 @@ namespace Doorstop
                 {
                     try
                     {
-                        if (Path.GetFileName(file).StartsWith("doorstop", StringComparison.OrdinalIgnoreCase)
-                            && Path.GetExtension(file).Equals(".log", StringComparison.OrdinalIgnoreCase))
+                        if (Path.GetFileName(file).StartsWith("doorstop", StringComparison.OrdinalIgnoreCase) && Path.GetExtension(file).Equals(".log", StringComparison.OrdinalIgnoreCase))
                             File.Delete(file);
                     }
                     catch

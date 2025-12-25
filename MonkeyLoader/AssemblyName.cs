@@ -27,7 +27,7 @@ namespace MonkeyLoader
             => string.Equals(left.Name, right.Name, StringComparison.InvariantCultureIgnoreCase);
 
         /// <inheritdoc/>
-        public override readonly bool Equals(object obj)
+        public override readonly bool Equals(object? obj)
             => obj is AssemblyName assemblyName && assemblyName == this;
 
         /// <inheritdoc/>

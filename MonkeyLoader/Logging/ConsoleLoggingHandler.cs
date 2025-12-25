@@ -204,7 +204,7 @@ namespace MonkeyLoader.Logging
         /// </summary>
         /// <param name="message">The message to write.</param>
         /// <param name="textHighlight">Optional color / bold / underline codes to use for the message.</param>
-        public void Log(string message, string textHighlight = NORMAL)
+        public void Log(string? message, string textHighlight = NORMAL)
         {
             if (!Connected)
                 return;
@@ -233,7 +233,7 @@ namespace MonkeyLoader.Logging
             _consoleHostProcess = null;
         }
 
-        private static void OnConsoleHostExited(object sender, EventArgs e)
+        private static void OnConsoleHostExited(object? sender, EventArgs e)
         {
             DisposeConsoleHost();
 

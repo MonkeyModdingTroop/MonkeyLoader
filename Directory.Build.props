@@ -2,7 +2,7 @@
   <PropertyGroup>
     <OutputType>Library</OutputType>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    <LangVersion>13.0</LangVersion>
+    <LangVersion>14.0</LangVersion>
     <Nullable>enable</Nullable>
     <Deterministic>true</Deterministic>
     <AllowUnsafeBlocks>False</AllowUnsafeBlocks>

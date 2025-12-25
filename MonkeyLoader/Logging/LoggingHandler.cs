@@ -135,7 +135,8 @@ namespace MonkeyLoader.Logging
         public abstract void Debug(Func<object> messageProducer);
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is LoggingHandler otherHandler && this == otherHandler;
+        public override bool Equals(object? obj)
+            => obj is LoggingHandler otherHandler && this == otherHandler;
 
         /// <summary>
         /// Logs that one or more functionalities are not working, preventing some from working correctly.

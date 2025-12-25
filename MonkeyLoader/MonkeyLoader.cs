@@ -338,7 +338,8 @@ namespace MonkeyLoader
         /// <summary>
         /// Adds the given <see cref="JsonConverter"/> instance to this loader's <see cref="JsonSerializer">JsonSerializer</see>.
         /// </summary>
-        public void AddJsonConverter(JsonConverter jsonConverter) => JsonSerializer.Converters.Add(jsonConverter);
+        public void AddJsonConverter(JsonConverter jsonConverter)
+            => JsonSerializer.Converters.Add(jsonConverter);
 
         /// <summary>
         /// Instantiates and adds a <see cref="JsonConverter"/> instance of the given <paramref name="converterType">converter type</paramref>
@@ -346,7 +347,12 @@ namespace MonkeyLoader
         /// </summary>
         /// <param name="converterType">The <see cref="JsonConverter"/> derived type to instantiate.</param>
         public void AddJsonConverter(Type converterType)
-            => AddJsonConverter((JsonConverter)Activator.CreateInstance(converterType));
+        {
+            if (Activator.CreateInstance(converterType) is not JsonConverter converter)
+                throw new ArgumentException("Converter Type must be instantiable as a JsonConverter without parameters!", nameof(converterType));
+
+            AddJsonConverter(converter);
+        }
 
         /// <summary>
         /// Searches the given <paramref name="assembly"/> for all instantiable types derived from <see cref="JsonConverter"/>,
@@ -474,9 +480,8 @@ namespace MonkeyLoader
         {
             try
             {
-                return Directory.EnumerateFiles(Locations.GamePacks, NuGetPackageMod.SearchPattern, SearchOption.TopDirectoryOnly)
-                    .TrySelect<string, NuGetPackageMod>(TryLoadGamePack)
-                    .ToArray();
+                return [.. Directory.EnumerateFiles(Locations.GamePacks, NuGetPackageMod.SearchPattern, SearchOption.TopDirectoryOnly)
+                    .TrySelect<string, NuGetPackageMod>(TryLoadGamePack)];
             }
             catch (Exception ex)
             {
@@ -521,7 +526,7 @@ namespace MonkeyLoader
         /// <returns>All successfully loaded mods.</returns>
         public IEnumerable<NuGetPackageMod> LoadAllMods()
         {
-            return Locations.Mods.SelectMany(location =>
+            return [.. Locations.Mods.SelectMany(location =>
             {
                 try
                 {
@@ -534,8 +539,7 @@ namespace MonkeyLoader
 
                 return [];
             })
-            .TrySelect<string, NuGetPackageMod>(TryLoadMod)
-            .ToArray();
+            .TrySelect<string, NuGetPackageMod>(TryLoadMod)];
         }
 
         /// <summary>
@@ -646,18 +650,21 @@ namespace MonkeyLoader
         /// <summary>
         /// Loads every loaded regular <see cref="RegularMods">mod's</see> pre-patcher assemblies and <see cref="IEarlyMonkey"/>s.
         /// </summary>
-        public void LoadModEarlyMonkeys() => LoadEarlyMonkeys(RegularMods);
+        public void LoadModEarlyMonkeys()
+            => LoadEarlyMonkeys(RegularMods);
 
         /// <summary>
         /// Loads every loaded regular <see cref="RegularMods">mod's</see> patcher assemblies and <see cref="IMonkey"/>s.
         /// </summary>
-        public void LoadModMonkeys() => LoadMonkeys(RegularMods);
+        public void LoadModMonkeys()
+            => LoadMonkeys(RegularMods);
 
         /// <summary>
         /// Loads every given <see cref="Mod"/>'s patcher assemblies and <see cref="IMonkey"/>s.
         /// </summary>
         /// <param name="mods">The mods who's <see cref="IMonkey"/>s to load.</param>
-        public void LoadMonkeys(params Mod[] mods) => LoadMonkeys((IEnumerable<Mod>)mods);
+        public void LoadMonkeys(params Mod[] mods)
+            => LoadMonkeys((IEnumerable<Mod>)mods);
 
         /// <summary>
         /// Loads every given <see cref="Mod"/>'s patcher assemblies and <see cref="IMonkey"/>s.
@@ -808,7 +815,8 @@ namespace MonkeyLoader
         /// </summary>
         /// <param name="mod">The mod to run.</param>
         /// <exception cref="InvalidOperationException">When the <paramref name="mod"/> mod is invalid.</exception>
-        public void RunMod(Mod mod) => RunMods(mod);
+        public void RunMod(Mod mod)
+            => RunMods(mod);
 
         /// <summary>
         /// <see cref="MonkeyBase.Run">Runs</see> the given <see cref="Mod"/>s'
@@ -836,14 +844,16 @@ namespace MonkeyLoader
         /// <see cref="Mod.EarlyMonkeys">early</see> and <see cref="Mod.Monkeys">regular</see> monkeys in topological order.
         /// </summary>
         /// <param name="mods">The mods to run.</param>
-        public void RunMods(IEnumerable<Mod> mods) => RunMods(mods.ToArray());
+        public void RunMods(IEnumerable<Mod> mods)
+            => RunMods([.. mods]);
 
         /// <summary>
         /// Runs every given <see cref="Mod"/>'s loaded
         /// <see cref="Mod.Monkeys">monkeys'</see> <see cref="MonkeyBase.Run">Run</see>() method.
         /// </summary>
         /// <param name="mods">The mods who's <see cref="Mod.Monkeys">monkeys</see> should be <see cref="MonkeyBase.Run">run</see>.</param>
-        public void RunMonkeys(params Mod[] mods) => RunMonkeys((IEnumerable<Mod>)mods);
+        public void RunMonkeys(params Mod[] mods)
+            => RunMonkeys((IEnumerable<Mod>)mods);
 
         /// <summary>
         /// Runs every given <see cref="Mod"/>'s loaded
@@ -1026,7 +1036,8 @@ namespace MonkeyLoader
         /// <param name="mods">The mods to shut down.</param>
         /// <param name="applicationExiting">Whether the shutdown is caused by the application exiting.</param>
         /// <returns><c>true</c> if it ran successfully; otherwise, <c>false</c>.</returns>
-        public bool ShutdownMods(IEnumerable<Mod> mods, bool applicationExiting = false) => ShutdownMods(applicationExiting, mods.ToArray());
+        public bool ShutdownMods(IEnumerable<Mod> mods, bool applicationExiting = false)
+            => ShutdownMods(applicationExiting, [.. mods]);
 
         /// <summary>
         /// Searches all of this loader's loaded <see cref="Mods">Mods</see> to find a single one with the given <see cref="Mod.Location">location</see>.

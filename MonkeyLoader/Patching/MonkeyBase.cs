@@ -167,7 +167,7 @@ namespace MonkeyLoader.Patching
         internal MonkeyBase()
         {
             Type = GetType();
-            AssemblyName = new(Type.Assembly.GetName().Name);
+            AssemblyName = new(Type.Assembly.GetName().Name!);
 
             _featurePatches = new Lazy<IFeaturePatch[]>(() =>
             {
@@ -182,7 +182,8 @@ namespace MonkeyLoader.Patching
         }
 
         /// <inheritdoc/>
-        public int CompareTo(IMonkey other) => Monkey.AscendingComparer.Compare(this, other);
+        public int CompareTo(IMonkey? other)
+            => Monkey.AscendingComparer.Compare(this, other!);
 
         /// <inheritdoc/>
         public bool HasAuthor(string name)

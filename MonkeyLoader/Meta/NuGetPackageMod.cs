@@ -31,14 +31,14 @@ namespace MonkeyLoader.Meta
         /// </summary>
         public const string SearchPattern = "*.nupkg";
 
-        internal readonly HashSet<Assembly> PatcherAssemblies = new();
-        internal readonly HashSet<Assembly> PrePatcherAssemblies = new();
+        internal readonly HashSet<Assembly> PatcherAssemblies = [];
+        internal readonly HashSet<Assembly> PrePatcherAssemblies = [];
 
-        private Dictionary<string, Assembly> assemblyCache = new();
         private const char AuthorsSeparator = ',';
         private const string PrePatchersFolderName = "pre-patchers";
         private const char TagsSeparator = ' ';
 
+        private readonly Dictionary<string, Assembly> _assemblyCache = [];
         private readonly string? _title;
 
         /// <inheritdoc/>
@@ -81,33 +81,6 @@ namespace MonkeyLoader.Meta
         /// <inheritdoc/>
         public override string Title => _title ?? base.Title;
 
-        public override bool TryResolveAssembly(AssemblyName assemblyName, [NotNullWhen(true)] out Assembly? assembly)
-        {
-            assembly = null;
-            
-            var strippedName = assemblyName.Name[..assemblyName.Name.IndexOf(',')];
-            if (assemblyCache.TryGetValue(strippedName, out var cachedAssembly))
-            {
-                Logger.Debug(() => $"Resolving assembly: {assemblyName.Name} from cache");
-                assembly = cachedAssembly;
-                return true;
-            }
-                
-            var assemblyPath = assemblyPaths.FirstOrDefault(path => path.GetNameWithoutExtension() == strippedName);
-            if (assemblyPath == default)
-                return false;
-
-            Logger.Debug(() => $"Resolving assembly: {assemblyName.Name} from path: {assemblyPath}");
-            assembly = LoadAssembly(FileSystem, assemblyPath);
-            if (assembly is null)
-            {
-                Logger.Warn(() => $"Failed to resolve assembly: {assemblyName.Name} from path: {assemblyPath}");
-                return false;
-            }
-            
-            return true;
-        }
-
         /// <summary>
         /// Creates a new <see cref="NuGetPackageMod"/> instance for the given <paramref name="loader"/>,
         /// loading a .nupkg into memory from the given <paramref name="location"/>.<br/>
@@ -136,8 +109,8 @@ namespace MonkeyLoader.Meta
             Description = nuspecReader.GetDescription();
             ReleaseNotes = nuspecReader.GetReleaseNotes();
 
-            tags.AddRange(nuspecReader.GetTags().Split(new[] { TagsSeparator }, StringSplitOptions.RemoveEmptyEntries));
-            authors.AddRange(nuspecReader.GetAuthors().Split(new[] { AuthorsSeparator }, StringSplitOptions.RemoveEmptyEntries).Select(name => name.Trim()));
+            tags.AddRange(nuspecReader.GetTags().Split([TagsSeparator], StringSplitOptions.RemoveEmptyEntries));
+            authors.AddRange(nuspecReader.GetAuthors().Split([AuthorsSeparator], StringSplitOptions.RemoveEmptyEntries).Select(name => name.Trim()));
 
             if (!string.IsNullOrWhiteSpace(nuspecReader.GetIcon()))
             {
@@ -187,7 +160,7 @@ namespace MonkeyLoader.Meta
                 .Where(path => AssemblyExtension.Equals(Path.GetExtension(path), StringComparison.OrdinalIgnoreCase))
                 .Select(path => new UPath(path).ToAbsolute()));
 
-            if (assemblyPaths.Any())
+            if (assemblyPaths.Count > 0)
                 Logger.Trace(() => $"Found the following assemblies:{Environment.NewLine}    - {string.Join($"{Environment.NewLine}    - ", assemblyPaths)}");
             else
                 Logger.Warn(() => "Found no assemblies!");
@@ -202,8 +175,35 @@ namespace MonkeyLoader.Meta
             foreach (var package in deps.Packages)
                 dependencies.Add(package.Id, new DependencyReference(loader.NuGet, package));
 
-            if (dependencies.Any())
+            if (dependencies.Count > 0)
                 Logger.Debug(() => $"Found the following dependencies:{Environment.NewLine}    - {string.Join($"{Environment.NewLine}    - ", dependencies.Keys)}");
+        }
+
+        public override bool TryResolveAssembly(AssemblyName assemblyName, [NotNullWhen(true)] out Assembly? assembly)
+        {
+            assembly = null;
+
+            var strippedName = assemblyName.Name[..assemblyName.Name.IndexOf(',')];
+            if (_assemblyCache.TryGetValue(strippedName, out var cachedAssembly))
+            {
+                Logger.Debug(() => $"Resolving assembly: {assemblyName.Name} from cache");
+                assembly = cachedAssembly;
+                return true;
+            }
+
+            var assemblyPath = assemblyPaths.FirstOrDefault(path => path.GetNameWithoutExtension() == strippedName);
+            if (assemblyPath == default)
+                return false;
+
+            Logger.Debug(() => $"Resolving assembly: {assemblyName.Name} from path: {assemblyPath}");
+            assembly = LoadAssembly(FileSystem, assemblyPath);
+            if (assembly is null)
+            {
+                Logger.Warn(() => $"Failed to resolve assembly: {assemblyName.Name} from path: {assemblyPath}");
+                return false;
+            }
+
+            return true;
         }
 
         /// <inheritdoc/>
@@ -218,6 +218,13 @@ namespace MonkeyLoader.Meta
                     Logger.Debug(() => $"Loading pre-patcher assembly from: {prepatcherPath}");
 
                     var assembly = LoadAssembly(FileSystem, prepatcherPath);
+
+                    if (assembly is null)
+                    {
+                        Logger.Warn(() => $"Failed to load assembly from: {prepatcherPath}");
+                        continue;
+                    }
+
                     Loader.AddJsonConverters(assembly);
                     PrePatcherAssemblies.Add(assembly);
 
@@ -256,6 +263,13 @@ namespace MonkeyLoader.Meta
                     Logger.Debug(() => $"Loading patcher assembly from: {patcherPath}");
 
                     var assembly = LoadAssembly(FileSystem, patcherPath);
+
+                    if (assembly is null)
+                    {
+                        Logger.Warn(() => $"Failed to load assembly from: {patcherPath}");
+                        continue;
+                    }
+
                     Loader.AddJsonConverters(assembly);
                     PatcherAssemblies.Add(assembly);
 
@@ -285,7 +299,7 @@ namespace MonkeyLoader.Meta
         private Assembly? LoadAssembly(IFileSystem fileSystem, UPath assemblyPath)
         {
             var filename = assemblyPath.GetNameWithoutExtension()!;
-            
+
             if (!fileSystem.FileExists(assemblyPath))
             {
                 return null!;
@@ -332,7 +346,7 @@ namespace MonkeyLoader.Meta
             }
 
             var assembly = Loader.AssemblyLoadStrategy.Load((newAssemblyStream.Length == 0 ? assemblyStream : newAssemblyStream).ToArray(), symbolStream.ToArray());
-            assemblyCache[assembly.GetName().Name] = assembly;
+            _assemblyCache[assembly.GetName().Name!] = assembly;
             return assembly;
         }
     }

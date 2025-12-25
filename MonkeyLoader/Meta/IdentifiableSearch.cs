@@ -36,7 +36,7 @@ namespace MonkeyLoader.Meta
         /// <param name="id">The <see cref="IIdentifiable.Id"/> of the item to search for.</param>
         /// <param name="item">The item if found; otherwise, <c>default(<typeparamref name="TIdentifiable"/>)</c>.</param>
         /// <returns><c>true</c> if an item was found; otherwise, <c>false</c>.</returns>
-        public bool ById(string id, [NotNullWhen(true)] out TIdentifiable item);
+        public bool ById(string id, [NotNullWhen(true)] out TIdentifiable? item);
     }
 
     internal sealed class IdentifiableSearch<TIdentifiable> : IIdentifiableSearch<TIdentifiable>, IIdentifiableTrySearch<TIdentifiable>
@@ -59,7 +59,7 @@ namespace MonkeyLoader.Meta
         }
 
         /// <inheritdoc/>
-        public bool ById(string id, [NotNullWhen(true)] out TIdentifiable item)
+        public bool ById(string id, [NotNullWhen(true)] out TIdentifiable? item)
         {
             item = _items.FirstOrDefault(element => element.Id.Equals(id, StringComparison.Ordinal));
 

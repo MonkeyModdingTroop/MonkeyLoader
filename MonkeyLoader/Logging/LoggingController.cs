@@ -124,7 +124,7 @@ namespace MonkeyLoader.Logging
 
             QueueLogging(() =>
             {
-                LogLevelToLogger(level)(MakeMessageProducer(level, identifier, messageProducer));
+                LogLevelToLogger(level)(LoggingController.MakeMessageProducer(level, identifier, messageProducer));
 
                 HandleAutoFlush(level);
             });
@@ -140,7 +140,7 @@ namespace MonkeyLoader.Logging
                 var logger = LogLevelToLogger(level);
 
                 foreach (var messageProducer in messageProducers)
-                    logger(MakeMessageProducer(level, identifier, messageProducer));
+                    logger(LoggingController.MakeMessageProducer(level, identifier, messageProducer));
 
                 HandleAutoFlush(level);
             });
@@ -156,7 +156,7 @@ namespace MonkeyLoader.Logging
                 var logger = LogLevelToLogger(level);
 
                 foreach (var message in messages)
-                    logger(MakeMessageProducer(level, identifier, message));
+                    logger(LoggingController.MakeMessageProducer(level, identifier, message));
 
                 HandleAutoFlush(level);
             });
@@ -173,10 +173,17 @@ namespace MonkeyLoader.Logging
             _ => "[WHAT?]"
         };
 
+        private static Func<object> MakeMessageProducer(LoggingLevel level, string identifier, Func<object> messageProducer)
+            => () => $"{LogLevelToString(level)} [{identifier}] {messageProducer()}";
+
+        private static Func<object> MakeMessageProducer(LoggingLevel level, string identifier, object message)
+            => () => $"{LogLevelToString(level)} [{identifier}] {message}";
+
         private Action<Func<object>> DeferMessage(LoggingLevel level)
             => messageProducer => _deferredMessages.Enqueue(new DeferredMessage(level, messageProducer()));
 
-        private void Flush(object _) => Flush();
+        private void Flush(object? _)
+            => Flush();
 
         private void FlushDeferredMessages()
         {
@@ -185,7 +192,7 @@ namespace MonkeyLoader.Logging
                 var autoFlush = AutoFlush;
                 AutoFlush = false;
 
-                while (_deferredMessages.Count > 0)
+                while (!_deferredMessages.IsEmpty)
                 {
                     if (!_deferredMessages.TryDequeue(out var deferredMessage))
                         continue;
@@ -229,12 +236,6 @@ namespace MonkeyLoader.Logging
                 _ => _ => { }
             };
         }
-
-        private Func<object> MakeMessageProducer(LoggingLevel level, string identifier, Func<object> messageProducer)
-            => () => $"{LogLevelToString(level)} [{identifier}] {messageProducer()}";
-
-        private Func<object> MakeMessageProducer(LoggingLevel level, string identifier, object message)
-            => () => $"{LogLevelToString(level)} [{identifier}] {message}";
 
         private void QueueLogging(Action handleLogging)
         {

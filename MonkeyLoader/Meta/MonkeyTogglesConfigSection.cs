@@ -12,7 +12,7 @@ namespace MonkeyLoader.Meta
     /// </summary>
     public sealed class MonkeyTogglesConfigSection : ExpandoConfigSection
     {
-        private readonly Dictionary<IMonkey, IDefiningConfigKey<bool>> _togglesByMonkey = new();
+        private readonly Dictionary<IMonkey, IDefiningConfigKey<bool>> _togglesByMonkey = [];
 
         /// <inheritdoc/>
         public override string Description => "Contains toggles for the Monkeys of a mod which support disabling.";

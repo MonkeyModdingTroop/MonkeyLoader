@@ -43,8 +43,14 @@ namespace MonkeyLoader.Patching
             }
 
             /// <inheritdoc/>
-            public int Compare(IMonkey x, IMonkey y)
+            public int Compare(IMonkey? x, IMonkey? y)
             {
+                if (x is null)
+                    return y is null ? 0 : -_factor;
+
+                if (y is null)
+                    return _factor;
+
                 // If one of the mods has to come before the other,
                 // all its patchers have to come before as well
                 var modComparison = x.Mod.CompareTo(y.Mod);
@@ -71,7 +77,7 @@ namespace MonkeyLoader.Patching
             }
 
             private int TypeNameComparison(IMonkey x, IMonkey y)
-                => _factor * x.GetType().FullName.CompareTo(y.GetType().FullName);
+                => _factor * StringComparer.Ordinal.Compare(x.GetType().FullName, y.GetType().FullName);
         }
     }
 

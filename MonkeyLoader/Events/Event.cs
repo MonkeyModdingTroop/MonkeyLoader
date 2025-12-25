@@ -45,7 +45,7 @@ namespace MonkeyLoader.Events
         }
 
         // Make sure this stays private protected
-        private protected Event()
+        protected Event()
         { }
 
         /// <summary>
