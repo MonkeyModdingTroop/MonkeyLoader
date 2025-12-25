@@ -62,7 +62,7 @@ jobs:
       uses: actions/upload-pages-artifact@v3
       with:
         name: NuGet Packages
-        path: '**/.nupkg'
+        path: '**/*.nupkg'
     
     # Generate and upload docs
     - run: dotnet tool update -g docfx
