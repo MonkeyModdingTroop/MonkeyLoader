@@ -23,7 +23,7 @@
     <PackageProjectUrl>https://github.com/MonkeyModdingTroop/MonkeyLoader</PackageProjectUrl>
     <RepositoryUrl>$(PackageProjectUrl).git</RepositoryUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/MonkeyModdingTroop/MonkeyLoader/master/Icon.png</PackageIconUrl>
-    <PackageIconUrl>/Icon.png</PackageIconUrl>
+    <PackageIcon>/Icon.png</PackageIcon>
     <RepositoryType>git</RepositoryType>
     <PackageTags>mod; mods; modding; loader; harmony; unity; game; games; mono; config; configuration; nuget; logging; monkeyloader</PackageTags>
     <IncludeSymbols>False</IncludeSymbols>
