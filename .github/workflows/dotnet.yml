@@ -77,6 +77,17 @@ jobs:
         if-no-files-found: error
         retention-days: 7
         path: ./*.nupkg
+
+    - name: Move zip files
+      run: mv (Get-ChildItem -Recurse ./ -Include *.zip) ./
+
+    - name: Upload Zip Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Zips
+        if-no-files-found: error
+        retention-days: 7
+        path: ./*.zip
     
     # Generate and upload docs
     - run: dotnet tool update -g docfx
@@ -85,7 +96,6 @@ jobs:
     - name: Upload Docs artifact
       uses: actions/upload-pages-artifact@v3
       with:
-        name: Docs
         path: './Docs/_site'
 
     - name: Deploy to GitHub Pages
