@@ -58,11 +58,21 @@ jobs:
     - name: Test
       run: dotnet test
 
-    - name: Upload Package artifact
-      uses: actions/upload-pages-artifact@v3
+    - name: Move NuGet Packages
+      run: mv (Get-ChildItem -Recurse ./ -Include *.nupkg) ./
+    
+    # Removes the version number from the package name
+    - name: Rename NuGet Packages
+      run: Get-ChildItem -Include *.nupkg -Path ./* | Rename-Item -NewName { $_.Name -Replace '\.\d+\.\d+\.\d+.*$','.nupkg' }
+      
+    # Publish the NuGet package(s) as an artifact, so they can be used in the following jobs
+    - name: Upload NuGet Packages Artifact
+      uses: actions/upload-artifact@v4
       with:
         name: NuGet Packages
-        path: '**/*.nupkg'
+        if-no-files-found: error
+        retention-days: 7
+        path: ./*.nupkg
     
     # Generate and upload docs
     - run: dotnet tool update -g docfx
