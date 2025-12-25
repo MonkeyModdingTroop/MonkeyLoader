@@ -50,13 +50,13 @@ jobs:
           
     # Build and test projects
     - name: Install dependencies
-      run: dotnet restore
+      run: dotnet restore -c Release
     
     - name: Build
-      run: dotnet build
+      run: dotnet build --no-restore -c Release
     
     - name: Test
-      run: dotnet test
+      run: dotnet test --no-restore --no-build -c Release
 
     - name: Move NuGet Packages
       run: mv (Get-ChildItem -Recurse ./ -Include *.nupkg) ./
