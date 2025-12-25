@@ -21,9 +21,9 @@ namespace MonkeyLoader
     /// </summary>
     public sealed class AssemblyPool : IAssemblyResolver
     {
-        private readonly Dictionary<AssemblyName, AssemblyEntry> _assemblies = new();
+        private readonly Dictionary<AssemblyName, AssemblyEntry> _assemblies = [];
         private readonly HashSet<string> _directories = new(StringComparer.OrdinalIgnoreCase);
-        private readonly HashSet<AssemblyPool> _fallbackPools = new();
+        private readonly HashSet<AssemblyPool> _fallbackPools = [];
         private readonly Func<string?>? _getPatchedAssemblyPath;
         private readonly Logger _logger;
 
@@ -39,6 +39,8 @@ namespace MonkeyLoader
         /// <summary>
         /// Creates a new <see cref="AssemblyPool"/> instance, loading assemblies when asked to resolve them if desired.
         /// </summary>
+        /// <param name="loader">The mod loader that this pool belongs to.</param>
+        /// <param name="poolName">The name of this pool.</param>
         /// <param name="getPatchedAssemblyPath">Provides the path where to save patched assemblies. Return <c>null</c> to disable.</param>
         /// <param name="loadForResolve">Whether to load assemblies when asked to resolve them.</param>
         public AssemblyPool(MonkeyLoader loader, string poolName = "AssemblyPool", Func<string?>? getPatchedAssemblyPath = null, bool loadForResolve = true)
@@ -51,16 +53,14 @@ namespace MonkeyLoader
             AppDomain.CurrentDomain.AssemblyResolve += ResolveAssembly;
         }
 
-        public bool AddFallbackPool(AssemblyPool pool) => _fallbackPools.Add(pool);
+        public bool AddFallbackPool(AssemblyPool pool)
+            => _fallbackPools.Add(pool);
 
         public void AddSearchDirectory(string directory)
-        {
-            _directories.Add(directory);
-        }
+            => _directories.Add(directory);
 
         public void Dispose()
-        {
-        }
+        { }
 
         public IEnumerable<ILoadedNuGetPackage> GetAllAsLoadedPackages(string optionalPrefix)
         {
@@ -131,18 +131,6 @@ namespace MonkeyLoader
         /// <returns>The loaded <see cref="Assembly"/>.</returns>
         /// <exception cref="KeyNotFoundException">When the <paramref name="name"/> doesn't exist in this pool.</exception>
         public Assembly LoadAssembly(AssemblyName name) => GetEntry(name).LoadAssembly(_logger, PatchedAssemblyPath);
-        
-        public bool TryResolveAssembly(AssemblyName name, [NotNullWhen(true)] out Assembly? assembly)
-        {
-            if (TryGetEntry(name, out var entry))
-            {
-                assembly = entry.LoadAssembly(_logger, PatchedAssemblyPath);
-                return true;
-            }
-
-            assembly = null;
-            return false;
-        }
 
         public AssemblyDefinition LoadDefinition(string path, ReaderParameters? readerParameters = null)
         {
@@ -231,6 +219,18 @@ namespace MonkeyLoader
             return false;
         }
 
+        public bool TryResolveAssembly(AssemblyName name, [NotNullWhen(true)] out Assembly? assembly)
+        {
+            if (TryGetEntry(name, out var entry))
+            {
+                assembly = entry.LoadAssembly(_logger, PatchedAssemblyPath);
+                return true;
+            }
+
+            assembly = null;
+            return false;
+        }
+
         /// <summary>
         /// Tries to wait until nothing else is modifying the <see cref="AssemblyDefinition"/> of an entry anymore,
         /// before making a snapshot and returning it. The definition has to be returned using
@@ -271,7 +271,7 @@ namespace MonkeyLoader
             return assemblyDefinition;
         }
 
-        private Assembly? ResolveAssembly(object sender, ResolveEventArgs args)
+        private Assembly? ResolveAssembly(object? sender, ResolveEventArgs args)
         {
             var name = new AssemblyName(AssemblyNameReference.Parse(args.Name).Name);
 
@@ -287,7 +287,7 @@ namespace MonkeyLoader
         private AssemblyDefinition? SearchDirectory(AssemblyNameReference name, ReaderParameters parameters)
         {
             parameters.AssemblyResolver ??= this;
-            var extensions = name.IsWindowsRuntime ? new[] { ".winmd", ".dll" } : new[] { ".exe", ".dll" };
+            string[] extensions = name.IsWindowsRuntime ? [".winmd", ".dll"] : [".exe", ".dll"];
 
             foreach (var directory in _directories)
             {
@@ -310,15 +310,15 @@ namespace MonkeyLoader
             return null;
         }
 
-        private bool TryGetEntry(AssemblyName name, out AssemblyEntry entry)
+        private bool TryGetEntry(AssemblyName name, [NotNullWhen(true)] out AssemblyEntry? entry)
             => _assemblies.TryGetValue(name, out entry);
 
         private sealed class AssemblyEntry : IDisposable
         {
             public readonly FileInfo? AssemblyFile;
             public readonly AssemblyName Name;
-            private AssemblyDefinition _definition;
             private readonly IAssemblyLoadStrategy _assemblyLoadStrategy;
+            private AssemblyDefinition _definition;
             private AutoResetEvent? _definitionLock;
             private MemoryStream? _definitionSnapshot;
             private bool _disposedValue = false;
@@ -361,7 +361,7 @@ namespace MonkeyLoader
                     : _definition.GetAssemblyReferences()
                         .Select(reference => AssemblyNameReference.Parse(reference.Name).Name);
 
-                return fullNames.Select(name => new AssemblyName(name))
+                return fullNames.Select(name => new AssemblyName(name!))
                     .Where(name => !alreadyLoaded.Contains(name));
             }
 
@@ -387,7 +387,7 @@ namespace MonkeyLoader
                         // so let's always load assemblies from files for now
                         if (saveAssemblies)
                         {
-                            var targetPath = Path.Combine(patchedAssemblyPath, $"{Name}.dll");
+                            var targetPath = Path.Combine(patchedAssemblyPath!, $"{Name}.dll");
 
                             try
                             {
@@ -398,7 +398,7 @@ namespace MonkeyLoader
                             {
                                 logger.Warn(ex.LogFormat($"Exception while trying to save assembly to {targetPath}"));
                             }
-                            
+
                             _loadedAssembly = _assemblyLoadStrategy.LoadFile(Path.GetFullPath(targetPath));
                             logger.Trace(() => $"Loaded changed assembly definition [{Name}]");
                         }

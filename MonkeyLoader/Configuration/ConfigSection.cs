@@ -154,7 +154,7 @@ namespace MonkeyLoader.Configuration
         /// </summary>
         /// <param name="obj">The other object.</param>
         /// <returns><c>true</c> if the other object is considered equal.</returns>
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
             => obj is ConfigSection section && section == this;
 
         /// <summary>
@@ -302,7 +302,7 @@ namespace MonkeyLoader.Configuration
         /// <param name="key">The key to deserialize.</param>
         /// <param name="source">The <see cref="JObject"/> being deserialized from.</param>
         /// <param name="jsonSerializer">The <see cref="JsonSerializer"/> to deserialize objects with.</param>
-        protected void DeserializeKey(IDefiningConfigKey key, JObject source, JsonSerializer jsonSerializer)
+        protected static void DeserializeKey(IDefiningConfigKey key, JObject source, JsonSerializer jsonSerializer)
         {
             if (source[key.Id] is not JToken token)
                 return;
@@ -400,7 +400,7 @@ namespace MonkeyLoader.Configuration
         /// <param name="key">The key to serialize.</param>
         /// <param name="result">The <see cref="JObject"/> being serialized to.</param>
         /// <param name="jsonSerializer">The <see cref="JsonSerializer"/> to serialize objects with.</param>
-        protected void SerializeKey(IDefiningConfigKey key, JObject result, JsonSerializer jsonSerializer)
+        protected static void SerializeKey(IDefiningConfigKey key, JObject result, JsonSerializer jsonSerializer)
         {
             if (!key.TryGetValue(out var value))
                 return;
@@ -415,7 +415,7 @@ namespace MonkeyLoader.Configuration
         /// <param name="key">The key that wasn't found.</param>
         /// <exception cref="KeyNotFoundException">Always.</exception>
         [DoesNotReturn]
-        protected void ThrowKeyNotFound(IConfigKey key)
+        protected static void ThrowKeyNotFound(IConfigKey key)
             => throw new KeyNotFoundException($"Key [{key.Id}] not found in this config section!");
 
         private static bool AreVersionsCompatible(Version serializedVersion, Version currentVersion)

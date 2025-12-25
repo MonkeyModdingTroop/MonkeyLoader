@@ -79,7 +79,7 @@ namespace MonkeyLoader.NuGet
             var source = new PackageSource(SourceUri.AbsoluteUri, Name);
 
             if (Authenticated)
-                source.Credentials = new(SourceUri.AbsolutePath, Username, Password, true, string.Empty);
+                source.Credentials = new(SourceUri.AbsolutePath, Username ?? string.Empty, Password ?? string.Empty, true, string.Empty);
 
             return source;
         }

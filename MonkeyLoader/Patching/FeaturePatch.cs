@@ -35,8 +35,14 @@ namespace MonkeyLoader.Patching
                 _factor = ascending ? 1 : -1;
             }
 
-            public int Compare(IFeaturePatch x, IFeaturePatch y)
+            public int Compare(IFeaturePatch? x, IFeaturePatch? y)
             {
+                if (x is null)
+                    return y is null ? 0 : -_factor;
+
+                if (y is null)
+                    return _factor;
+
                 var featureComparison = x.Feature.CompareTo(y.Feature);
 
                 // Feature already decided it
@@ -47,8 +53,8 @@ namespace MonkeyLoader.Patching
                 return _factor * (x.Compatibility - y.Compatibility);
             }
 
-            public bool Equals(IFeaturePatch x, IFeaturePatch y)
-                => ReferenceEquals(x, y) || (x.Compatibility == y.Compatibility && x.Feature.Equals(y.Feature));
+            public bool Equals(IFeaturePatch? x, IFeaturePatch? y)
+                => ReferenceEquals(x, y) || (x is not null && y is not null && x.Compatibility == y.Compatibility && x.Feature.Equals(y.Feature));
 
             public int GetHashCode(IFeaturePatch obj)
                 => unchecked(obj.Compatibility.GetHashCode() + (31 * obj.Feature.GetHashCode()));
@@ -88,15 +94,15 @@ namespace MonkeyLoader.Patching
         /// Uses <see cref="FeaturePatch.AscendingComparer"/>: higher impact first.
         /// </summary>
         /// <inheritdoc/>
-        public int CompareTo(IFeaturePatch other)
-            => FeaturePatch.AscendingComparer.Compare(this, other);
+        public int CompareTo(IFeaturePatch? other)
+            => FeaturePatch.AscendingComparer.Compare(this, other!);
 
         /// <inheritdoc/>
-        public bool Equals(IFeaturePatch other)
-             => FeaturePatch.EqualityComparer.Equals(this, other);
+        public bool Equals(IFeaturePatch? other)
+             => FeaturePatch.EqualityComparer.Equals(this, other!);
 
         /// <inheritdoc/>
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
             => obj is IFeaturePatch patch && Equals(patch);
 
         /// <inheritdoc/>

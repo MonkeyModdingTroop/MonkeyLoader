@@ -5,7 +5,7 @@
     <AssemblyFileName>$(AssemblyTitle).dll</AssemblyFileName>
     <Deterministic>True</Deterministic>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-    <CompilerGeneratedFilesOutputPath>Generated</CompilerGeneratedFilesOutputPath>
+    <CompilerGeneratedFilesOutputPath>Generated/$(TargetFramework)</CompilerGeneratedFilesOutputPath>
     
     <!-- Create reference Assemblies instead of a full assembly -->
     <ProduceOnlyReferenceAssembly Condition="'$(TargetFramework)' == 'netstandard2.0'">true</ProduceOnlyReferenceAssembly>
@@ -16,7 +16,7 @@
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <Title>MonkeyLoader</Title>
     <Authors>Banane9</Authors>
-    <Version>0.28.2-beta</Version>
+    <Version>0.29.0</Version>
     <Description>A convenience and extendability focused mod loader using NuGet packages.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseExpression>LGPL-3.0-or-later</PackageLicenseExpression>
@@ -42,7 +42,7 @@
   
   <ItemGroup>
     <!-- Exclude the output of source generators from the compilation -->
-    <Compile Remove="$(CompilerGeneratedFilesOutputPath)/**/*.cs" />
+    <Compile Remove="Generated/**/*.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -93,7 +93,7 @@
     </PackageReference>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="NuGet.Protocol" Version="6.14.0" />
-    <PackageReference Include="PolySharp" Version="1.15.0">
+    <PackageReference Include="PolySharp" Version="1.15.0" Condition="'$(TargetFramework)' != 'net10.0'">
       <Private>False</Private>
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -122,11 +122,11 @@
     </ProjectReference>
   </ItemGroup>
 
-  <!-- Remove `System.*` DLLs from the output folder -->
+  <!-- Remove `System.*` DLLs from the output folder
   <Target Name="ClearReferenceCopyLocalPaths" AfterTargets="ResolveAssemblyReferences">
     <ItemGroup>
       <RemoveRefCopy Include="@(ReferenceCopyLocalPaths)" Condition="$([System.String]::Copy(&quot;%(ReferenceCopyLocalPaths.Filename)&quot;).StartsWith('System'))" />
       <ReferenceCopyLocalPaths Remove="@(RemoveRefCopy)" />
     </ItemGroup>
-  </Target>
+  </Target> -->
 </Project>

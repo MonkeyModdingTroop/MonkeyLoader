@@ -185,10 +185,12 @@ namespace MonkeyLoader.Configuration
         public static implicit operator T?(DefiningConfigKey<T> key) => key.GetValue();
 
         /// <inheritdoc/>
-        public bool Equals(IConfigKey other) => ConfigKey.EqualityComparer.Equals(this, other);
+        public bool Equals(IConfigKey? other)
+            => ConfigKey.EqualityComparer.Equals(this, other!);
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is IConfigKey otherKey && Equals(otherKey);
+        public override bool Equals(object? obj)
+            => obj is IConfigKey otherKey && Equals(otherKey);
 
         /// <inheritdoc/>
         public IEnumerator<IComponent<IDefiningConfigKey>> GetEnumerator()
@@ -419,10 +421,10 @@ namespace MonkeyLoader.Configuration
         private bool Validate(object? value)
             => (value is T || (value is null && Util.CanBeNull(ValueType))) && Validate((T)value!);
 
-        private void ValueCollectionChanged(object sender, NotifyCollectionChangedEventArgs eventArgs)
+        private void ValueCollectionChanged(object? sender, NotifyCollectionChangedEventArgs eventArgs)
             => OnChanged(true, _value, ConfigKey.CollectionChangedEventLabel, null, eventArgs);
 
-        private void ValuePropertyChanged(object sender, PropertyChangedEventArgs eventArgs)
+        private void ValuePropertyChanged(object? sender, PropertyChangedEventArgs eventArgs)
             => OnChanged(true, _value, ConfigKey.PropertyChangedEventLabel, eventArgs.PropertyName);
 
         /// <inheritdoc/>

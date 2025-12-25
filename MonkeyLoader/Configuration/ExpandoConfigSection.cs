@@ -119,7 +119,7 @@ namespace MonkeyLoader.Configuration
             base.OnLoad(source, jsonSerializer);
         }
 
-        private IDefiningConfigKey<T> AddDefiningKey<T>(string name, string? description, Func<T>? computeDefault, bool internalAccessOnly, Predicate<T?>? valueValidator)
+        private DefiningConfigKey<T> AddDefiningKey<T>(string name, string? description, Func<T>? computeDefault, bool internalAccessOnly, Predicate<T?>? valueValidator)
         {
             var definingKey = new DefiningConfigKey<T>(name, description, computeDefault, internalAccessOnly, valueValidator);
             definingKey.Section = this;

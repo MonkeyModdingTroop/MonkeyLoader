@@ -11,7 +11,7 @@ namespace MonkeyLoader
     /// </summary>
     public sealed class AnyMap
     {
-        private readonly Dictionary<Type, object?> _dict = new();
+        private readonly Dictionary<Type, object?> _dict = [];
 
         /// <summary>
         /// Gets all <see cref="Type"/>s that have a set value in this AnyMap.

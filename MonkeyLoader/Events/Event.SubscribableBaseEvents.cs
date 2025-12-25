@@ -23,7 +23,7 @@ namespace MonkeyLoader.Events
 
             if (!_subscribableBaseEventTypesByConcreteType.TryGetValue(eventType, out var baseEvents))
             {
-                baseEvents = GetSubscribableBaseEventTypesInternal(eventType.BaseType);
+                baseEvents = GetSubscribableBaseEventTypesInternal(eventType.BaseType!);
                 _subscribableBaseEventTypesByConcreteType.Add(eventType, baseEvents);
             }
 
@@ -53,7 +53,7 @@ namespace MonkeyLoader.Events
                 return ImmutableArray<Type>.Empty;
 
             if (!_subscribableBaseEventTypesByConcreteType.TryGetValue(eventType, out var subscribableBaseEventTypes))
-                subscribableBaseEventTypes = GetSubscribableBaseEventTypesInternal(eventType.BaseType);
+                subscribableBaseEventTypes = GetSubscribableBaseEventTypesInternal(eventType.BaseType!);
 
             if (eventType.GetCustomAttribute<SubscribableBaseEventAttribute>() is not null)
                 subscribableBaseEventTypes = subscribableBaseEventTypes.Insert(0, eventType);

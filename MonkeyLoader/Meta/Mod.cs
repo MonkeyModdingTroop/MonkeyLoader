@@ -319,7 +319,8 @@ namespace MonkeyLoader.Meta
         /// <i>Zero:</i> this and <paramref name="other"/> are independent.<br/>
         /// <i>Greater than zero:</i> this is dependent on <paramref name="other"/>.
         /// </returns>
-        public int CompareTo(Mod other) => AscendingComparer.Compare(this, other);
+        public int CompareTo(Mod? other)
+            => AscendingComparer.Compare(this, other!);
 
         /// <inheritdoc/>
         public bool DependsOn(string otherId)
@@ -505,8 +506,14 @@ namespace MonkeyLoader.Meta
             }
 
             /// <inheritdoc/>
-            public int Compare(Mod x, Mod y)
+            public int Compare(Mod? x, Mod? y)
             {
+                if (x is null)
+                    return y is null ? 0 : -_factor;
+
+                if (y is null)
+                    return _factor;
+
                 // Game Packs always first
                 if (x.IsGamePack ^ y.IsGamePack)
                     return _factor * (x.IsGamePack ? -1 : 1);

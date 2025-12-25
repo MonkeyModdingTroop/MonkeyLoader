@@ -60,7 +60,7 @@ namespace MonkeyLoader.Events
             foreach (var eventType in Event.GetDispatchableEventTypes(concreteEventType))
             {
                 done |= (bool)method.MakeGenericMethod(concreteEventType, eventType)
-                    .Invoke(this, parameters);
+                    .Invoke(this, parameters)!;
             }
 
             return done;
@@ -74,7 +74,7 @@ namespace MonkeyLoader.Events
             foreach (var eventType in Event.GetSubscribableEventTypes(concreteEventType))
             {
                 done |= (bool)method.MakeGenericMethod(eventType, concreteEventType)
-                    .Invoke(this, parameters);
+                    .Invoke(this, parameters)!;
             }
 
             return done;

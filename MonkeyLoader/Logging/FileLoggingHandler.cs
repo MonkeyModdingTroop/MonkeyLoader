@@ -66,7 +66,7 @@ namespace MonkeyLoader.Logging
         /// Writes a message prefixed with a timestamp to the log file.
         /// </summary>
         /// <param name="message">The message to write.</param>
-        public void Log(string message)
+        public void Log(string? message)
         {
             lock (_streamWriter)
                 _streamWriter.WriteLine($"[{DateTime.UtcNow:HH:mm:ss.ffff}] {message}");
@@ -76,7 +76,8 @@ namespace MonkeyLoader.Logging
         /// Writes the message from the producer, prefixed with a timestamp, to the log file.
         /// </summary>
         /// <param name="messageProducer">The producer for the message to write.</param>
-        public void Log(Func<object> messageProducer) => Log(messageProducer().ToString());
+        public void Log(Func<object> messageProducer)
+            => Log(messageProducer().ToString());
 
         /// <inheritdoc/>
         public override void Trace(Func<object> messageProducer) => Log(messageProducer);

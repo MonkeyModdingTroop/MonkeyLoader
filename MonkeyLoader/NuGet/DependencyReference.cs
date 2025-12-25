@@ -79,7 +79,7 @@ namespace MonkeyLoader.NuGet
         /// <param name="id"></param>
         /// <returns><c>true</c> if this (transitively) references a package with the given id; otherwise, <c>false</c>.</returns>
         public bool TransitivelyReferences(string id)
-            => TransitivelyReferences(id, new());
+            => TransitivelyReferences(id, []);
 
         [MemberNotNullWhen(true, nameof(LoadedPackage))]
         public bool TryResolve()
