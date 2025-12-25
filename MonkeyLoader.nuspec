@@ -1,0 +1,100 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2013/05/nuspec.xsd">
+  <metadata>
+    <id>MonkeyLoader</id>
+    <version>0.29.0</version>
+    <title>MonkeyLoader</title>
+    <authors>Banane9</authors>
+    <license type="expression">LGPL-3.0-or-later</license>
+    <licenseUrl>https://licenses.nuget.org/LGPL-3.0-or-later</licenseUrl>
+    <readme>README.md</readme>
+    <projectUrl>https://github.com/MonkeyModdingTroop/MonkeyLoader</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/MonkeyModdingTroop/MonkeyLoader/master/Icon.png</iconUrl>
+    <icon>/Icon.png</icon>
+    <description>A convenience and extendability focused mod loader using NuGet packages.</description>
+    <tags>mod mods modding loader harmony unity game games mono config configuration nuget logging monkeyloader</tags>
+    <repository type="git" url="https://github.com/MonkeyModdingTroop/MonkeyLoader.git" commit="38fa697f361718e1c40998850f90091a894d8b85" />
+    <dependencies>
+      <group targetFramework=".NETFramework4.6.2">
+        <dependency id="Ben.Demystifier" version="0.4.1" exclude="Build,Analyzers" />
+        <dependency id="EnumerableToolkit.Builder" version="2.1.0" exclude="Build,Analyzers" />
+        <dependency id="EnumerableToolkit.Builder.Async" version="2.1.0" exclude="Build,Analyzers" />
+        <dependency id="Lib.Harmony.Thin" version="2.4.2" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="13.0.4" exclude="Build,Analyzers" />
+        <dependency id="NuGet.Protocol" version="6.14.0" exclude="Build,Analyzers" />
+        <dependency id="System.Formats.Asn1" version="8.0.2" exclude="Build,Analyzers" />
+        <dependency id="System.Text.Json" version="10.0.0" exclude="Build,Analyzers" />
+        <dependency id="Zio" version="0.22.1" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net5.0">
+        <dependency id="Ben.Demystifier" version="0.4.1" exclude="Build,Analyzers" />
+        <dependency id="EnumerableToolkit.Builder" version="2.1.0" exclude="Build,Analyzers" />
+        <dependency id="EnumerableToolkit.Builder.Async" version="2.1.0" exclude="Build,Analyzers" />
+        <dependency id="Lib.Harmony.Thin" version="2.4.2" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="13.0.4" exclude="Build,Analyzers" />
+        <dependency id="NuGet.Protocol" version="6.14.0" exclude="Build,Analyzers" />
+        <dependency id="System.Formats.Asn1" version="8.0.2" exclude="Build,Analyzers" />
+        <dependency id="Zio" version="0.22.1" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net6.0">
+        <dependency id="Ben.Demystifier" version="0.4.1" exclude="Build,Analyzers" />
+        <dependency id="EnumerableToolkit.Builder" version="2.1.0" exclude="Build,Analyzers" />
+        <dependency id="EnumerableToolkit.Builder.Async" version="2.1.0" exclude="Build,Analyzers" />
+        <dependency id="Lib.Harmony.Thin" version="2.4.2" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="13.0.4" exclude="Build,Analyzers" />
+        <dependency id="NuGet.Protocol" version="6.14.0" exclude="Build,Analyzers" />
+        <dependency id="System.Formats.Asn1" version="8.0.2" exclude="Build,Analyzers" />
+        <dependency id="Zio" version="0.22.1" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net7.0">
+        <dependency id="Ben.Demystifier" version="0.4.1" exclude="Build,Analyzers" />
+        <dependency id="EnumerableToolkit.Builder" version="2.1.0" exclude="Build,Analyzers" />
+        <dependency id="EnumerableToolkit.Builder.Async" version="2.1.0" exclude="Build,Analyzers" />
+        <dependency id="Lib.Harmony.Thin" version="2.4.2" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="13.0.4" exclude="Build,Analyzers" />
+        <dependency id="NuGet.Protocol" version="6.14.0" exclude="Build,Analyzers" />
+        <dependency id="System.Formats.Asn1" version="8.0.2" exclude="Build,Analyzers" />
+        <dependency id="System.Text.Json" version="8.0.5" exclude="Build,Analyzers" />
+        <dependency id="Zio" version="0.22.1" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net8.0">
+        <dependency id="Ben.Demystifier" version="0.4.1" exclude="Build,Analyzers" />
+        <dependency id="EnumerableToolkit.Builder" version="2.1.0" exclude="Build,Analyzers" />
+        <dependency id="EnumerableToolkit.Builder.Async" version="2.1.0" exclude="Build,Analyzers" />
+        <dependency id="Lib.Harmony.Thin" version="2.4.2" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="13.0.4" exclude="Build,Analyzers" />
+        <dependency id="NuGet.Protocol" version="6.14.0" exclude="Build,Analyzers" />
+        <dependency id="Zio" version="0.22.1" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net9.0">
+        <dependency id="Ben.Demystifier" version="0.4.1" exclude="Build,Analyzers" />
+        <dependency id="EnumerableToolkit.Builder" version="2.1.0" exclude="Build,Analyzers" />
+        <dependency id="EnumerableToolkit.Builder.Async" version="2.1.0" exclude="Build,Analyzers" />
+        <dependency id="Lib.Harmony.Thin" version="2.4.2" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="13.0.4" exclude="Build,Analyzers" />
+        <dependency id="NuGet.Protocol" version="6.14.0" exclude="Build,Analyzers" />
+        <dependency id="Zio" version="0.22.1" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework="net10.0">
+        <dependency id="Ben.Demystifier" version="0.4.1" exclude="Build,Analyzers" />
+        <dependency id="EnumerableToolkit.Builder" version="2.1.0" exclude="Build,Analyzers" />
+        <dependency id="EnumerableToolkit.Builder.Async" version="2.1.0" exclude="Build,Analyzers" />
+        <dependency id="Lib.Harmony.Thin" version="2.4.2" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="13.0.4" exclude="Build,Analyzers" />
+        <dependency id="NuGet.Protocol" version="6.14.0" exclude="Build,Analyzers" />
+        <dependency id="Zio" version="0.22.1" exclude="Build,Analyzers" />
+      </group>
+      <group targetFramework=".NETStandard2.0">
+        <dependency id="Ben.Demystifier" version="0.4.1" exclude="Build,Analyzers" />
+        <dependency id="EnumerableToolkit.Builder" version="2.1.0" exclude="Build,Analyzers" />
+        <dependency id="EnumerableToolkit.Builder.Async" version="2.1.0" exclude="Build,Analyzers" />
+        <dependency id="Lib.Harmony.Thin" version="2.4.2" exclude="Build,Analyzers" />
+        <dependency id="Newtonsoft.Json" version="13.0.4" exclude="Build,Analyzers" />
+        <dependency id="NuGet.Protocol" version="6.14.0" exclude="Build,Analyzers" />
+        <dependency id="System.Formats.Asn1" version="8.0.2" exclude="Build,Analyzers" />
+        <dependency id="System.Text.Json" version="10.0.0" exclude="Build,Analyzers" />
+        <dependency id="Zio" version="0.22.1" exclude="Build,Analyzers" />
+      </group>
+    </dependencies>
+  </metadata>
+</package>
